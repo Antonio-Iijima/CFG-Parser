@@ -1,0 +1,17 @@
+-- grammar for a basic calculator, adapted from PLCI p. 58
+<Expr>     ::= <Add> | <Subtract> | <Term>
+<Add>      ::= <Expr> + <Term>
+<Subtract> ::= <Expr> - <Term>
+<Term>     ::= <Multiply> | <Divide> | <Factor>
+<Multiply> ::= <Term> * <Factor>
+<Divide>   ::= <IDivide> | <FDivide>
+<IDivide>  ::= <Term> // <Factor>
+<FDivide>  ::= <Term> / <Factor>
+<Factor>   ::= (<Expr>) | <Number>
+<Factor>   ::= (<Expr>) | <Exp> | <Number>
+<Exp>      ::= <Factor> ** <Factor>
+<Number>   ::= <Float> | <Int>
+<Float>    ::= <Int>.<Int>
+<Int>      ::= <Int><Digit> | <Digit>
+<Digit>    ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+-- nb - camille grammar p.86
