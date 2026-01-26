@@ -22,8 +22,8 @@ class Rule:
 
 
 def parse(expr: str) -> Rule:
-    from AST import GRAMMAR, is_expected
-    # from main import dFlag
+    from AST import GRAMMAR, is_expected, retype, OPERATORS
+    from main import dFlag
 
     expr = tokenize(expr)
 
@@ -31,14 +31,22 @@ def parse(expr: str) -> Rule:
     # For each step, there is a list of states (which is a list of tokens or nodes).
     current_states = [[]]
     future_states = []
+
+    if dFlag:
+        from AST import EXPECTED_TOKENS
+        print(EXPECTED_TOKENS)
     
-    # For each token, advance a step and add a new state.
+    # For each token, advance a step and begin processing states
     for token in expr:
 
         # For each state at the previous step, 
         # add to the current step with the newest token
         current_states = list(map(lambda x: x + [token], current_states))
+        if token in OPERATORS: continue
+
         to_be_reduced = list(current_states)
+
+        if dFlag: print("Current states", current_states)
 
         # We need to reduce all the new states at the current step
 
@@ -52,17 +60,38 @@ def parse(expr: str) -> Rule:
                 for pattern in alternatives:
                     idx = -len(pattern)
 
-                    if idx == -len(state[idx:]) and compare(state[idx:], pattern):
+                    # Reduce only states that can produce a valid parse
+                    if (
+                        retype(state[-1]) in pattern
+                        and -idx == len(state[idx:]) 
+                        and compare(state[idx:], pattern)
+                    ):
                         reduced = state[:idx] + [rule(state[idx:])]
                         
                         to_be_reduced.append(reduced)
+
+                        # Proceed with only states that can produce a valid parse
                         if (
-                            (len(reduced) == 1 and isinstance(reduced[0], Rule))
-                            or (len(reduced) > 1 and is_expected(reduced[-1], reduced[-2]))
+                            (
+                                len(reduced) == 1
+                                and isinstance(reduced[0], Rule)
+                            )
+                            or (
+                                len(reduced) == 2 
+                                and is_expected(reduced[-1], reduced[-2])
+                            )
+                            or (len(reduced) > 2 
+                                and is_expected(reduced[-1], reduced[-2])
+                                and is_expected(reduced[-2], reduced[-3])
+                            )
                         ):
                             future_states.append(reduced)
 
         current_states, future_states = future_states or current_states, []
+
+        if dFlag: 
+            print("Future states", current_states)
+            print()
 
     # Filter for accepting state; if not found return None explicitly
     for state in current_states:

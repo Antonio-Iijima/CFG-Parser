@@ -85,8 +85,27 @@ TERMINALS = {TERMINALS}
 TOKENS = TERMINALS.union(GRAMMAR.keys())
 
 
-# Pre-compute expected subsequent tokens for any given token for arbitrary lookahead
+OPERATORS = {{{", ".join(embed_nonterminal(t) if is_nonterminal(t) else f"'{t}'" for t in set(
+        token 
+                for alternatives in GRAMMAR.values()
+            for pattern in alternatives
+        for token in pattern if (
+            len(pattern) > 1
+            and is_terminal(token)
+            and (not token == pattern[-1])
+            and any(is_nonterminal(x) for x in pattern)
+        )))}}}
+
+
 EXPECTED_TOKENS = {{ token : [] for token in TOKENS }}
+
+def expand_expected(token, x):
+    EXPECTED_TOKENS[token].append(x)
+
+    for alternative in GRAMMAR.get(x, []):
+        y = alternative[0]
+        if not y in EXPECTED_TOKENS[token] and not y in TERMINALS.difference(OPERATORS):
+            expand_expected(token, y)
 
 for token in TOKENS:
     for rule in GRAMMAR.values():
@@ -96,12 +115,11 @@ for token in TOKENS:
                 for i, t in enumerate(alternative[:-1]):
 
                     if t == token:
-                        EXPECTED_TOKENS[token].append(alternative[i+1])
+                        expand_expected(token, alternative[i+1])
 
+def retype(x): return type(x) if isinstance(x, Rule) else x
 
-def is_expected(e, x: Rule|str) -> list:
-    def retype(x): return type(x) if isinstance(x, Rule) else x
-    return retype(e) in EXPECTED_TOKENS[retype(x)]
+def is_expected(e, x: Rule|str) -> list: return retype(e) in EXPECTED_TOKENS[retype(x)]
 """
 
 
