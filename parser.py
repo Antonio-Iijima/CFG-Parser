@@ -22,7 +22,7 @@ class Rule:
 
 
 def parse(expr: str) -> Rule:
-    from AST import GRAMMAR, is_expected, retype, OPERATORS
+    from AST import GRAMMAR, is_expected, retype, OPERATORS, K
     from main import dFlag
 
     expr = tokenize(expr)
@@ -70,23 +70,10 @@ def parse(expr: str) -> Rule:
                         
                         to_be_reduced.append(reduced)
 
-                        # Proceed with only states that can produce a valid parse
-                        if (
-                            (
-                                len(reduced) == 1
-                                and isinstance(reduced[0], Rule)
-                            )
-                            or (
-                                len(reduced) == 2 
-                                and is_expected(reduced[-1], reduced[-2])
-                            )
-                            or (len(reduced) > 2 
-                                and is_expected(reduced[-1], reduced[-2])
-                                and is_expected(reduced[-2], reduced[-3])
-                            )
-                        ):
+                        # Proceed with only states that can produce a valid parse using maximum K-token lookahead
+                        if all(is_expected(reduced[-k], reduced[-k-1]) for k in range(1, min(K, len(reduced)))):
                             future_states.append(reduced)
-
+                        
         current_states, future_states = future_states or current_states, []
 
         if dFlag: 

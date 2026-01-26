@@ -79,6 +79,9 @@ GRAMMAR = {{
 }}
 
 
+K = {max(map(len, (pattern for alternatives in GRAMMAR.values() for pattern in alternatives)))}
+
+
 TERMINALS = {TERMINALS}
 
 

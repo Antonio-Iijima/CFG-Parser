@@ -24,7 +24,7 @@ tests = [
 # N = 367 # largest number we can currently process without a recursion error or changing the limit. Avg. Time: 0.24 sec.
 # tests = [
 #     ("".join(map(str, range(N))), int("".join(map(str, range(N))))),
-#     # ("12345678982 + 123456773657984", 123469119336966)
+#     ("12345678982 + 123456773657984", 123469119336966)
 # ]
 
 # tests = [
