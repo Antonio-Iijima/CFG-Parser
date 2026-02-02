@@ -1,0 +1,12 @@
+<OP_Add> ::= <OP>[+]
+<OP_Subtract> ::= <OP>[-]
+<OP_Multiply> ::= <OP>[*]
+<OP_Exp> ::= <OP>[**]
+<OP_FDivide> ::= <OP>[/]
+<OP_IDivide> ::= <OP>[//]
+
+<OP_LParen> ::= <OP>[(]
+<OP_RParen> ::= <OP>[)]
+
+<SPACES> ::= <SPACE> | <SPACE><SPACES>
+<SPACE>  ::= ς | ε

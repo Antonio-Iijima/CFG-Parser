@@ -26,8 +26,8 @@ class Rule:
 
 def parse(expr: str) -> Rule:
     from AST import (
-        GRAMMAR, is_expected, nullable, expected_patterns,
-        K, EPSILON, EXPECTED_TOKENS, EXPECTED_PATTERNS
+        is_expected, expected_patterns,
+        GRAMMAR, K, EPSILON, EXPECTED_TOKENS, EXPECTED_PATTERNS
     )
     from main import dFlag
 
@@ -40,14 +40,14 @@ def parse(expr: str) -> Rule:
 
     if dFlag:
         print("EXPECTED TOKENS:")
-        for key in sorted(EXPECTED_TOKENS.keys(), key=lambda x: x if isinstance(x, str) else x.__name__):
+        for key in sorted(EXPECTED_TOKENS.keys(), key=comparative):
             print(f"{key} :: {EXPECTED_TOKENS[key]}")
             print()
         
         print()
         
         print("EXPECTED PATTERNS:")
-        for key in sorted(EXPECTED_PATTERNS.keys(), key=lambda x: x if isinstance(x, str) else x.__name__):
+        for key in sorted(EXPECTED_PATTERNS.keys(), key=comparative):
             print(f"{key} :: {EXPECTED_PATTERNS[key]}")
             print()
 

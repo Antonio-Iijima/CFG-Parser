@@ -1,4 +1,5 @@
 from AST_generator import generate_AST
+from utils import preprocess_text
 
 from os.path import abspath, exists
 from os import listdir, remove
@@ -18,10 +19,6 @@ iFlag and argv.remove("-i")
 dFlag = "-d" in argv 
 dFlag and argv.remove("-d")
 
-# vFlag = "-v" in argv 
-# vFlag and argv.remove("-v")
-
-
 if len(argv) > 1:
     path = abspath(argv[0])
     language = abspath(argv[1])
@@ -32,7 +29,7 @@ if len(argv) > 1:
                 SEMANTICS = path
             case "syntax.txt":
                 with open(path) as text: 
-                    SYNTAX = [line for line in text.read().splitlines() if line and not line.startswith("--")]
+                    SYNTAX = preprocess_text(text.read().splitlines())
             case _:
                 print(f"Unrecognized file: {path}")
 else:
@@ -46,7 +43,6 @@ generate_AST(
     debug=dFlag
 )
 print()
-
 
 from parser import parse
 from eval import evaluate

@@ -8,6 +8,24 @@ def process_syntax(syntax: list[str]) -> dict:
     grammar = {}
     macros = {}
     parameters = {}
+    
+    prepend, append = [], []
+    while syntax[0].startswith("#"):
+        libraries = syntax[0].removeprefix("#")
+
+        prefix, index = ("MACRO", 1) if libraries.startswith("MACRO") else ("RULE", 0)
+    
+        libraries = libraries.removeprefix(prefix).strip().split(", ")
+        
+        for library in libraries:
+            with open(f".lib/{prefix.lower()}s/{library}.txt") as file:
+                lib = preprocess_text(file.read().splitlines())
+                if index: prepend += lib
+                else: append += lib
+        
+        syntax.pop(0)
+
+    syntax = prepend + syntax + append
 
     for line in syntax:
         rule, alternatives = line.split("::=")
@@ -133,16 +151,22 @@ GRAMMAR = {{
 }}
 
 
+
+##### CONSTANTS #####
+
+
+
 K = {max(map(len, (pattern for alternatives in GRAMMAR.values() for pattern in alternatives)))}
+
 EPSILON = "ε"
+
 SIGMA = "ς"
+
 SPECIAL = {{EPSILON, SIGMA}}
 
 TERMINALS = {TERMINALS}
 
-
 TOKENS = TERMINALS.union(GRAMMAR.keys())
-
 
 OPERATORS = {{{", ".join(embed_nonterminal(t) if is_nonterminal(t) else f"'{t}'" for t in set(
         token 
@@ -156,37 +180,31 @@ OPERATORS = {{{", ".join(embed_nonterminal(t) if is_nonterminal(t) else f"'{t}'"
         )))}}}
 
 EXPECTED_TOKENS = {{ token : [] for token in TOKENS }}
+
 EXPECTED_PATTERNS = {{ token : [] for token in TOKENS }}
 
-EPSILOI = {{EPSILON}}
+EPSILA = {{EPSILON}}
+
+
+
+##### HELPER FUNCTIONS #####
+
 
 
 def retype(x): return type(x) if isinstance(x, Rule) else x
 
+
 def expected_patterns(x): return EXPECTED_PATTERNS[retype(x)]
 
-def nullable(x): return retype(x) in EPSILOI
+
+def nullable(x): return retype(x) in EPSILA
+
 
 def is_expected(e, x: Rule|str) -> bool:
     '''Check if `e` is expected by `x` or `e` is `EPSILON` and x expects a nullable.'''
  
     expected = EXPECTED_TOKENS.get(retype(x), [])
     return expected and retype(e) in expected or (e == EPSILON and any(nullable(c) for c in expected))
-
-    
-# Collect nullable rules (i.e. rules that can be expanded from EPSILON)
-count = 0
-while count < len(EPSILOI):
-    for rule, alternatives in GRAMMAR.items():
-        for pattern in alternatives:
-            if (
-                len(pattern) == 1
-                and pattern[0] in EPSILOI
-                and rule not in EPSILOI
-            ):
-                EPSILOI.add(rule)
-    count += 1
-del count
 
 
 def expand_expected(token, x):
@@ -196,7 +214,28 @@ def expand_expected(token, x):
         for y in alternative:
             if not y in EXPECTED_TOKENS[token]:
                 expand_expected(token, y)
-            if not y in EPSILOI: break
+            if not y in EPSILA: break
+
+
+
+##### GRAMMAR PREPROCESSING / EXPANSION #####
+
+
+
+# Collect nullable rules (i.e. rules that can be expanded from EPSILON)
+count = 0
+while count < len(EPSILA):
+    for rule, alternatives in GRAMMAR.items():
+        for pattern in alternatives:
+            if (
+                len(pattern) == 1
+                and pattern[0] in EPSILA
+                and rule not in EPSILA
+            ):
+                EPSILA.add(rule)
+    count += 1
+del count
+
 
 # Grammar post-processing/expansion
 for rule, alternatives in GRAMMAR.items():

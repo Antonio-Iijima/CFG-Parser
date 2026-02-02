@@ -1,9 +1,5 @@
--- MACROS
-
-<OP>[a] ::= <SPACES>[a]<SPACES>
-<Paren>[a] ::= <OP_LParen>[a]<OP_RParen>
-
--- GRAMMAR
+#MACRO spacing
+#RULE math
 
 <Expr>     ::= <Add> | <Subtract> | <Term>
 <Add>      ::= <Expr> <OP_Add> <Term>
@@ -19,18 +15,3 @@
 <Float>    ::= <Int> . <Int>
 <Int>      ::= <Int> <Digit> | <Digit>
 <Digit>    ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-
--- OPERATORS
-
-<OP_Add> ::= <OP>[+]
-<OP_Subtract> ::= <OP>[-]
-<OP_Multiply> ::= <OP>[*]
-<OP_Exp> ::= <OP>[**]
-<OP_FDivide> ::= <OP>[/]
-<OP_IDivide> ::= <OP>[//]
-
-<OP_LParen> ::= <OP>[(]
-<OP_RParen> ::= <OP>[)]
-
-<SPACES> ::= <SPACE> | <SPACE><SPACES>
-<SPACE>  ::= ς | ε

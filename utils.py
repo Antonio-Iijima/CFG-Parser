@@ -1,13 +1,21 @@
-def filterl(f, x): return list(filter(f, x))
+def preprocess_text(text: list[str]) -> list[str]: 
+    return [line for line in text if line and not line.startswith("--")]
 
 
-def is_nonterminal(prod: str) -> bool: return isinstance(prod, str) and prod.startswith("<") and prod.endswith(">")# not (re.fullmatch(re_terminal, prod) == None)
+def filterl(f, x): 
+    return list(filter(f, x))
 
 
-def is_terminal(prod: str) -> bool: return not is_nonterminal(prod)
+def is_nonterminal(prod: str) -> bool: 
+    return isinstance(prod, str) and prod.startswith("<") and prod.endswith(">")
 
 
-def embed_nonterminal(s: str) -> str: return s[1:-1] if is_nonterminal(s) else s
+def is_terminal(prod: str) -> bool: 
+    return not is_nonterminal(prod)
+
+
+def embed_nonterminal(s: str) -> str: 
+    return s[1:-1] if is_nonterminal(s) else s
 
 
 def split_pattern(prod: str) -> list:
@@ -41,11 +49,14 @@ def split_pattern(prod: str) -> list:
     return out
 
 
+def comparative(x): 
+    return x if isinstance(x, str) else x.__name__
+
+
 def compare(a: list, b: list) -> bool:
     """Check if all the elements of `a` and `b` match, filtering epsilons from both."""
-    from AST import Rule, EPSILON
+    from AST import EPSILON
     
-    def comparative(x): return x if isinstance(x, str) else x.__name__
 
     f = lambda x: not (x == EPSILON)
     a, b = filterl(f, a), filterl(f, b)
