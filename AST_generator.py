@@ -3,10 +3,63 @@ from utils import *
 
 
 def process_syntax(syntax: list[str]) -> dict:
-    return {                                                                          # "ε"          
-        rule.strip() : [[s for s in split_nonterminals(alternative.strip()) if not s in ("",)] for alternative in pattern.split("|")]
-        for rule, pattern in (line.split("::=") for line in syntax)
-    }
+    from rich import print
+
+    grammar = {}
+    macros = {}
+    parameters = {}
+
+    for line in syntax:
+        rule, alternatives = line.split("::=")
+        rule, alternatives = split_pattern(rule), [split_pattern(pattern) for pattern in alternatives.split("|")]
+        
+
+        # Add params to dict
+        if len(rule) == 2:
+            rule, params = rule[0][1:-1], rule[1][1:-1].split()
+            macros[rule] = alternatives[0]
+            parameters[rule] = params
+            continue
+        
+        rule = rule[0][1:-1]
+        
+        # Prep rule entry
+        grammar[rule] = []
+
+        for pattern in alternatives:
+            expanded_pattern = []
+
+            i = 0
+            while i < len(pattern):
+                current = pattern[i]
+                next = pattern[i+1] if i < len(pattern)-1 else None
+
+                # Match macro application
+                if (
+                    not (next == None)
+                    and current.startswith("<")
+                    and current.endswith(">")
+                    and next.startswith("[")
+                    and next.endswith("]")
+                ):
+                    operation, args = current[1:-1], next[1:-1].split()
+
+                    # Macro application is a simple pattern replacement of [param] with arg
+                    for param, arg in zip(parameters[operation], args):
+                        expanded_pattern.extend([arg if e == f"[{param}]" else e for e in macros[operation]])
+                        i += 2
+                
+                # Otherwise match regular token
+                else:
+                    expanded_pattern.append(current)
+                    i += 1
+
+            grammar[rule] = grammar.get(rule) + [expanded_pattern]
+
+    print(grammar)
+    print()    
+    
+    return grammar
 
 
 def process_semantics(semantics: str) -> str:
@@ -54,11 +107,6 @@ from parser import Rule
 
 
 """
-#     if "ε" in TERMINALS: AST_text += """
-# class Epsilon(Rule):
-#     '''Rule: `_ ::= ε`'''
-#     name: str = "ε"
-# """
 
     for (rule, alternatives) in GRAMMAR.items():
 
@@ -86,8 +134,10 @@ GRAMMAR = {{
 
 K = {max(map(len, (pattern for alternatives in GRAMMAR.values() for pattern in alternatives)))}
 EPSILON = "ε"
+SIGMA = "ς"
+SPECIAL = {{EPSILON, SIGMA}}
 
-TERMINALS = {TERMINALS}.difference({{EPSILON}})
+TERMINALS = {TERMINALS}
 
 
 TOKENS = TERMINALS.union(GRAMMAR.keys())
@@ -104,29 +154,62 @@ OPERATORS = {{{", ".join(embed_nonterminal(t) if is_nonterminal(t) else f"'{t}'"
             and any(is_nonterminal(x) for x in pattern)
         )))}}}
 
-
 EXPECTED_TOKENS = {{ token : [] for token in TOKENS }}
+EXPECTED_PATTERNS = {{ token : [] for token in TOKENS }}
 
+EPSILOI = {{EPSILON}}
+
+def retype(x): return type(x) if isinstance(x, Rule) else x
+
+def expected_patterns(x): return EXPECTED_PATTERNS[retype(x)]
+
+def nullable(x): return retype(x) in EPSILOI
+
+def is_expected(e, x: Rule|str) -> bool:
+    '''Check if `e` is expected by `x` or `e` is `EPSILON` and x expects a nullable.'''
+ 
+    expected = EXPECTED_TOKENS.get(retype(x), [])
+    return expected and retype(e) in expected or (e == EPSILON and any(nullable(c) for c in expected))
+
+count = 0
+while count < len(EPSILOI):
+    for rule, alternatives in GRAMMAR.items():
+        for pattern in alternatives:
+            if (
+                len(pattern) == 1
+                and pattern[0] in EPSILOI
+                and rule not in EPSILOI
+            ):
+                EPSILOI.add(rule)
+    count += 1
+del count
 
 def expand_expected(token, x):
     EXPECTED_TOKENS[token].append(x)
 
     for alternative in GRAMMAR.get(x, []):
-        if len(alternative) > 0:
-            y = alternative[0]
-            if not y in EXPECTED_TOKENS[token] and not y in TERMINALS.difference(OPERATORS):
+        for y in alternative:
+            if not y in EXPECTED_TOKENS[token]: # and not y in TERMINALS.difference(OPERATORS):
                 expand_expected(token, y)
+            if not y in EPSILOI: break
 
 for alternatives in GRAMMAR.values():
     for pattern in alternatives:
         for i, token in enumerate(pattern[:-1]):
             expand_expected(token, pattern[i+1])
 
-def retype(x): return type(x) if isinstance(x, Rule) else x
 
-def is_expected(e, x: Rule|str) -> list: 
-    expected = EXPECTED_TOKENS.get(retype(x), [])
-    return retype(e) in expected
+for rule, alternatives in GRAMMAR.items():
+    for pattern in alternatives:
+        null = list(map(lambda x: EPSILON if nullable(x) else x, pattern))
+        if not null == pattern:
+            GRAMMAR[rule].append(null)
+            
+for rule, alternatives in GRAMMAR.items():
+    for pattern in alternatives:
+        for token in pattern:
+            if not (rule, pattern) in EXPECTED_PATTERNS[token]: 
+                EXPECTED_PATTERNS[token].append((rule, pattern))
 """
 
 
@@ -161,7 +244,7 @@ s = SourceFileLoader("semantics", "{semantics}").load_module()
 
 def evaluate(AST):
     from AST import Rule
-
+    
     if isinstance(AST, Rule):
         expr = list(map(evaluate, AST.children))
 

@@ -1,2 +1,1 @@
---<S> ::= ε | a | b | a<S>a | b<S>b
-<S> ::= aa | bb | a<S>a | b<S>b
+<S> ::= ε | a | b | a<S>a | b<S>b

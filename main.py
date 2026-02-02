@@ -32,13 +32,12 @@ if len(argv) > 1:
                 SEMANTICS = path
             case "syntax.txt":
                 with open(path) as text: 
-                    SYNTAX = [line for line in text.readlines() if not line.startswith("--")]
+                    SYNTAX = [line for line in text.read().splitlines() if line and not line.startswith("--")]
             case _:
                 print(f"Unrecognized file: {path}")
 else:
     print("Language folder not found.")
     quit()
-
 
 print()
 generate_AST(

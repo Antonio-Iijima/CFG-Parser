@@ -1,16 +1,36 @@
--- grammar for a basic calculator, adapted from PLCI p. 58
+-- MACROS
+
+<OP>[a] ::= <SPACES>[a]<SPACES>
+<Paren>[a] ::= <OP_LParen>[a]<OP_RParen>
+
+-- GRAMMAR
+
 <Expr>     ::= <Add> | <Subtract> | <Term>
-<Add>      ::= <Expr> + <Term>
-<Subtract> ::= <Expr> - <Term>
+<Add>      ::= <Expr> <OP_Add> <Term>
+<Subtract> ::= <Expr> <OP_Subtract> <Term>
 <Term>     ::= <Multiply> | <Divide> | <Factor>
-<Multiply> ::= <Term> * <Factor>
+<Multiply> ::= <Term> <OP_Multiply> <Factor>
 <Divide>   ::= <IDivide> | <FDivide>
-<IDivide>  ::= <Term> // <Factor>
-<FDivide>  ::= <Term> / <Factor>
-<Factor>   ::= (<Expr>) | <Exp> | <Number>
-<Exp>      ::= <Factor> ** <Factor>
+<IDivide>  ::= <Term> <OP_IDivide> <Factor>
+<FDivide>  ::= <Term> <OP_FDivide> <Factor>
+<Factor>   ::= <Paren>[<Expr>] | <Exp> | <Number>
+<Exp>      ::= <Factor> <OP_Exp> <Factor>
 <Number>   ::= <Float> | <Int>
-<Float>    ::= <Int>.<Int>
-<Int>      ::= <Int><Digit> | <Digit>
+<Float>    ::= <Int> . <Int>
+<Int>      ::= <Int> <Digit> | <Digit>
 <Digit>    ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
--- nb - camille grammar p.86
+
+-- OPERATORS
+
+<OP_Add> ::= <OP>[+]
+<OP_Subtract> ::= <OP>[-]
+<OP_Multiply> ::= <OP>[*]
+<OP_Exp> ::= <OP>[**]
+<OP_FDivide> ::= <OP>[/]
+<OP_IDivide> ::= <OP>[//]
+
+<OP_LParen> ::= <OP>[(]
+<OP_RParen> ::= <OP>[)]
+
+<SPACES> ::= <SPACE> | <SPACE><SPACES>
+<SPACE>  ::= ς | ε

@@ -52,10 +52,10 @@ while args:
         # print(validate(test))
         AST = parse(test)
         print("\nPARSED\n")
-        print(AST)
-        print(type(AST))
+        print("AST  :", AST)
+        print("Type :", type(AST))
         result = evaluate(AST)
-        print(result if result == solution else f"ERROR: value of {test} should be {solution}, but received {result or "False|None"}")
+        print("Eval :", result if result == solution else f"ERROR: value of {test} should be {solution}, but received {result or "False|None"}")
         print()
 
         print(f"Runtime: {time()-start}")

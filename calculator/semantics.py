@@ -22,8 +22,7 @@ def p_fdivide(expr):
 def p_factor(expr): 
     return expr[1] if len(expr) == 3 else expr[0]
 
-def p_exp(expr): 
-    return expr[0] ** expr[2]
+def p_exp(expr): return expr[0] ** expr[2]
 
 def p_number(expr): 
     return expr[0]
@@ -36,3 +35,23 @@ def p_int(expr):
 
 def p_digit(expr): 
     return int(expr[0])
+
+def p_op_add(expr): return None
+
+def p_op_subtract(expr): return None
+
+def p_op_multiply(expr): return None
+
+def p_op_exp(expr): return None
+
+def p_op_fdivide(expr): return None
+
+def p_op_idivide(expr): return None
+
+def p_op_lparen(expr): return None
+
+def p_op_rparen(expr): return None
+
+def p_spaces(expr): return None
+
+def p_space(expr): return None
