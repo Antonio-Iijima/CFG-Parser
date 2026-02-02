@@ -9,7 +9,7 @@ from sys import argv
 
 
 if '-x' in argv:
-    exists("parser.py") and remove("parser.py")
+    exists("AST.py") and remove("AST.py")
     exists("eval.py") and remove("eval.py")
     quit()
 
