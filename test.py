@@ -26,7 +26,7 @@ while args:
                 (" + ".join(["1"]*n), n) for n in range(100, 901, 100)
             ]
         case "3":
-            N = 367 # largest number we can currently process without a recursion error or changing the limit. Avg. Time: 0.24 sec.
+            N = 367
             tests = [
                 ("".join(map(str, range(N))), int("".join(map(str, range(N))))),
                 ("12345678982 + 123456773657984", 123469119336966)
@@ -49,7 +49,6 @@ while args:
 
         start = time()
 
-        # print(validate(test))
         AST = parse(test)
         print("\nPARSED\n")
         print("AST  :", AST)

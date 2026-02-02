@@ -18,8 +18,8 @@ iFlag and argv.remove("-i")
 dFlag = "-d" in argv 
 dFlag and argv.remove("-d")
 
-vFlag = "-v" in argv 
-vFlag and argv.remove("-v")
+# vFlag = "-v" in argv 
+# vFlag and argv.remove("-v")
 
 
 if len(argv) > 1:
@@ -48,12 +48,11 @@ generate_AST(
 print()
 
 
-from parser import parse, validate
+from parser import parse
 from eval import evaluate
 
 if iFlag:
     for line in iter(lambda: input("> "), "quit"):
         if dFlag: start = time()
-        if vFlag: print(validate(line))
         print(evaluate(parse(line)))
         if dFlag: print(f"Runtime: {time() - start}")

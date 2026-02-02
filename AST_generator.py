@@ -110,11 +110,12 @@ from parser import Rule
 
     for (rule, alternatives) in GRAMMAR.items():
 
-        docstring = f"{rule} ::= {" | ".join("".join(pattern) for pattern in alternatives)}"
+        docstring = f"\n{" "*(len(rule)+5)}| ".join(" ".join(pattern) for pattern in alternatives)
         AST_text += f"""
-class {embed_nonterminal(rule)}(Rule):
-    '''Rule: `{docstring}`'''
-    name: str = "{rule}"
+class {embed_nonterminal(rule)}(Rule): 
+    '''```
+<{rule}> ::= {docstring}
+    ```'''
 """
 
     AST_text += f"""
@@ -159,6 +160,7 @@ EXPECTED_PATTERNS = {{ token : [] for token in TOKENS }}
 
 EPSILOI = {{EPSILON}}
 
+
 def retype(x): return type(x) if isinstance(x, Rule) else x
 
 def expected_patterns(x): return EXPECTED_PATTERNS[retype(x)]
@@ -171,6 +173,8 @@ def is_expected(e, x: Rule|str) -> bool:
     expected = EXPECTED_TOKENS.get(retype(x), [])
     return expected and retype(e) in expected or (e == EPSILON and any(nullable(c) for c in expected))
 
+    
+# Collect nullable rules (i.e. rules that can be expanded from EPSILON)
 count = 0
 while count < len(EPSILOI):
     for rule, alternatives in GRAMMAR.items():
@@ -184,29 +188,30 @@ while count < len(EPSILOI):
     count += 1
 del count
 
+
 def expand_expected(token, x):
     EXPECTED_TOKENS[token].append(x)
 
     for alternative in GRAMMAR.get(x, []):
         for y in alternative:
-            if not y in EXPECTED_TOKENS[token]: # and not y in TERMINALS.difference(OPERATORS):
+            if not y in EXPECTED_TOKENS[token]:
                 expand_expected(token, y)
             if not y in EPSILOI: break
 
-for alternatives in GRAMMAR.values():
+# Grammar post-processing/expansion
+for rule, alternatives in GRAMMAR.items():
     for pattern in alternatives:
+
+        # 1) Expand expected tokens
         for i, token in enumerate(pattern[:-1]):
             expand_expected(token, pattern[i+1])
 
-
-for rule, alternatives in GRAMMAR.items():
-    for pattern in alternatives:
+        # 2) Expand nullable patterns
         null = list(map(lambda x: EPSILON if nullable(x) else x, pattern))
         if not null == pattern:
             GRAMMAR[rule].append(null)
-            
-for rule, alternatives in GRAMMAR.items():
-    for pattern in alternatives:
+
+        # 3) Expand expected patterns 
         for token in pattern:
             if not (rule, pattern) in EXPECTED_PATTERNS[token]: 
                 EXPECTED_PATTERNS[token].append((rule, pattern))

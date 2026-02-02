@@ -6,15 +6,17 @@ from rich import print
 class Rule:
     def __init__(self, children):
         from AST import EPSILON, SIGMA
-        self.children = [" " if c == SIGMA else "" if c == EPSILON else c for c in children]
+
+        self.__name__ = type(self).__name__
+        self.children = [{EPSILON : "", SIGMA : " "}.get(c, c) for c in children]
 
         
     def __hash__(self):
-        return self.name.__hash__()
+        return self.__name__.__hash__()
 
         
     def __repr__(self):
-        return f"{self.name}"
+        return f"{self.__name__}"
             
                 
     def __str__(self):
@@ -38,14 +40,14 @@ def parse(expr: str) -> Rule:
 
     if dFlag:
         print("EXPECTED TOKENS:")
-        for key in sorted(EXPECTED_TOKENS.keys(), key=lambda x: x if isinstance(x, str) else x.name):
+        for key in sorted(EXPECTED_TOKENS.keys(), key=lambda x: x if isinstance(x, str) else x.__name__):
             print(f"{key} :: {EXPECTED_TOKENS[key]}")
             print()
         
         print()
         
         print("EXPECTED PATTERNS:")
-        for key in sorted(EXPECTED_PATTERNS.keys(), key=lambda x: x if isinstance(x, str) else x.name):
+        for key in sorted(EXPECTED_PATTERNS.keys(), key=lambda x: x if isinstance(x, str) else x.__name__):
             print(f"{key} :: {EXPECTED_PATTERNS[key]}")
             print()
 
@@ -57,17 +59,12 @@ def parse(expr: str) -> Rule:
         # add to the current step with the newest token
         current_states = list(map(lambda x: x + [token], current_states))
         
-        # if token in OPERATORS: continue
-
         reducible_states = list(current_states)
 
         if dFlag: print("Current states", current_states)
 
-        # We need to reduce all the new states at the current step
-
-        # Select a state from the current set for reducible states,
-        # and add the reduction to both the set of states at this step, and
-        # the set of further reducible states.
+        # We need to iteratively reduce all states as far as possible,
+        # adding valid future states to the list as appropriate 
         while reducible_states:
 
             state = reducible_states.pop()
@@ -76,32 +73,10 @@ def parse(expr: str) -> Rule:
 
             for (rule, pattern) in expected_patterns(state[-1]):
 
-                # Optimization: skip cases where the number of necessary characters 
-                # in pattern is simply too large to match.
-                if sum(1 for e in pattern if not nullable(e)) > len(state): continue
-
                 # We want to ignore epsilons in the pattern since epsilon is not a readable token.
                 idx = len(state) - sum(1 for e in pattern if not e == EPSILON)
-                # idx = len(state) - sum(1 for e in pattern if not nullable(e))
-                # idx = sum(1 for e in state if not nullable(e)) - sum(1 for e in pattern if not nullable(e))
-                # idx = len(state) - len(pattern)
-
-                # idx = len(state) - sum(1 for e in pattern if not nullable(e))
-                # i = 0
-                # for e in state[idx:]:
-                #     if nullable(e): i += 1
-                #     else: break
-                # idx += i
-                # del i
 
                 reducible = state[idx:] # Will be an empty list if pattern == [EPSILON].
-
-                # Filter patterns such that:
-                # 1) Not EOI
-                # 2) The last read token is not null
-                # 3) Epsilon is an expected token
-                # 4) The first lookahead token is not null
-                # 5) The first lookahead token is not expected 
 
                 # Reduce only if pattern matches the reducible part of the state (excluding epsilon)
                 if compare(reducible, pattern):
@@ -126,6 +101,9 @@ def parse(expr: str) -> Rule:
                     ):
                         if dFlag: print("Future", reduced)
                         future_states.append(reduced)
+                
+                # If the current pattern does not match, but could match if more tokens
+                # elif 0: future_states.append(state)
                         
         current_states, future_states = future_states or current_states, []
 
@@ -137,23 +115,16 @@ def parse(expr: str) -> Rule:
     acceptable_states = [ 
         state[0] for state in current_states if (
             len(state) == 1 
-            and isinstance(state[0], list(GRAMMAR.keys())[0]) 
-            # and str(state[0]) == expr
+            and isinstance(state[0], list(GRAMMAR.keys())[0])
         )
     ]
 
-    print()
-    print(list(map(str, acceptable_states)))
+    if dFlag:
+        print()
+        print(list(map(str, acceptable_states)))
 
     return acceptable_states[0] if acceptable_states else None
     
-
-
-def validate(expr: str) -> str:
-    parsed = parse(expr)
-    return f"{{expr}} is not a valid expression." if (parsed == None) else f"{{parsed}} is a valid {{parsed.name}} expression."
-
-
 
 def tokenize(string: str) -> list:
     from AST import TERMINALS, SIGMA

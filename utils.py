@@ -43,8 +43,9 @@ def split_pattern(prod: str) -> list:
 
 def compare(a: list, b: list) -> bool:
     """Check if all the elements of `a` and `b` match, filtering epsilons from both."""
-    from AST import EPSILON
-    def comparative(x): return x if isinstance(x, str) else x.name
+    from AST import Rule, EPSILON
+    
+    def comparative(x): return x if isinstance(x, str) else x.__name__
 
     f = lambda x: not (x == EPSILON)
     a, b = filterl(f, a), filterl(f, b)
