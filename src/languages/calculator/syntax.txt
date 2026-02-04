@@ -1,7 +1,1 @@
 #require rule infix_math
-#require macro parentheses
-
-<Expr>     ::= <Add> | <Subtract> | <Term>
-<Term>     ::= <Multiply> | <Divide> | <Factor>
-<Divide>   ::= <IDivide> | <FDivide>
-<Factor>   ::= <Parenthesized>[<Expr>] | <Exp> | <Number>

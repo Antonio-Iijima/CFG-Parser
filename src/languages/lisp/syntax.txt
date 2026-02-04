@@ -1,5 +1,5 @@
-#require rule math
-#require rule abc
+#require rule prefix_math
+#require rule alphanum
 #require macro parentheses
 #require macro spacing
 

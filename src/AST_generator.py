@@ -15,7 +15,7 @@ def process_syntax(syntax: list[str]) -> tuple[dict, set]:
     requirements = set()
 
     # Identify any required libraries.
-    while syntax[0].startswith("#require"):
+    while syntax and syntax[0].startswith("#require"):
 
         # Skip dependency if already met
         if syntax[0] in requirements: syntax.pop(0); continue
@@ -30,7 +30,7 @@ def process_syntax(syntax: list[str]) -> tuple[dict, set]:
             with open(f".lib/{category}s/{folder}/syntax.txt") as file:
                 lines = preprocess_text(file.read().splitlines())
 
-                while lines[0].startswith("#require"):
+                while lines and lines[0].startswith("#require"):
 
                     # Again, skip dependency if already met
                     if lines[0] in requirements: lines.pop(0); continue

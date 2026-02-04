@@ -1,8 +1,13 @@
 #require rule math
+#require macro parentheses
 
-<Add>      ::= <Expr> <OP_Add> <Term>
-<Subtract> ::= <Expr> <OP_Subtract> <Term>
+<MathExpr> ::= <Add> | <Subtract> | <Term>
+<Add>      ::= <MathExpr> <OP_Add> <Term>
+<Subtract> ::= <MathExpr> <OP_Subtract> <Term>
+<Term>     ::= <Multiply> | <Divide> | <Factor>
 <Multiply> ::= <Term> <OP_Multiply> <Factor>
+<Divide>   ::= <IDivide> | <FDivide>
+<Factor>   ::= <Parenthesized>[<MathExpr>] | <Exp> | <Number>
 <IDivide>  ::= <Term> <OP_IDivide> <Factor>
 <FDivide>  ::= <Term> <OP_FDivide> <Factor>
 <Exp>      ::= <Factor> <OP_Exp> <Factor>
