@@ -318,7 +318,7 @@ from parser import Rule
         for filename in dependencies:
             folder = f"{LIB_PATH}/{category}s/{filename}"
             path = f"{folder}/semantics.py"
-            if not exists(path): print(f"WARNING: dependency semantics {folder} not found.")
+            if not exists(path): print(f"WARNING: semantics for dependency {folder} not found.")
             else:
                 with open(path) as file:
                     eval_text += f"""
@@ -331,7 +331,7 @@ from parser import Rule
 """ + file.read()
                     
 
-    if not exists(semantics): print(f"WARNING: main semantics {semantics} not found.")
+    if not exists(semantics): print(f"WARNING: semantics for main {semantics} not found.")
     else:
         with open(semantics) as file:
             eval_text += f"""
