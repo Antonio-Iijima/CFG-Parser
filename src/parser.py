@@ -104,7 +104,7 @@ def parse(expr: str) -> Rule:
                         future_states.append(reduced)
                 
                 # If the current pattern does not match, but could match if more tokens
-                elif any(token in pattern for token in reversed(state[idx:])): future_states.append(state)
+                elif state[-1] in pattern: future_states.append(state)
                         
         current_states, future_states = future_states or current_states, []
 

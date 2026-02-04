@@ -344,8 +344,10 @@ from parser import Rule
 """ + file.read()
                     
 
-    with open(semantics) as file:
-        eval_text += f"""
+    if not exists(semantics): print(f"WARNING: main semantics {semantics} not found.")
+    else:
+        with open(semantics) as file:
+            eval_text += f"""
 
 
 ##### MAIN: {semantics.removesuffix("/semantics.py")} #####
