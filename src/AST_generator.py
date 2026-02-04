@@ -17,16 +17,36 @@ def process_syntax(syntax: list[str]) -> tuple[dict, set]:
     # Identify any required libraries.
     while syntax and syntax[0].startswith("#require"):
 
-        # Skip dependency if already met
-        if syntax[0] in requirements: syntax.pop(0); continue
+        # Handle comma-separated multiple dependencies and nested dependencies
 
-        requirements.add(syntax[0])
-        
         # Split declaration of the form: #require (macro|rule) <name>[, <name>]*
         _, category, *dependencies = syntax.pop(0).split()
+        dependencies = [dep.removesuffix(",").strip() for dep in dependencies if dep.strip()]
+        
+        # Add parents of nested modules, e.g. #require rule math.infix
+        for i, dependency in enumerate(dependencies):
+            if "." in dependency:
+
+                # Lowest level folder; modify in-place
+                dependency = dependency.split(".")
+                dependencies[i] = "/".join(dependency)
+
+                # Also require all higher level folders to be processed later
+                for j, _ in enumerate(dependency):
+                    submodule = "/".join(dependency[:j+1])
+                    if f"#require {category} {submodule}" not in requirements: 
+                        syntax.insert(0, f"#require {category} {submodule}")
+
+            folder = dependencies[i]
+
+            declaration = f"#require {category} {folder}"
+
+            # Skip dependency if already met
+            if declaration in requirements: continue
+
+            requirements.add(declaration)
             
-        # Iterate through dependencies: math, spacing, &c.
-        for folder in dependencies:
+            # Iterate through dependencies: math, spacing, &c.
             with open(f".lib/{category}s/{folder}/syntax.txt") as file:
                 lines = preprocess_text(file.read().splitlines())
 
@@ -304,12 +324,10 @@ from parser import Rule
 """
     
     
-
     for requirement in requirements:
         _, category, *dependencies = requirement.split()
 
         if category == "macro": continue
-
         for filename in dependencies:
             folder = f"{LIB_PATH}/{category}s/{filename}"
             path = f"{folder}/semantics.py"

@@ -1,7 +1,5 @@
-#require rule prefix_math
-#require rule alphanum
-#require macro parentheses
-#require macro spacing
+#require rule math.prefix, alphanum
+#require macro parentheses, spacing
 
 <Program>   ::= <Atom> | <List>
 <Atom>      ::= <Number> | <Symbol>
