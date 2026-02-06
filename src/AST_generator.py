@@ -260,7 +260,7 @@ def is_expected(e, x: Rule|str) -> bool:
 
 
 def expand_expected(token, x):
-    EXPECTED_TOKENS[token].append(x)
+    not x in EXPECTED_TOKENS[token] and EXPECTED_TOKENS[token].append(x)
 
     for alternative in GRAMMAR.get(x, []):
         for y in alternative:
@@ -299,9 +299,9 @@ for rule, alternatives in GRAMMAR.items():
         expanded_null_patterns = [[]]
         for i, token in enumerate(pattern):
             if not token == EPSILON:
-                expanded_null_patterns = list(map(lambda x: x + [token], expanded_null_patterns))
+                expanded_null_patterns = list(state + [token] for state in expanded_null_patterns)
                 if nullable(token):
-                    expanded_null_patterns += list(map(lambda x: x[:-1], expanded_null_patterns))
+                    expanded_null_patterns += list(state[:-1] for state in expanded_null_patterns)
 
         for expanded_null_pattern in expanded_null_patterns:
             if expanded_null_pattern and not (
@@ -310,6 +310,7 @@ for rule, alternatives in GRAMMAR.items():
             ):
                 GRAMMAR[rule].append(expanded_null_pattern)
 
+# Only construct expected tokens/patterns with the full expansion of the grammar
 for rule, alternatives in GRAMMAR.items():                
     for pattern in alternatives:
         # Expand expected tokens

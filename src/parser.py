@@ -34,7 +34,6 @@ def parse(expr: str) -> Rule:
 
     tokens = tokenize(expr)
 
-    # A list of states organized by step (i.e. number of processed tokens).
     # For each step, there is a list of states (which is a list of tokens or nodes).
     current_states = [[]]
     future_states = []
@@ -58,9 +57,9 @@ def parse(expr: str) -> Rule:
 
         # For each state at the previous step, 
         # add to the current step with the newest token
-        current_states = list(map(lambda x: x + [token], current_states))
+        current_states = list(state + [token] for state in current_states)
         
-        reducible_states = list(current_states)
+        reducible_states = current_states.copy()
 
         if dFlag: print("Current states", current_states)
 
@@ -88,7 +87,7 @@ def parse(expr: str) -> Rule:
                     reducible_states.append(reduced)
                     
                     # Accept as future state if any of the following:
-                    # 1) EOI
+                    # 1) EOI (defined as no lookahead tokens left in input)
                     # 2) Correct expected next token
                     # Whole sequence must also be valid. 
                     if (
@@ -104,7 +103,10 @@ def parse(expr: str) -> Rule:
                         future_states.append(reduced)
                 
                 # If the current pattern does not match, but could match if given more tokens.
-                elif state[-1] in pattern and not state in future_states: future_states.append(state)
+                elif (
+                    state[-1] in pattern 
+                    and not state in future_states
+                ): future_states.append(state)
                         
         current_states, future_states = future_states or current_states, []
 
@@ -113,18 +115,16 @@ def parse(expr: str) -> Rule:
             print()
             
     # Filter for accepting states; if not found return None explicitly.
-    acceptable_states = [ 
-        state[0] for state in current_states if (
-            len(state) == 1 
-            and isinstance(state[0], list(GRAMMAR.keys())[0])
-        )
-    ]
+    acceptable_states = filterl(
+        lambda state: len(state) == 1 and isinstance(state[0], list(GRAMMAR.keys())[0]), 
+        current_states
+    )
 
     if dFlag:
         print()
-        print(list(map(str, acceptable_states)))
+        print(list(str(state[0]) for state in acceptable_states))
 
-    return acceptable_states[0] if acceptable_states else None
+    return acceptable_states[0][0] if acceptable_states else None
     
 
 def tokenize(string: str) -> list:
