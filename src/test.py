@@ -69,12 +69,18 @@ while args:
 
         start = time()
 
-        AST = parse(test)
+        AST, max_states = parse(test)
         print("\nPARSED\n")
-        print("AST  :", AST)
-        print("Type :", type(AST))
+        
         result = evaluate(AST)
-        print("Eval :", result if result == solution else f"ERROR: value of {test} should be {solution}, but received {result or "False|None"}")
+        
+        for s, v in {
+            "Max States" : max_states,
+            "AST" : AST,
+            "Type" : type(AST),
+            "Eval" : result if result == solution else f"ERROR: value of {test} should be {solution}, but received {result or "False|None"}"
+        }.items(): print(f"{s:10s} : {v}")
+        
         print()
 
         print(f"Runtime: {time()-start}")

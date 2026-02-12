@@ -36,5 +36,5 @@ from eval import evaluate
 if iFlag:
     for line in iter(lambda: input("> "), "quit"):
         if dFlag: start = time()
-        print(evaluate(parse(line)))
+        print(evaluate(parse(line)[0]))
         if dFlag: print(f"Runtime: {time() - start}")

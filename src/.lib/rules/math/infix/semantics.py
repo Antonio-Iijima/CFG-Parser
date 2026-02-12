@@ -16,10 +16,10 @@ def p_multiply(expr):
 def p_divide(expr):
     return expr[0]
 
-def p_factor0(expr):
+def p_factor_0(expr):
     return expr[1]
 
-def p_factor4(expr):
+def p_factor_4(expr):
     return -expr[1]
 
 def p_factor(expr): 

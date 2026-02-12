@@ -220,6 +220,7 @@ GRAMMAR = {{
 ##### USEFUL VARIABLES #####
 
 
+FIRST = list(GRAMMAR)[0]
 
 K = {max(map(len, (pattern for alternatives in GRAMMAR.values() for pattern in alternatives)))}
 
@@ -254,9 +255,9 @@ def expected_patterns(x) -> tuple[Rule, int, list]: return EXPECTED_PATTERNS[ret
 def nullable(x): return retype(x) in EPSILA
 
 
-def is_expected(e, x: Rule|str) -> bool:
-    '''Check if `e` is expected by `x` or `e` is `EPSILON` and `x` expects a nullable.'''
-    return retype(e) in EXPECTED_TOKENS.get(retype(x), [])
+def expects(previous: Rule|str, next: str|None) -> bool:
+    '''Check if `previous` expects `next` or `previous` is `None`.'''
+    return previous == None or retype(next) in EXPECTED_TOKENS.get(retype(previous), [])
 
 
 def expand_expected(token, x):
@@ -312,7 +313,7 @@ for rule, alternatives in GRAMMAR.items():
 
 # Only construct expected tokens/patterns with the full expansion of the grammar
 for rule, alternatives in GRAMMAR.items():                
-    for pattern in alternatives:
+    for pattern in sorted(alternatives, key=len):
         variant = pattern.pop(0)
 
         # Expand expected patterns 
@@ -396,15 +397,15 @@ from parser import Rule
 def null(x): return None
 
 
-def get_function(AST):
+def get_function(AST: Rule):
     return (
-        globals().get(AST.fname + AST.variant)
+        globals().get(f"{{AST.fname}}_{{AST.variant}}")
         or globals().get(AST.fname)
         or null
     )
 
 
-def evaluate(AST):
+def evaluate(AST: Rule):
     return (
         get_function(AST)(list(map(evaluate, AST.children))) if isinstance(AST, Rule)
         else AST

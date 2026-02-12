@@ -9,14 +9,14 @@ class Rule:
 
         self.__name__ = type(self).__name__
         self.fname = f"p_{self.__name__.lower()}"
-        self.variant = str(variant)
+        self.variant = variant
         self.str = [{EPSILON : "", SIGMA : " "}.get(c, c) for c in children]
-        self.children = [ c for c in children if not c in {EPSILON, SIGMA} ]
-        self._hash = self.__name__.__hash__() + sum(map(hash, self.children))
+        self.children = [c for c in children if not c in {EPSILON, SIGMA}]
+        self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in self.children)
+        
 
-
-    def __eq__(self, value: 'Rule'):
-        return isinstance(value, Rule) and self.__hash__() == value.__hash__()
+    def __eq__(self, other: 'Rule'):
+        return isinstance(other, Rule) and self.__hash__() == other.__hash__()
         
 
     def __hash__(self):
@@ -32,42 +32,68 @@ class Rule:
 
 
 
-def parse(expr: str) -> Rule:
+class State(list):    
+    def __init__(self, iterable = None):
+        iterable = iterable or []
+        super().__init__(iterable)
+        self._hash = sum(token.__hash__() for token in iterable)
+
+
+    def __hash__(self) -> int:
+        return self._hash
+    
+
+
+def parse(expr: str) -> tuple[Rule, int]:
     from AST import (
-        is_expected, expected_patterns,
-        GRAMMAR, K, EXPECTED_TOKENS, EXPECTED_PATTERNS, ACCEPT_NULL
+        expects, expected_patterns,
+        FIRST, K, 
+        EXPECTED_TOKENS,
+        EXPECTED_PATTERNS, 
+        ACCEPT_NULL
     )
     from main import dFlag
 
     tokens = tokenize(expr)
     
     # Accept empty strings immediately only if permitted by the grammar.
-    if tokens == [] and ACCEPT_NULL: return list(GRAMMAR.keys())[0]("")
+    if tokens == [] and ACCEPT_NULL: return (FIRST(0, []), 0)
 
-    # For each step, there is a list of states (which is a list of tokens or nodes).
-    current_states = [[]]
-    future_states = []
+    # Everything is a dict now, because they are
+    # a) fast
+    # b) ordered 
+    current_states: dict[State, None] = dict.fromkeys((State(),))
+    future_states: dict[State, None] = {}
 
     if dFlag:
         print("EXPECTED TOKENS:")
-        for key in sorted(EXPECTED_TOKENS.keys(), key=comparative):
-            print(f"{key} :: {EXPECTED_TOKENS[key]}")
+        for key, expected in EXPECTED_TOKENS.items():
+            print(key, end=" :: ")
+            print(expected)
             print()
-        
+
         print()
         
         print("EXPECTED PATTERNS:")
-        for key in sorted(EXPECTED_PATTERNS.keys(), key=comparative):
-            print(f"{key} :: {EXPECTED_PATTERNS[key]}")
+        for key, expected in EXPECTED_PATTERNS.items():
+            print(key, end=" :: ")
+            print(expected)
             print()
+
+        print()
+
+    max_states = 0
 
     # For each token, advance a step and begin processing states
     for i, token in enumerate(tokens):
-        lookahead = tokens[i+1:K+i+1]
+        max_states = max(max_states, len(current_states))
+        if max_states > 2**10: raise RuntimeError(f"Too many states to consider: {max_states}")
+        
+        next_token = tokens[i+1] if i+1 < len(tokens) else None
 
         # For each state at the previous step, 
         # add to the current step with the newest token
-        current_states = list(state + [token] for state in current_states)
+        for state in current_states: state.append(token)
         
         reducible_states = current_states.copy()
 
@@ -77,7 +103,7 @@ def parse(expr: str) -> Rule:
         # adding valid future states to the list as appropriate 
         while reducible_states:
 
-            state = reducible_states.pop()
+            state = reducible_states.popitem()[0]
             
             if dFlag: print("State", state)
 
@@ -89,54 +115,49 @@ def parse(expr: str) -> Rule:
                 # Reduce only if pattern matches the reducible part of the state.
                 if compare(reducible, pattern):
 
-                    reduced = state[:idx] + [rule(variant, reducible)]
+                    reduced = State(state[:idx] + [rule(variant, reducible)])
 
                     if dFlag: print("Reduced", reduced)
 
-                    reducible_states.append(reduced)
+                    reducible_states[reduced] = None
                     
-                    # Accept as future state if any of the following:
-                    # 1) EOI (defined as no lookahead tokens left in input)
-                    # 2) Correct expected next token
-                    # Whole sequence must also be valid. 
+                    # Accept as future state if the following:
+                    # 1) EOI (no next token) or next token is expected
+                    # 2) Each token correctly expects the next token
                     if (
                         (
-                            (not lookahead)
-                            or is_expected(lookahead[0], reduced[-1])
+                            next_token == None
+                            or expects(reduced[-1], next_token)
                         ) and (
-                            all(idx == k or is_expected(reduced[idx-k], reduced[idx-k-1]) 
+                            all(idx == k or expects(reduced[idx-k-1], reduced[idx-k]) 
                                 for k in range(min(K, len(reduced))))
                         )
                     ):
                         if dFlag: print("Future", reduced)
-                        future_states.append(reduced)
+                        future_states[reduced] = None
                 
                 # If the current pattern does not match, but could match if given more tokens.
-                elif (
-                    state[-1] in pattern 
-                    and not state in future_states
-                ): future_states.append(state)
+                elif state[-1] in pattern: future_states[state] = None
                         
-        current_states, future_states = future_states or current_states, []
+        current_states, future_states = future_states or current_states, {}
 
         if dFlag: 
             print("Future states", current_states)
             print()
             
     # Filter for accepting states; if not found return None explicitly.
-    acceptable_states = filterl(
-        lambda state: (
-            len(state) == 1 
-            and isinstance(state[0], list(GRAMMAR.keys())[0]) 
-        ), 
-        current_states
-    )
-
+    acceptable_states: set = {
+        state[0] for state in current_states if (
+            len(state) == 1
+            and isinstance(state[0], FIRST)
+        )
+    }
+    
     if dFlag:
         print()
-        print(list(str(state[0]) for state in acceptable_states))
+        print(list(str(state) for state in acceptable_states))
 
-    return acceptable_states[0][0] if acceptable_states else None
+    return (acceptable_states.pop(), max_states) if acceptable_states else (None, None)
     
 
 def tokenize(string: str) -> list:
