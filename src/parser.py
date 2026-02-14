@@ -105,7 +105,6 @@ def parse(expr: str) -> tuple[Rule, int]:
                         
         current_states, future_states = future_states or current_states, OrderedSet()
 
-        print("Future states", current_states)
         if dFlag: 
             print("Future states", current_states)
             print()
