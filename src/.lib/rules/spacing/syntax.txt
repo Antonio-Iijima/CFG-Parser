@@ -1,2 +1,0 @@
-<SPACES> ::= <SPACE> | <SPACE><SPACES>
-<SPACE>  ::= ς | ε

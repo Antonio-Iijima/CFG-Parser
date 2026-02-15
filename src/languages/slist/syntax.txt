@@ -1,5 +1,4 @@
-#require macro parentheses
-#require macro spacing
+#require math
 
-<SymbolExpr> ::=  x | y | z | <Parenthesized>[<SList>]
-<SList>      ::= <SymbolExpr> | <SymbolExpr> <Spaced>[,] <SList>
+<SymbolExpr> ::=  x | y | z | <LParen> <SList> <RParen>
+<SList>      ::= <SymbolExpr> | <SymbolExpr> , <SList>

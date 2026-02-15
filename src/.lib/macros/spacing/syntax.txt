@@ -1,3 +1,0 @@
-#require rule spacing
-
-<SPACED>[a] ::= <SPACES>[a]<SPACES>

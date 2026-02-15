@@ -22,8 +22,13 @@ def is_terminal(prod: str) -> bool:
     return not is_nonterminal(prod)
 
 
-def embed_nonterminal(s: str) -> str: 
-    return s[1:-1] if is_nonterminal(s) else s
+def embed_nonterminal(s: str) -> str:
+    if is_nonterminal(s):
+        s = s[1:-1]
+    if s.startswith("!"):
+        s = s[1:]
+        
+    return s
 
 
 def split_pattern(prod: str) -> list:
@@ -47,17 +52,9 @@ def split_pattern(prod: str) -> list:
         is_nonterminal = (is_nonterminal or prev == "<") and not curr == ">"
 
         # Conditions to start a new word
-        if (
-            (prev == "]") # End of macro parameter
-            or (curr == "<" and not prev == "[") # Beginning of a non-parameter rule
-            or (prev == ">" and not curr == "]") # End of a non-parameter rule
-        ):
-            out.append("")
-
-
+        if (curr == "<") or (prev == ">"): out.append("")
+            
         out[-1] += curr.upper() if is_nonterminal else curr
-
-    out = [c.strip() for c in out if c.strip()]
 
     return out
 

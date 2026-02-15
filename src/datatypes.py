@@ -1,13 +1,11 @@
 class Rule:
     def __init__(self, variant: int, children: list):
-        from AST import EPSILON, SIGMA
-
         self.__name__ = type(self).__name__
         self.fname = f"p_{self.__name__.lower()}"
         self.variant = variant
-        self._str = "".join(({EPSILON : "", SIGMA : " "}.get(c, str(c)) for c in children))
-        self.children = [c for c in children if not c in {EPSILON, SIGMA}]
-        self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in self.children)
+        self._str = "".join(map(str, children))
+        self.children = tuple(c for c in children if c)
+        self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in children)
         
 
     def __eq__(self, other: 'Rule'):
@@ -24,6 +22,10 @@ class Rule:
                 
     def __str__(self):
         return self._str
+    
+
+
+class StrictRule(Rule): pass
 
 
 
@@ -58,3 +60,18 @@ class OrderedSet(dict):
 
     def copy(self):
         return OrderedSet(self.keys())
+
+
+class Parsed:
+    def __init__(self, sentence: str, AST: Rule = None, max_states: int = None):
+        self.sentence = sentence
+        self.AST = AST
+        self.max_states = max_states
+
+
+    def get(self):
+        return self.AST
+
+
+    def __str__(self):
+        return self.sentence

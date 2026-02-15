@@ -1,7 +1,19 @@
 from main import *
-from rich import print
 
+from datatypes import Parsed
+
+from rich import print
 from time import time
+
+
+
+def validate(parsed: Parsed, solution: any) -> str:
+    if str(parsed) == solution: return solution
+    
+    result = evaluate(parsed.AST)
+    
+    if result == solution: return solution
+    raise ValueError(f"value of {parsed} should be {solution}, but received {result or "False|None"}")
 
 
 args = argv[2:]
@@ -69,16 +81,14 @@ while args:
 
         start = time()
 
-        AST, max_states = parse(test)
+        parsed = parse(test)
         print("\nPARSED\n")
         
-        result = evaluate(AST)
-        
         for s, v in {
-            "Max States" : max_states,
-            "AST" : AST,
-            "Type" : type(AST),
-            "Eval" : result if result == solution else f"ERROR: value of {test} should be {solution}, but received {result or "False|None"}"
+            "Sentence" : str(parsed),
+            "AST" : parsed.AST,
+            "Eval" : validate(parsed, solution),
+            "Max States" : parsed.max_states,
         }.items(): print(f"{s:10s} : {v}")
         
         print()

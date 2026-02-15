@@ -1,3 +1,0 @@
-#require rule parentheses
-
-<Parenthesized>[a] ::= <LParen>[a]<RParen>

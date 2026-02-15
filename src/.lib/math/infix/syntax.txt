@@ -1,12 +1,10 @@
-#require macro parentheses
-
 <MathExpr> ::= <Add> | <Subtract> | <Term>
 <Add>      ::= <MathExpr> <OP_Add> <Term>
 <Subtract> ::= <MathExpr> <OP_Subtract> <Term>
 <Term>     ::= <Multiply> | <Divide> | <Factor>
 <Multiply> ::= <Term> <OP_Multiply> <Factor>
 <Divide>   ::= <IDivide> | <FDivide>
-<Factor>   ::= <Parenthesized>[<MathExpr>] | <Abs> | <Exp> | <Number> | <OP_Subtract> <Factor>
+<Factor>   ::= <LParen> <MathExpr> <RParen> | <Abs> | <Exp> | <Number> | <OP_Subtract> <Factor>
 <Abs>      ::= <OP_PIPE> <MathExpr> <OP_PIPE>
 <IDivide>  ::= <Term> <OP_IDivide> <Factor>
 <FDivide>  ::= <Term> <OP_FDivide> <Factor>

@@ -5,7 +5,7 @@ from rich import print
 
 
 
-def parse(expr: str) -> tuple[Rule, int]:
+def parse(expr: str, state_limit: int = 2**10) -> Parsed:
     from AST import (
         expects, expected_patterns,
         FIRST, K, 
@@ -15,10 +15,11 @@ def parse(expr: str) -> tuple[Rule, int]:
     )
     from main import dFlag
 
-    tokens = tokenize(expr)
+    remaining_tokens = tokenize(expr)
+    tokens = []
     
     # Accept empty strings immediately only if permitted by the grammar.
-    if tokens == [] and ACCEPT_NULL: return (FIRST(0, []), 0)
+    if remaining_tokens == [] and ACCEPT_NULL: return Parsed(expr, FIRST(0, []), 0)
 
     # Everything is a dict now, because they are
     # a) fast
@@ -26,12 +27,9 @@ def parse(expr: str) -> tuple[Rule, int]:
     current_states = OrderedSet((State(),))
     future_states = OrderedSet()
 
-    # Memoize everything; to be implemented
-    memoized: dict[str, list] = {}
-
     if dFlag:
         print("EXPECTED TOKENS:")
-        for key, expected in EXPECTED_TOKENS.items():
+        for key, expected in (EXPECTED_TOKENS.items()):
             print(key, end=" :: ")
             print(expected)
             print()
@@ -48,15 +46,21 @@ def parse(expr: str) -> tuple[Rule, int]:
 
     max_states = 0
 
-    # For each token, advance a step and begin processing states
-    for i, token in enumerate(tokens):
-        max_states = max(max_states, len(current_states))
-        if max_states > 2**10: raise RuntimeError(f"Too many states to consider: {max_states}")
-        
-        next_token = tokens[i+1] if i+1 < len(tokens) else None
+    # Track number of tokens since last space read.
+    counter = 0
 
-        # For each state at the previous step, 
-        # add to the current step with the newest token
+    # For each token, advance a step and begin processing states.
+    while remaining_tokens:
+        token = remaining_tokens.pop(0)
+
+        # Ignore spaces in input sentence, but track them.
+        if token == " ": counter = 0; continue
+        counter += 1
+
+        # Otherwise set up to process states at this token
+        tokens.append(token)
+        next_token = remaining_tokens[0] if remaining_tokens else None
+
         for state in current_states: state.append(token)
         
         reducible_states = current_states.copy()
@@ -64,7 +68,7 @@ def parse(expr: str) -> tuple[Rule, int]:
         if dFlag: print("Current states", current_states)
 
         # We need to iteratively reduce all states as far as possible,
-        # adding valid future states to the list as appropriate 
+        # adding valid future states to the list as appropriate.
         while reducible_states:
 
             state = reducible_states.remove()
@@ -72,6 +76,9 @@ def parse(expr: str) -> tuple[Rule, int]:
             if dFlag: print("State", state)
 
             for (rule, variant, pattern) in expected_patterns(state[-1]):
+
+                # Strict rules cannot include spaces
+                if issubclass(rule, StrictRule) and counter < len(pattern): continue
                 
                 idx = len(state) - len(pattern)
                 reducible = state[idx:]
@@ -102,7 +109,11 @@ def parse(expr: str) -> tuple[Rule, int]:
 
                 # If the current pattern does not match, but could match if given more tokens.
                 elif state[-1] in pattern: future_states.add(state)
-                        
+
+        
+        max_states = max(max_states, len(future_states))
+        if max_states > state_limit: raise RuntimeError(f"Too many states to consider: {max_states}")
+        
         current_states, future_states = future_states or current_states, OrderedSet()
 
         if dFlag: 
@@ -121,11 +132,11 @@ def parse(expr: str) -> tuple[Rule, int]:
         print()
         print(list(str(state) for state in acceptable_states))
 
-    return (acceptable_states.pop(), max_states) if acceptable_states else (None, None)
-    
+    return Parsed(expr, acceptable_states.pop(), max_states) if acceptable_states else Parsed(expr)
+
 
 def tokenize(string: str) -> list:
-    from AST import TERMINALS, SIGMA
+    from AST import TERMINALS
 
     terminals = sorted(TERMINALS, reverse=True)
     tokens = []
@@ -133,7 +144,7 @@ def tokenize(string: str) -> list:
         for terminal in terminals:
             
             if string.startswith(" "):
-                tokens.append(SIGMA)
+                tokens.append(" ")
                 string = string.removeprefix(" ")
                 break
 
@@ -142,6 +153,6 @@ def tokenize(string: str) -> list:
                 string = string.removeprefix(terminal)
                 break
 
-        else: raise SyntaxError(f"unrecognized token in input '{string}'")
+        else: raise SyntaxError(f"unrecognized token in input '{string}'; stopped at {tokens}")
 
     return tokens

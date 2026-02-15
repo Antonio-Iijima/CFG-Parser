@@ -2,7 +2,7 @@ def p_number(expr):
     return expr[0]
 
 def p_float(expr): 
-    return float(".".join(map(str, expr)))
+    return float(expr[0] + "." + expr[1])
 
 def p_int(expr): 
     return int("".join(map(str, expr)))

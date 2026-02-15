@@ -15,17 +15,17 @@ DEFAULTS = {
 
 
 
-def build_grammar(path: str) -> tuple[list, list]:
+def build_grammar(path: str) -> list:
     """
 Recursively build a complete set of grammar rules from path.
 
 :param str path: Path to a directory containing at least a `syntax.txt` file, and any dependencies.
 
-:return: Returns a tuple containing two lists: the macros and the rules.
+:return: Returns the rules as a list.
     """
 
-    macros, rules = [], []
-    dependency_macros, dependency_rules = [], []
+    rules = []
+    dependency_rules = []
     symbols = DEFAULTS.copy()
 
     if not path in REQUIREMENTS:
@@ -44,39 +44,24 @@ Recursively build a complete set of grammar rules from path.
 
                 # Expand #require lines into the grammars of their modules
                 elif line.startswith("#require"):
-                    # Remove #require line and enumerate direct dependencies (i.e. dependencies specified in the #require line) 
-                    _, category, *dependencies = line.split()
-                    
-                    if not category in ("macro", "rule"): raise SyntaxError(f"Invalid #require location.")
-
-                    dependencies = [
-                        dependency.removesuffix(",").strip() for dependency in dependencies if dependency.strip()
-                    ]
+                    # Enumerate direct dependencies (i.e. dependencies specified in the #require line) 
+                    dependencies = (dependency.removesuffix(",").strip() for dependency in line.split()[1:] if dependency.strip())
                     
                     # General dependency list will be expanded to include all indirect dependencies (i.e. math from math.infix)
                     for dependency in dependencies:
                         dependency = dependency.split(".")
                         for i, _ in enumerate(dependency):
-                            dependency_path = f"{LIB_PATH}/{category}s/{'/'.join(dependency[:i+1])}"
-
-                            m, r = build_grammar(dependency_path)
-                            dependency_macros = m + dependency_macros
-                            dependency_rules = r + dependency_rules
+                            dependency_rules = build_grammar(f"{LIB_PATH}/{'/'.join(dependency[:i+1])}") + dependency_rules
                 
-                # Process rules/macros in top-level file            
+                # Process rules in top-level file            
                 else:
                     rule, alternatives = line.split(symbols["production"])
-                    rule, alternatives = split_pattern(rule), [split_pattern(pattern) for pattern in alternatives.split(symbols["alt"])]
+                    rules.append((
+                        rule.strip().upper(), 
+                        [split_pattern(pattern) for pattern in alternatives.split(symbols["alt"])]
+                    ))
                     
-                    if len(rule) == 2:
-                        macros.append([rule, alternatives])
-                    else:
-                        rules.append([rule, alternatives])
-
-    return (
-        macros + dependency_macros,
-        rules + dependency_rules
-    )
+    return rules + dependency_rules
 
 
 def process_syntax(path: str) -> dict:
@@ -84,60 +69,23 @@ def process_syntax(path: str) -> dict:
     from main import dFlag
 
     grammar = {}
-    macros = {}
-    parameters = {}
     
-    prepend, append = build_grammar(path)
-    syntax = prepend + append
+    syntax = build_grammar(path)
 
     if dFlag: print(syntax)
 
+    # Only save dependencies as requirements
     REQUIREMENTS.pop(path)
     
     for rule, alternatives in syntax:
-        
-
-        # Match macro declaration and add params to dict
-        if len(rule) == 2:
-            rule, params = rule[0][1:-1], rule[1][1:-1].split()
-            macros[rule] = alternatives[0]
-            parameters[rule] = params
-            continue
-        
-        rule = rule[0][1:-1]
+        rule = rule[1:-1]
         
         # Prep rule entry; if rule already exists, continue to add alternatives
         grammar[rule] = grammar.get(rule, [])
 
         for pattern in alternatives:
-            expanded_pattern = []
-
-            i = 0
-            while i < len(pattern):
-                current = pattern[i]
-                next = pattern[i+1] if i < len(pattern)-1 else None
-
-                # Match macro application
-                if (
-                    not (next == None)
-                    and current.startswith("<")
-                    and current.endswith(">")
-                    and next.startswith("[")
-                    and next.endswith("]")
-                ):
-                    operation, args = current[1:-1], next[1:-1].split()
-
-                    # Macro application is a simple pattern replacement of [param] with arg
-                    for param, arg in zip(parameters[operation], args):
-                        expanded_pattern.extend([arg if e == f"[{param}]" else e for e in macros[operation]])
-                        i += 2
-                
-                # Otherwise match regular token
-                else:
-                    expanded_pattern.append(current)
-                    i += 1
-
-            grammar[rule] = grammar.get(rule) + [expanded_pattern]
+            # grammar[rule] = grammar.get(rule) + [pattern]
+            grammar[rule].append(pattern)
 
     for dependency in sorted(REQUIREMENTS): print(dependency)
     
@@ -183,7 +131,7 @@ Generates an AST from a context-free grammar.
 
 
 
-from datatypes import Rule
+from datatypes import Rule, StrictRule
 
 
 
@@ -193,12 +141,14 @@ from datatypes import Rule
 """
 
     for (rule, alternatives) in GRAMMAR.items():
+        strictSpacing = rule.startswith("!")
+        name = rule[1:] if strictSpacing else rule
 
-        docstring = f"\n{" "*(len(rule)+5)}| ".join(" ".join(pattern) for pattern in alternatives)
+        docstring = f"\n{" "*(len(name)+5)}| ".join(" ".join(pattern) for pattern in alternatives)
         AST_text += f"""
-class {embed_nonterminal(rule)}(Rule): 
+class {embed_nonterminal(name)}({"Strict" if strictSpacing else ""}Rule): 
     '''```
-<{rule}> ::= {docstring}
+<{name}> ::= {docstring}
     ```'''
 """
 
@@ -226,8 +176,6 @@ FIRST = list(GRAMMAR)[0]
 K = {max(map(len, (pattern for alternatives in GRAMMAR.values() for pattern in alternatives)))}
 
 EPSILON = "ε"
-
-SIGMA = "ς"
 
 TERMINALS = {TERMINALS}
 
@@ -258,7 +206,7 @@ def nullable(x): return retype(x) in EPSILA
 
 def expects(previous: Rule|str, next: str|None) -> bool:
     '''Check if `previous` expects `next` or `previous` is `None`.'''
-    return previous == None or retype(next) in EXPECTED_TOKENS.get(retype(previous), [])
+    return previous == None or next == " " or retype(next) in EXPECTED_TOKENS.get(retype(previous), [])
 
 
 def expand_expected(token, x):
@@ -395,7 +343,7 @@ from datatypes import Rule
 
 
 
-def null(x): return None
+def null(x): return x[0] if x else None
 
 
 def get_function(AST: Rule):
