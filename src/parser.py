@@ -142,7 +142,8 @@ def tokenize(string: str) -> list:
 
     terminals = sorted(TERMINALS, reverse=True)
     tokens = []
-    while string:
+
+    while string:        
         for terminal in terminals:
 
             if string.startswith("\n"):
@@ -159,6 +160,7 @@ def tokenize(string: str) -> list:
                 string = string.removeprefix(terminal)
                 break
 
-        else: raise SyntaxError(f"unrecognized token at index {len(tokens)} in input '{original}'")
+        else: 
+            raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
 
     return tokens

@@ -1,0 +1,16 @@
+<mathexpr>      ::= <Add> | <Subtract> | <term>
+<add>           ::= <mathexpr> <OP_Add> <term>
+<Subtract>      ::= <mathexpr> <OP_Subtract> <term>
+<term>          ::= <Multiply> | <Divide> | <OP_Subtract> <term> | <Modulo> | <Factor>
+<Multiply>      ::= <term> <OP_Multiply> <factor>
+<Divide>        ::= <term> <OP_FDivide> <factor>
+<Modulo>        ::= <term> <OP_Modulo> <Factor>
+<factor>        ::= <LParen> <mathexpr> <RParen> | <comparison> | <Number>
+
+<comparison>    ::= <le> | <leq> | <ge> | <geq> | <eq> | <neq>
+<le>            ::= <mathexpr> <OP_le> <mathexpr>
+<leq>           ::= <mathexpr> <OP_leq> <mathexpr>
+<ge>            ::= <mathexpr> <OP_ge> <mathexpr>
+<geq>           ::= <mathexpr> <OP_geq> <mathexpr>
+<eq>            ::= <mathexpr> <OP_eq> <mathexpr>
+<neq>           ::= <mathexpr> <OP_neq> <mathexpr>

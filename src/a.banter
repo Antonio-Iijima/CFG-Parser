@@ -1,0 +1,9 @@
+let a be 1
+
+if a + 6 > 7, then
+    let limit be "not too far"
+
+if a - 6 <= 7, then let limit be 2.17
+
+return limit
+

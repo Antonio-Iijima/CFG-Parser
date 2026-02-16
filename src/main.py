@@ -37,6 +37,13 @@ print()
 from parser import parse
 from eval import evaluate
 
+for arg in argv:
+    if arg.endswith(".banter"):
+        with open(arg) as file:
+            for line in file.readlines():
+                out = evaluate(parse(line).AST)
+                if out: print(out)
+
 if iFlag:
     for line in iter(lambda: get_input("</> "), "quit"):
         if dFlag: start = time()

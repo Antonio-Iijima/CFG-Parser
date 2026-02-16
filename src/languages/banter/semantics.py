@@ -1,4 +1,5 @@
 g_env = {}
+g_markers = {}
 
  
 def lookup(var): return g_env(var)
@@ -16,57 +17,18 @@ def p_if_then_else(expr):
     else: 
         return expr(6)
     
-def p_condition(expr):
-    return bool(expr(0))
-    
-def p_le(expr):
-    return expr(0) < expr(2)
-    
-def p_leq(expr):
-    return expr(0) <= expr(2)
-    
-def p_ge(expr):
-    return expr(0) > expr(2)
-    
-def p_geq(expr):
-    return expr(0) >= expr(2)
-    
-def p_eq(expr):
-    return expr(0) == expr(2)
-    
-def p_neq(expr):
-    return expr(0) != expr(2)
-
-def p_statement_list_1(expr):
-    return expr
-
 def p_return(expr):
     print(expr(1))
     exit()
 
-def p_add(expr):
-    return expr(0) + expr(2)
-
-def p_subtract(expr): 
-    return expr(0) - expr(2)
-
-def p_term_2(expr):
-    return -expr(1)
-
-def p_multiply(expr): 
-    return expr(0) * expr(2)
-
-def p_divide(expr): 
-    return expr(0) / expr(2)
-
-def p_modulo(expr):
-    return expr(0) % expr(2)
-
-def p_factor_0(expr):
-    return expr(1)
-
-def p_variable(expr):
-    return g_env[expr(0)]
-
 def p_string(expr):
     return expr(1)
+
+def p_reference(expr):
+    return g_env[expr(0)]
+
+def p_jump(expr):
+    return g_markers[expr(2)]()
+
+def p_marker(expr):
+    g_markers[expr(1)] = lambda: expr(2)

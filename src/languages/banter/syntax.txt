@@ -1,28 +1,20 @@
 #require alphanum
+#require math.basic
 
-<program>       ::= <statement> | <expression>
-<statement>     ::= <assignment> | <conditional> | <return>
-<assignment>    ::= let <label> be <expression>
-<label>         ::= <Word>
-<conditional>   ::= <if_then> | <if_then_else>
-<if_then>       ::= if <condition>, then <statement>
-<if_then_else>  ::= if <condition>, then <statement> else <statement>
-<return>        ::= return <expression>
-<expression>    ::= <condition> | <arithmetic> | <String>
-<condition>     ::= <le> | <leq> | <ge> | <geq> | <eq> | <neq>
-<le>            ::= <arithmetic> <OP_le> <arithmetic>
-<leq>           ::= <arithmetic> <OP_leq> <arithmetic>
-<ge>            ::= <arithmetic> <OP_ge> <arithmetic>
-<geq>           ::= <arithmetic> <OP_geq> <arithmetic>
-<eq>            ::= <arithmetic> <OP_eq> <arithmetic>
-<neq>           ::= <arithmetic> <OP_neq> <arithmetic>
-<arithmetic>    ::= <Add> | <Subtract> | <term>
-<add>           ::= <arithmetic> <OP_Add> <term>
-<Subtract>      ::= <arithmetic> <OP_Subtract> <term>
-<term>          ::= <Multiply> | <Divide> | <OP_Subtract> <term> | <Modulo> | <Factor>
-<Multiply>      ::= <term> <OP_Multiply> <factor>
-<Divide>        ::= <term> <OP_FDivide> <factor>
-<Modulo>        ::= <term> <OP_Modulo> <Factor>
-<factor>        ::= <LParen> <arithmetic> <RParen> | <Number> | <Variable>
-<Variable>      ::= <label>
-<String>        ::= " <Word> "
+<program>           ::= <statement> | <expression>
+<statement>         ::= <assignment> | <conditional> | <return> | <goto>
+<assignment>        ::= let <label> be <expression>
+<label>             ::= <Word>
+<conditional>       ::= <if_then> | <if_then_else>
+<if_then>           ::= if <comparison>, then <statement>
+<if_then_else>      ::= if <comparison>, then <statement> else <statement>
+<return>            ::= return <expression>
+<expression>        ::= <mathexpr> | <String>
+<String>            ::= " <Word> "
+<number>            ::= <reference>
+<reference>         ::= <label>
+<goto>              ::= <marker> | <jump>
+<jump>              ::= goto instruction <id>
+<id>                ::= <number> | <word>
+<Letter>            ::= _
+<marker>            ::= @ <id> <program>

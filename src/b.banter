@@ -1,0 +1,11 @@
+let a be "not too far"
+let speed be 60
+let score be 73
+
+if limit != "not too far", then
+    if speed == 60, then
+        let score be 7009.56
+else
+    let answer be score - 75
+
+return score

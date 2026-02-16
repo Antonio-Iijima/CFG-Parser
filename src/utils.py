@@ -75,12 +75,12 @@ def compare(a: list, b: list) -> bool:
 
 
 def get_input(prompt: str = "", s: str = "") -> str:
+    if s.endswith("\nquit"):
+        quit()
     if s.endswith("\n"):
         return s
-    try:
-        return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
-    except EOFError:
-        return ""
+    return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
+    
 
 def ordinal(s: str) -> int:
-    return sum(i * ord(c) for i, c in enumerate(s))
+    return abs(hash(s)%100000)

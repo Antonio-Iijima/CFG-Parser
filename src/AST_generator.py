@@ -83,16 +83,17 @@ def process_syntax(path: str) -> dict:
         # Prep rule entry; if rule already exists, continue to add alternatives
         grammar[rule] = grammar.get(rule, [])
 
-        for pattern in alternatives: grammar[rule].append(pattern)
+        for pattern in alternatives: 
+            grammar[rule].append(pattern)
 
-        # Replace standalone terminals with nonterminals
-        # if len(pattern) > 1:
-        #     for i, token in enumerate(pattern):
-        #         if len(token) > 1 and not token[0::len(token)-1] == "<>":
-        #             new_rule = f"<T_{str(ordinal(token))}>"
-        #             pattern[i] = new_rule
-        #             if not new_rule in grammar:
-        #                 grammar[new_rule[1:-1]] = [token]
+            # Replace standalone terminals with nonterminals
+            if len(pattern) > 1:
+                for i, token in enumerate(pattern):
+                    if not (token.startswith("<") and token.endswith(">")):
+                        new_rule = f"<T_{str(ordinal(token))}>"
+                        pattern[i] = new_rule
+                        if not new_rule in grammar:
+                            grammar[new_rule[1:-1]] = [[token]]
 
     for dependency in sorted(REQUIREMENTS): print(dependency)
     
