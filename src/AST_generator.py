@@ -354,7 +354,10 @@ from datatypes import Rule
 
 
 
-def null(x): return x[0] if x else None
+def null(x): return x(0) if x else None
+
+
+def lazy(expr: list): return lambda i: evaluate(expr[i])
 
 
 def get_function(AST: Rule):
@@ -367,7 +370,7 @@ def get_function(AST: Rule):
 
 def evaluate(AST: Rule):
     return (
-        get_function(AST)(list(map(evaluate, AST.children))) if isinstance(AST, Rule)
+        get_function(AST)(lazy(AST.children)) if isinstance(AST, Rule)
         else AST
     )
 """

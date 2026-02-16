@@ -3,7 +3,7 @@ class Rule:
         self.__name__ = type(self).__name__
         self.fname = f"p_{self.__name__.lower()}"
         self.variant = variant
-        self._str = "".join(map(str, children))
+        self._str = " ".join(map(str, children))
         self.children = tuple(c for c in children if c)
         self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in children)
         
