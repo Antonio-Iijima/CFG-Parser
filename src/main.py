@@ -42,7 +42,7 @@ if __name__ == "__main__":
         print()
     else:
         from AST import LANGUAGE
-        print(f"Language folder not specified; using {LANGUAGE}.")
+        print(f"Using compiled language: {LANGUAGE.rsplit("/")[-1]}.")
 
     from parser import parse
     from eval import interpret

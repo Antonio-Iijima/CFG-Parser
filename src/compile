@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# Dependencies:
+# sudo apt install patchelf
+# pip install nuitka
+# pip install zstandard
+
 clear
-python3 -m nuitka --mode=onefile --output-filename=$1 main.py
-rm -r main.build/
-rm -r main.dist/
-rm -r main.onefile-build/
+python3 main.py -c $1
+python3 -m nuitka --remove-output --python-flag="no_docstrings" --mode=onefile --output-filename=$2 main.py
