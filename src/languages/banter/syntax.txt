@@ -6,7 +6,8 @@
 <statements>        ::= <statement> | <statement> <statements>
 <statement>         ::= <assignment> | <conditional> | <return> | <goto> | <print>
 
-<expression>        ::= <mathexpr> | <String>
+<expression>        ::= <mathexpr>
+<mathexpr>          ::= <String>
 
 <assignment>        ::= let <word> be <expression>
 <String>            ::= "<Word>"

@@ -16,7 +16,7 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
 
     remaining_tokens = tokenize(expr)
     tokens = []
-    
+
     # Accept empty strings immediately only if permitted by the grammar.
     if not remaining_tokens and ACCEPT_NULL: return Parsed(expr, FIRST(0, []), 0)
 
@@ -61,7 +61,12 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
 
         # Otherwise set up to process states at this token
         tokens.append(token)
-        next_token = remaining_tokens[0] if remaining_tokens else None
+
+        for t in remaining_tokens:
+            if not t == " ":
+                next_token = t
+                break
+        else: next_token = None
 
         for state in current_states: state.append(token)
         
@@ -128,11 +133,11 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
             and isinstance(state[0], FIRST)
         )
     }
-    
+
     if dFlag:
         print()
         print(list(str(state) for state in acceptable_states))
-
+    
     return Parsed(expr, acceptable_states.pop(), max_states) if acceptable_states else Parsed("ERROR: Parser terminated without any accepting states.")
 
 
@@ -142,8 +147,10 @@ def tokenize(string: str) -> list:
     prev_indent = 0
     curr_indent = 0
 
+    # Remove commented lines
+    lines = [line for line in string.splitlines() if not line.startswith("#")]
+    
     if INDENT_SENSITIVE:
-        lines = string.splitlines()
         indented = [""]*len(lines)
 
         for i, line in enumerate(lines):
@@ -162,10 +169,10 @@ def tokenize(string: str) -> list:
 
             indented[i] += line
             prev_indent, curr_indent = curr_indent, 0
-            
-        string = " ".join(indented)
+        
+        lines = indented
 
-    original = string = string.strip()
+    original = string = "".join(lines).strip()
 
     terminals = sorted(TERMINALS.difference({""}), reverse=True)
     tokens = []
