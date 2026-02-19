@@ -76,7 +76,8 @@ def compare(a: list, b: list) -> bool:
 
 def get_input(prompt: str = "", s: str = "") -> str:
     if s.endswith("\nquit"):
-        quit()
+        from sys import exit
+        exit()
     if s.endswith("\n"):
         return s
     return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))

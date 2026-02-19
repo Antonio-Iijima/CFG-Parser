@@ -65,7 +65,7 @@ Recursively build a complete set of grammar rules from path.
 
 
 def process_syntax(path: str) -> dict:
-    from rich import print
+    # from rich import print
     from main import dFlag
 
     grammar = {}
@@ -150,6 +150,7 @@ Generates an AST from a context-free grammar.
 
 
 from datatypes import Rule, StrictRule
+LANGUAGE = '{path}'
 
 
 
@@ -329,6 +330,8 @@ def generate_eval(main_path: str) -> str:
 
 from datatypes import Rule
 from parser import parse
+
+# from rich import print
 """
     
     
@@ -397,7 +400,10 @@ def interpret(string: str, dFlag: bool) -> any:
         out = evaluate(parse(string, dFlag=dFlag).AST)
         if out: print(out)
     except Exception as e:
-        if len(e.args) > 1 and e.args[0] == 0:
+        if (
+            len(e.args) > 1
+            and e.args[0] in (0, 1)
+        ):
             print(e.args[1])
         else:
             raise e

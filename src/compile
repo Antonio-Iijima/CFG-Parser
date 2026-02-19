@@ -1,0 +1,7 @@
+#!/bin/bash
+
+clear
+python3 -m nuitka --mode=onefile --output-filename=$1 main.py
+rm -r main.build/
+rm -r main.dist/
+rm -r main.onefile-build/

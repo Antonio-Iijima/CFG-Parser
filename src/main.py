@@ -6,12 +6,13 @@ from AST_generator import generate_AST
 from utils import get_input
 
 from os.path import abspath, exists
-from rich import print
+# from rich import print
 from os import remove
 from time import time
 from sys import argv
 
 
+if __name__ == "__main__": argv.pop(0)
 
 if '-x' in argv:
     exists("AST.py") and remove("AST.py")
@@ -30,17 +31,18 @@ vFlag and argv.remove("-v")
 tFlag = "-t" in argv
 tFlag and argv.remove("-t")
 
-if len(argv) == 1:
-    print("Language folder not found.")
-    quit()
-
-
+cFlag = "-c" in argv
+cFlag and argv.remove("-c")
 
 if __name__ == "__main__":
-
-    print()
-    generate_AST(abspath(argv[1]))
-    print()
+    if cFlag: 
+        LANGUAGE = abspath(argv.pop(0))
+        print()
+        generate_AST(LANGUAGE)
+        print()
+    else:
+        from AST import LANGUAGE
+        print(f"Language folder not specified; using {LANGUAGE}.")
 
     from parser import parse
     from eval import interpret
@@ -48,8 +50,8 @@ if __name__ == "__main__":
     if tFlag:
         from parser import validate
 
-        while len(argv) > 2:
-            match argv[1].split("/")[-2] + argv.pop(2):
+        while argv:
+            match LANGUAGE.split("/")[-1] + argv.pop(0):
                 case "calculator1":
                     tests = [
                         ("123", 123),
@@ -126,7 +128,7 @@ if __name__ == "__main__":
                 print(f"Runtime: {time()-start}")
 
     else:
-        for arg in argv[2:]:
+        for arg in argv:
             if exists(arg):
                 with open(arg) as file:
                     interpret(file.read(), dFlag=dFlag)

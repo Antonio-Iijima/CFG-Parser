@@ -44,7 +44,10 @@ def p_jump(expr):
 
 
 def p_label(expr):
-    return g_env[expr(0)]
+    try:
+        return g_env[expr(0)]
+    except KeyError:
+        raise Exception(1, f"Error: variable {expr(0)} not declared.")
 
 
 def p_print(expr):
