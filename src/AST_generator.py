@@ -65,7 +65,6 @@ Recursively build a complete set of grammar rules from path.
 
 
 def process_syntax(path: str) -> dict:
-    # from rich import print
     from main import dFlag
 
     grammar = {}
@@ -84,7 +83,8 @@ def process_syntax(path: str) -> dict:
         grammar[rule] = grammar.get(rule, [])
 
         for pattern in alternatives:
-            if rule.startswith("~"): pattern = ["INDENT", *pattern, "DEDENT"]
+            if "~" in rule: pattern = ["INDENT", *pattern, "DEDENT"]
+            
             grammar[rule].append(pattern)
 
             # Replace standalone terminals with nonterminals
@@ -98,7 +98,6 @@ def process_syntax(path: str) -> dict:
 
     for dependency in sorted(REQUIREMENTS): print(dependency)
     
-    from main import dFlag
     if dFlag:
         print()
         print(grammar)
@@ -161,10 +160,15 @@ LANGUAGE = '{path}'
 
     indentSensitive = False
     for (rule, alternatives) in GRAMMAR.items():
-        modifier = "Strict" if rule.startswith("!") else ""
-        
-        name = rule[1:] if (modifier or rule.startswith("~")) else rule
-        indentSensitive = (indentSensitive or (rule.startswith("~")))
+        name = rule
+        modifier = ""
+        while name[0] in ("!", "~"):
+            match name[0]:
+                case "!": 
+                    modifier = "Strict"
+                case "~":
+                    indentSensitive = True
+            name = name[1:]
 
         docstring = f"\n{" "*(len(name)+5)}| ".join(" ".join(pattern) for pattern in alternatives)
         AST_text += f"""
@@ -328,10 +332,8 @@ def generate_eval(main_path: str) -> str:
 
     
 
-from datatypes import Rule
+from datatypes import Rule, Parsed
 from parser import parse
-
-# from rich import print
 """
     
     
@@ -395,7 +397,7 @@ def evaluate(AST: Rule):
     )
 
 
-def interpret(string: str, dFlag: bool) -> any:
+def process(string: str, dFlag: bool) -> any:
     try:
         out = evaluate(parse(string, dFlag=dFlag).AST)
         if out: print(out)
@@ -407,6 +409,15 @@ def interpret(string: str, dFlag: bool) -> any:
             print(e.args[1])
         else:
             raise e
+        
+
+def validate(parsed: Parsed, solution: any) -> str:
+    if str(parsed) == solution: return solution
+    
+    result = evaluate(parsed.AST)
+    
+    if result == solution: return solution
+    raise ValueError(f"value of {{parsed}} should be {{solution}}, but received {{result}}")
 """
 
     return eval_text

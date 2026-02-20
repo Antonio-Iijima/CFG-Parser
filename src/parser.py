@@ -1,8 +1,6 @@
 from utils import *
 from datatypes import *
 
-# from rich import print
-
 
 
 def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
@@ -18,12 +16,8 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
     tokens = []
 
     # Accept empty strings immediately only if permitted by the grammar.
-    if not remaining_tokens and ACCEPT_NULL: return Parsed(expr, FIRST(0, []), 0)
+    if all(t == " " for t in remaining_tokens) and ACCEPT_NULL: return Parsed(expr, FIRST(0, []), 0)
 
-    # Everything is a dict now, because they are
-    # a) fast
-    # b) ordered 
-    # c) unique
     current_states = OrderedSet((State(),))
     future_states = OrderedSet()
 
@@ -157,6 +151,7 @@ def tokenize(string: str) -> list:
             while line.startswith(INDENT):
                 line = line.removeprefix(INDENT)
                 curr_indent += 1
+            if line.startswith(" "): raise IndentationError(f"invalid indent in line {i+1}: '{line}'")
 
             diff = curr_indent - prev_indent
             while diff > 0:
@@ -200,14 +195,3 @@ def tokenize(string: str) -> list:
             raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
 
     return tokens
-
-
-def validate(parsed: Parsed, solution: any) -> str:
-    from eval import evaluate
-    
-    if str(parsed) == solution: return solution
-    
-    result = evaluate(parsed.AST)
-    
-    if result == solution: return solution
-    raise ValueError(f"value of {parsed} should be {solution}, but received {result or "False|None"}")
