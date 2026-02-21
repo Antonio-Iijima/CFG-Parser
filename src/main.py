@@ -7,8 +7,8 @@ from utils import get_input
 
 from os.path import abspath, exists
 from sys import exit, argv
-from os import remove
 from time import time
+from os import remove
 
 
 
@@ -54,16 +54,15 @@ if __name__ == "__main__":
     
         test(LANGUAGE.rsplit("/")[-1], argv)
     
-    else:
-        from eval import process
-        
-        for arg in argv:
-            if exists(arg):
-                with open(arg) as file:
-                    process(file.read(), dFlag=dFlag)
+    from eval import process
+    
+    for arg in argv:
+        if exists(arg):
+            with open(arg) as file:
+                process(file.read(), dFlag=dFlag)
 
-        if iFlag:
-            for line in iter(lambda: get_input("</> "), "quit"):
-                if dFlag: start = time()
-                process(line, dFlag)
-                if dFlag: print(f"Runtime: {time() - start}")
+    if iFlag:
+        for line in iter(lambda: get_input("</> "), "quit"):
+            if dFlag: start = time()
+            process(line, dFlag)
+            if dFlag: print(f"Runtime: {time() - start}")
