@@ -172,7 +172,7 @@ LANGUAGE = '{path}'
 
         docstring = f"\n{" "*(len(name)+5)}| ".join(" ".join(pattern) for pattern in alternatives)
         AST_text += f"""
-class {embed_nonterminal(name)}({modifier}Rule): 
+class {name}({modifier}Rule): 
     '''```
 <{name}> ::= {docstring}
     ```'''

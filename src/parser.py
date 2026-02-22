@@ -56,11 +56,7 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
         # Otherwise set up to process states at this token
         tokens.append(token)
 
-        for t in remaining_tokens:
-            if not t == " ":
-                next_token = t
-                break
-        else: next_token = None
+        next_token = get_next_token(remaining_tokens)
 
         for state in current_states: state.append(token)
         
@@ -137,6 +133,7 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
 
 def tokenize(string: str) -> list:
     from AST import TERMINALS, INDENT_SENSITIVE
+    
     INDENT = "   "
     prev_indent = 0
     curr_indent = 0
@@ -195,3 +192,10 @@ def tokenize(string: str) -> list:
             raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
 
     return tokens
+
+
+def get_next_token(remaining: list) -> str|None:
+    for t in remaining:
+            if not t == " ":
+                return t
+    return None
