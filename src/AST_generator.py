@@ -220,6 +220,8 @@ ACCEPT_NULL = {["ε"] in list(GRAMMAR.values())[0]}
 
 INDENT_SENSITIVE = {indentSensitive}
 
+INDENT = "   "
+
 
 
 ##### HELPER FUNCTIONS #####

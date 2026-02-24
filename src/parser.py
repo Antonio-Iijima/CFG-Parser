@@ -3,7 +3,7 @@ from datatypes import *
 
 
 
-def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
+def parse(expr: str, state_limit: int = 2**100, dFlag: bool = False) -> Parsed:
     from AST import (
         expects, expected_patterns,
         FIRST, K, 
@@ -106,7 +106,7 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
 
                 # If the current pattern does not match, but could match if given more tokens.
                 elif state[-1] in pattern: future_states.add(state)
-        
+
         max_states = max(max_states, len(future_states))
         if max_states > state_limit: raise RuntimeError(f"Too many states to consider: {max_states}")
         
@@ -128,43 +128,18 @@ def parse(expr: str, state_limit: int = 2**10, dFlag: bool = False) -> Parsed:
         print()
         print(list(str(state) for state in acceptable_states))
     
-    return Parsed(expr, acceptable_states.pop(), max_states) if acceptable_states else Parsed("ERROR: Parser terminated without any accepting states.")
+    if not acceptable_states: 
+        raise SyntaxError("parser terminated without any accepting states.")
+    
+    return Parsed(expr, acceptable_states.pop(), max_states)
 
 
 def tokenize(string: str) -> list:
-    from AST import TERMINALS, INDENT_SENSITIVE
+    from AST import TERMINALS, INDENT_SENSITIVE, INDENT
     
-    INDENT = "   "
-    prev_indent = 0
-    curr_indent = 0
-
-    # Remove commented lines
-    lines = [line for line in string.splitlines() if not line.startswith("#")]
-
-    if INDENT_SENSITIVE:
-        indented = [""]*len(lines)
-
-        for i, line in enumerate(lines):
-            while line.startswith(INDENT):
-                line = line.removeprefix(INDENT)
-                curr_indent += 1
-            if line.startswith(" "): raise IndentationError(f"invalid indent in line {i+1}: '{line}'")
-
-            diff = curr_indent - prev_indent
-            while diff > 0:
-                indented[i] += "INDENT"
-                diff -= 1
-            
-            while diff < 0:
-                indented[i] += "DEDENT"
-                diff += 1
-
-            indented[i] += line
-            prev_indent, curr_indent = curr_indent, 0
-        
-        lines = indented
-
-    original = string = "".join(lines).strip()
+    lines = indent(INDENT, string.splitlines()) if INDENT_SENSITIVE else string.splitlines()
+    
+    original = string = "".join((line for line in lines if (not line.strip().startswith("#")) and line.strip())).strip()
 
     terminals = sorted(TERMINALS.difference({""}), reverse=True)
     tokens = []
@@ -192,6 +167,41 @@ def tokenize(string: str) -> list:
             raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
 
     return tokens
+
+
+def indent(INDENT: str, lines: list) -> list:
+    indented = []
+    curr_indent = prev_indent = 0
+
+    for i, line in enumerate(lines):
+        
+        # Remove commented lines
+        if (not line.strip()) or line.strip().startswith("#"): 
+            continue
+
+        while line.startswith(INDENT):
+            line = line.removeprefix(INDENT)
+            curr_indent += 1
+
+        if line.startswith(" "): 
+            count = line.count(" ", 0, 2)
+            raise IndentationError(f"invalid indent in line {i+1}: {count} unnecessary space{"" if count == 1 else "s"}.")
+
+        indented.append("")
+
+        diff = curr_indent - prev_indent
+        while diff > 0:
+            indented[-1] += "INDENT"
+            diff -= 1
+            
+        while diff < 0:
+            indented[-1] += "DEDENT"
+            diff += 1
+
+        indented[-1] += line
+        prev_indent, curr_indent = curr_indent, 0
+        
+    return indented
 
 
 def get_next_token(remaining: list) -> str|None:

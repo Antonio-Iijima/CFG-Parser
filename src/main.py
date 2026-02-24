@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
     if iFlag:
         for line in iter(lambda: get_input("</> "), "quit"):
-            if dFlag: start = time()
-            process(line, dFlag)
-            if dFlag: print(f"Runtime: {time() - start}")
+            if line.strip():
+                if dFlag: start = time()
+                process(line, dFlag)
+                if dFlag: print(f"Runtime: {time() - start}")

@@ -20,7 +20,7 @@
 <return>            ::= return <expression>
 
 <goto>              ::= <marker> | <jump>
-<marker>            ::= @ <number> <statements> 
+<marker>            ::= @ <number>
 <number>            ::= <label> | <bool>
 <bool>              ::= True | False
 <label>             ::= <Word>

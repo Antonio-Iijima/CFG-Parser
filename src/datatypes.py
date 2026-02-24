@@ -72,7 +72,7 @@ class OrderedSet(dict):
 
 
 class Parsed:
-    def __init__(self, sentence: str, AST: Rule = None, max_states: int = None):
+    def __init__(self, sentence: str, AST: Rule, max_states: int):
         self.sentence = sentence
         self.AST = AST
         self.max_states = max_states
