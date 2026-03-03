@@ -12,9 +12,9 @@
 <ASSIGNMENT>     ::= let <WORD> be <EXPRESSION>
 
 <CONDITIONAL>    ::= <IF_THEN> | <IF_THEN_ELSE>
-<IF_THEN>        ::= if <comparison>, then \n <BLOCK>
-<IF_THEN_ELSE>   ::= if <comparison>, then \n <BLOCK> \n else \n <BLOCK>
-<BLOCK>          ::= INDENT <STATEMENT_LIST> DEDENT
+<IF_THEN>        ::= if <comparison>, then <BLOCK>
+<IF_THEN_ELSE>   ::= if <comparison>, then <BLOCK> \n else <BLOCK>
+<BLOCK>          ::= \n INDENT <STATEMENT_LIST> DEDENT
 
 <RETURN>         ::= return <EXPRESSION>
 

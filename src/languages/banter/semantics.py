@@ -25,16 +25,16 @@ def p_string(expr):
 
 def p_if_then(expr):
     if expr(1): 
-        expr(5)
+        expr(4)
 
 def p_if_then_else(expr):
     if expr(1):
-        expr(5)
+        expr(4)
     else: 
-        expr(9)
+        expr(7)
 
 def p_block(expr):
-    return expr(1)
+    return expr(2)
 
 
 def p_return(expr):
