@@ -3,7 +3,6 @@ g_markers = {}
 
 
 
-#! <statement> ::= <assignment> NEWLINE | <conditional> NEWLINE | <return> NEWLINE | <goto> NEWLINE | <print> NEWLINE 
 def p_statement(expr):
     expr(0)    
 
@@ -11,10 +10,9 @@ def p_statement(expr):
 def p_statement_list_0(expr):
     expr(0)
     
-#! <statement_list> ::= <statement> | <statement> NEWLINE <statement_list> 
 def p_statement_list_1(expr):
     expr(0)
-    expr(1)
+    expr(2)
 
 
 def p_assignment(expr):
@@ -25,19 +23,16 @@ def p_string(expr):
     return expr(1)
 
 
-#! <if_then> ::= if <comparison>, then NEWLINE <block>
 def p_if_then(expr):
     if expr(1): 
-        expr(4)
+        expr(5)
 
-#! <if_then_else> ::= if <comparison>, then NEWLINE <block> else NEWLINE <block>
 def p_if_then_else(expr):
     if expr(1):
-        expr(4)
+        expr(5)
     else: 
-        expr(6)
+        expr(9)
 
-#! <block> ::= INDENT <statement_list> DEDENT
 def p_block(expr):
     return expr(1)
 
@@ -47,8 +42,10 @@ def p_return(expr):
 
 
 def p_marker(expr):
-    g_markers[expr(1)] = lambda: expr(2)
-    expr(2)
+    mark = expr(1)
+    if not mark in g_markers: 
+        g_markers[mark] = lambda: expr(3)
+    expr(3)
 
 def p_jump(expr):
     g_markers[expr(2)]()

@@ -3,7 +3,7 @@
 
 <program>           ::= <statement_list> | <expression>
 
-<statement_list>    ::= <statement> | <statement> <statement_list>
+<statement_list>    ::= <statement> | <statement> \n <statement_list>
 <statement>         ::= <assignment> | <conditional> | <return> | <goto> | <print>
 
 <expression>        ::= <mathexpr>
@@ -13,14 +13,14 @@
 <String>            ::= "<Word>"
 
 <conditional>       ::= <if_then> | <if_then_else>
-<if_then>           ::= if <comparison>, then <block>
-<if_then_else>      ::= if <comparison>, then <block> else <block>
-<block>             ::= <statement_list>
+<if_then>           ::= if <comparison>, then \n <block>
+<if_then_else>      ::= if <comparison>, then \n <block> \n else \n <block>
+<block>             ::= INDENT <statement_list> DEDENT
 
 <return>            ::= return <expression>
 
 <goto>              ::= <marker> | <jump>
-<marker>            ::= @ <number>
+<marker>            ::= @ <number> \n <statement_list>
 <number>            ::= <label> | <bool>
 <bool>              ::= True | False
 <label>             ::= <Word>

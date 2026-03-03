@@ -36,13 +36,7 @@ def compile_language(path: str) -> None:
         # First computes addenda (attributes from semantics),
         # then completes the syntax processing into a full `dict`,
         # then uses that `dict` to generate the AST file.
-        file.write(generate_AST(
-            path,
-            process_syntax(    
-                RULES,
-                read_attributes(semantics_text)
-            )
-        ))
+        file.write(generate_AST(path, process_syntax(RULES)))
 
     print()
     print("Done!")
@@ -248,8 +242,6 @@ EXPECTED_PATTERNS = {{ token : [] for token in TOKENS }}
 
 EPSILA: set = {{EPSILON}}
 
-ACCEPT_NULL = {["ε"] in list(GRAMMAR.values())[0]}
-
 {"\n\n".join(f"{modifier} = {val}" for modifier, val in Nonterminal.modifiers.items())}
 
 INDENT = "   "
@@ -401,7 +393,7 @@ Constructs `REQUIREMENTS` from path search.
 
 
 
-def process_syntax(rules_list: list, addenda: dict) -> dict[Nonterminal, list]:
+def process_syntax(rules_list: list) -> dict[Nonterminal, list]:
     """Convert a list of `(rule, alternatives)` pairs into a fully processed dictionary of `{ rule : [*patterns] }`."""
     
     from main import dFlag
@@ -412,14 +404,8 @@ def process_syntax(rules_list: list, addenda: dict) -> dict[Nonterminal, list]:
 
     for rule, alternatives in rules_list:
 
-        if (rule in addenda):
-            if (rule in grammar): continue
-            else:
-                grammar[rule] = []
-                alternatives = addenda[rule]
-        else:
-            # Prep rule entry; if rule already exists, continue to add alternatives
-            grammar[rule] = grammar.get(rule, [])
+        # Prep rule entry; if rule already exists, continue to add alternatives
+        grammar[rule] = grammar.get(rule, [])
 
         for pattern in alternatives:
             grammar[rule].append(pattern)

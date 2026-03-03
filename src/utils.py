@@ -8,7 +8,7 @@ LIB_PATH = ".lib"
 
 
 def preprocess_text(text: TextIOWrapper) -> list[str]: 
-    return [line for line in text.read().splitlines() if line and not line.startswith("--")]
+    return [line for line in text.read().splitlines() if line.strip() and not line.startswith("--")]
 
 
 def is_nonterminal(prod: str) -> bool: 

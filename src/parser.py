@@ -8,17 +8,12 @@ def parse(expr: str, state_limit: int = 2**100, dFlag: bool = False) -> Parsed:
         expects, expected_patterns,
         FIRST, K, 
         EXPECTED_TOKENS,
-        EXPECTED_PATTERNS, 
-        ACCEPT_NULL,
-        IGNORED,
+        EXPECTED_PATTERNS,
         NEWLINE_SENSITIVE
     )
 
     remaining_tokens = tokenize(expr)
     tokens = []
-
-    # Accept empty strings immediately only if permitted by the grammar.
-    if (not remaining_tokens) and ACCEPT_NULL: return Parsed(expr, FIRST(0, []), 0)
 
     current_states = OrderedSet((State(),))
     future_states = OrderedSet()
@@ -134,37 +129,29 @@ def parse(expr: str, state_limit: int = 2**100, dFlag: bool = False) -> Parsed:
     if not acceptable_states: 
         raise SyntaxError("parser terminated without any accepting states.")
     
-    return Parsed(expr, acceptable_states.pop(), max_states)
+    return Parsed(expr, acceptable_states.pop(), max_states, showTree=dFlag)
+
 
 
 def tokenize(string: str) -> list:
     from AST import TERMINALS, INDENT_SENSITIVE, INDENT
     
-    lines = indent(INDENT, string.splitlines()) if INDENT_SENSITIVE else string.splitlines()
+    lines = preprocess_input(string, INDENT_SENSITIVE, INDENT)
     
-    original = string = "\n".join((line for line in lines if line.strip())).strip() + "\n"
+    original = string = "\n".join((line for line in lines if line.strip())).strip()
 
     terminals = sorted(TERMINALS, reverse=True)
     tokens = []
-    comment = False
 
-    while string:        
-        comment = (comment or string.startswith("#")) and not (string.startswith("\n"))
-        
-        if comment: 
-            string = string[1:]
-            continue
-
+    while string:
         for terminal in terminals:
             if string.startswith(terminal):
                 tokens.append(terminal)
                 string = string.removeprefix(terminal)
                 break
-
-        else: 
-            raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
+        else: raise SyntaxError(f"index {len(original)-len(string)}: unrecognized token '{string[0]}' in input '{original}'")
     
-    print(tokens)
+    # print(tokens)
     return tokens
  
 
@@ -174,7 +161,7 @@ def indent(INDENT: str, lines: list) -> list:
 
     for i, line in enumerate(lines):
         
-        # Remove commented lines
+        # Remove commented and empty lines
         if (not line.strip()) or line.strip().startswith("#"): 
             continue
 
@@ -184,23 +171,40 @@ def indent(INDENT: str, lines: list) -> list:
 
         if line.startswith(" "): 
             count = line.count(" ", 0, 2)
-            raise IndentationError(f"invalid indent in line {i+1}: {count} unnecessary space{"" if count == 1 else "s"}.")
-
-        indented.append("")
+            raise IndentationError(f"invalid indent in line {i+1}: {count} extra space{"" if count == 1 else "s"}.")
 
         diff = curr_indent - prev_indent
-        while diff > 0:
-            indented[-1] += "INDENT"
-            diff -= 1
-            
+
         while diff < 0:
             indented[-1] += "DEDENT"
             diff += 1
 
+        # Newline will come after DEDENTs but before INDENTS
+        indented.append("")
+        
+        while diff > 0:
+            indented[-1] += "INDENT"
+            diff -= 1
+            
         indented[-1] += line
         prev_indent, curr_indent = curr_indent, 0
-        
+
+    # Handle any final DEDENTs
+    while prev_indent > 0:
+        indented[-1] += "DEDENT"
+        prev_indent -= 1
+
     return indented
+
+
+def preprocess_input(string: str, indentSensitive: bool, indentation: str = "   "):
+    lines = string.splitlines()
+
+    for i, line in enumerate(lines):
+        if "#" in line:
+            lines[i] = line[:line.index("#")]
+
+    return indent(indentation, lines) if indentSensitive else lines
 
 
 def get_next_token(remaining: list) -> str|None:

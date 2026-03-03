@@ -72,11 +72,11 @@ class OrderedSet(dict):
 
 
 class Parsed:
-    def __init__(self, sentence: str, AST: Rule, max_states: int):
+    def __init__(self, sentence: str, AST: Rule, max_states: int, showTree: bool = False):
         self.sentence = sentence
         self.AST = AST
         self.max_states = max_states
-        # if AST: print(AST.tree())
+        if showTree: print(AST.tree())
 
 
     def get(self):
