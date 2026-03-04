@@ -101,7 +101,14 @@ from parser import parse
 def null(x): return x(0) if isinstance(x, type(null)) else None
 
 
-def lazy(expr: list): return lambda i: evaluate(expr[i])
+def lazy(expr: list): 
+    def expression(i):
+        try:
+            return evaluate(expr[i])
+        except IndexError as e:
+            print(f"Error in expression {{expr}}: index {{i}}")
+            raise e
+    return expression
 
 
 def get_function(AST: Rule):

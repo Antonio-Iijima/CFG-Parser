@@ -20,7 +20,7 @@ def parse(expr: str, state_limit: int = 2**100, dFlag: bool = False) -> Parsed:
 
     if dFlag:
         print("EXPECTED TOKENS:")
-        for key, expected in (EXPECTED_TOKENS.items()):
+        for key, expected in sorted(EXPECTED_TOKENS.items(), key=lambda x: str(x)):
             print(key, end=" :: ")
             print(expected)
             print()
@@ -28,7 +28,7 @@ def parse(expr: str, state_limit: int = 2**100, dFlag: bool = False) -> Parsed:
         print()
         
         print("EXPECTED PATTERNS:")
-        for key, expected in EXPECTED_PATTERNS.items():
+        for key, expected in sorted(EXPECTED_PATTERNS.items(), key=lambda x: str(x)):
             print(key, end=" :: ")
             print(expected)
             print()

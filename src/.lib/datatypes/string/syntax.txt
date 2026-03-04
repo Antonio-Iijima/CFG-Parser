@@ -1,6 +1,10 @@
+#require datatypes.numeric
+
 <LETTER>    ::= <MAJUSCULE> | <MINISCULE>
 <MAJUSCULE> ::= A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z
 <MINISCULE> ::= a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z
 <!LETTERS>  ::= <LETTER> | <LETTER> <LETTERS>
 <WORD>      ::= <LETTERS>
-<STRING>    ::= " <WORD> "
+<CHAR>      ::= <LETTER> | <INT>
+<!CHARS>     ::= <CHAR> | <CHAR> <CHARS>
+<STRING>    ::= " <CHARS> "

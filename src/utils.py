@@ -120,7 +120,7 @@ def regularize(path, sep="::="):
                 rule, production = line
                 text[i] = f"{rule.upper()}{" " * (offset-len(rule))} ::= {" ".join([s.upper() if (len(s) > 1 and s[::len(s)-1] == "<>") else s for s in production.split()])}"
 
-    text = "\n".join(text) + "\n"
+    text = "\n".join(text).strip() + "\n"
 
     with open(path, "w") as file:
         file.write(text)
@@ -129,4 +129,4 @@ def regularize(path, sep="::="):
 if __name__ == "__main__":
     from sys import argv
 
-    regularize(argv[-1])
+    regularize(argv[-1] + "/syntax.txt")
