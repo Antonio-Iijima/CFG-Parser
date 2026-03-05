@@ -1,22 +1,5 @@
 #require datatypes.numeric
 
-<MATHEXPR>   ::= <ADD> | <SUBTRACT> | <TERM> | <COMPARISON>
-<ADD>        ::= <MATHEXPR> <OP_ADD> <TERM>
-<SUBTRACT>   ::= <MATHEXPR> <OP_SUBTRACT> <TERM>
-<TERM>       ::= <MULTIPLY> | <DIVIDE> | <EXP> | <OP_SUBTRACT> <TERM> | <MODULO> | <FACTOR>
-<MULTIPLY>   ::= <TERM> <OP_MULTIPLY> <FACTOR>
-<DIVIDE>     ::= <TERM> <OP_FDIVIDE> <FACTOR>
-<MODULO>     ::= <TERM> <OP_MODULO> <FACTOR>
-<FACTOR>     ::= <LPAREN> <MATHEXPR> <RPAREN> | <NUMBER>
-
-<COMPARISON> ::= <LE> | <LEQ> | <GE> | <GEQ> | <EQ> | <NEQ>
-<LE>         ::= <MATHEXPR> <OP_LE> <MATHEXPR>
-<LEQ>        ::= <MATHEXPR> <OP_LEQ> <MATHEXPR>
-<GE>         ::= <MATHEXPR> <OP_GE> <MATHEXPR>
-<GEQ>        ::= <MATHEXPR> <OP_GEQ> <MATHEXPR>
-<EQ>         ::= <MATHEXPR> <OP_EQ> <MATHEXPR>
-<NEQ>        ::= <MATHEXPR> <OP_NEQ> <MATHEXPR>
-
 <OP_ADD>      ::= +
 <OP_SUBTRACT> ::= -
 <OP_MULTIPLY> ::= *

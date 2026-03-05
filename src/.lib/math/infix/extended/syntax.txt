@@ -1,0 +1,5 @@
+<FACTOR>   ::= <ABS> | <OP_SUBTRACT> <FACTOR> | <EXP>
+<ABS>      ::= <OP_PIPE> <MATHEXPR> <OP_PIPE>
+<EXP>      ::= <BASE> <OP_EXP> <EXPONENT>
+<BASE>     ::= <FACTOR>
+<EXPONENT> ::= <MATHEXPR>

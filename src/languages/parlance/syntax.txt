@@ -1,6 +1,5 @@
 #require datatypes.string
 #require datatypes.list.extended
-#require math.basic
 #require math.infix
 
 <PROGRAM>        ::= <STATEMENT_LIST> | <EXPRESSION>
