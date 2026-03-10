@@ -58,9 +58,9 @@ $ ./magicc languages/banter banter
 ```
 
 This will generate a binary file `banter`, which can be run as a normal executable. Valid command line arguments are:
--i : interactive
--t : run tests (only available for certain built-in languages)
--c : recompile syntax/semantics (only valid when manually running `main.py`)
+- -i : interactive
+- -t : run tests (only available for certain built-in languages)
+- -c : recompile syntax/semantics (only valid when manually running `main.py`)
 
 e.g.
 
