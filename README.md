@@ -49,7 +49,14 @@ For the sake of example, we will take the included language `banter` as an objec
 
 There are two ways to use a language with magicc: compile it or run it directly.
 
-For the latter option, simply run `python3 main.py <language folder> -c <args>`. This will generate `AST.py` and `eval.py` files. The `-c` flag (explained shortly) builds the language from the specification files in the provided folder. You can omit the folder and the `-c` flag to use an already-generated language.
+For the latter option, simply run `python3 main.py [<language folder>] <args>`. Valid <args> are:
+
+- -i : interactive
+- -t : run tests (only supported with certain built-in languages)
+- -c : recompile syntax/semantics
+- any input program for the specified language
+
+This will generate `AST.py` and `eval.py` files. If `-c` is provided, the program builds the language from the specification files in the language folder; languages are saved after generation, so you can omit the folder and the `-c` flag on subsequent runs to use an already-generated language.
 
 To compile a language using `magicc`, provide the language folder (which must contain at least a `syntax.txt` file) as the first argument, and the name of the output executable as the second argument.
 
@@ -57,12 +64,7 @@ To compile a language using `magicc`, provide the language folder (which must co
 $ ./magicc languages/banter banter
 ```
 
-This will generate a binary file `banter`, which can be run as a normal executable. Valid command line arguments are:
-- -i : interactive
-- -t : run tests (only available for certain built-in languages)
-- -c : recompile syntax/semantics (only valid when manually running `main.py`)
-
-e.g.
+This will generate a binary file `banter`, which can be run as a normal executable. Only `-i` and `-t` are supported for languages compiled in this way; `-c` can only be used when running the language 'ad-hoc', e.g.
 
 ```
 $ ./banter -i
@@ -76,7 +78,7 @@ or
 $ python3 main.py languages/banter -c -i
 ```
 
-The user can also provide files to be evaluated.
+If no `semantics.py` file is included in the language folder, evaluation defaults to returning the string literal.
 
 
 ## Advanced Usage
