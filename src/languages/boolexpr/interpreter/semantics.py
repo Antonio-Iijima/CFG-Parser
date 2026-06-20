@@ -9,7 +9,7 @@ def p_program_1(expr):
 
 def p_boolexpr(expr):
     global g_env
-    
+
     g_env = set(expr(1))
 
     return expr(3)

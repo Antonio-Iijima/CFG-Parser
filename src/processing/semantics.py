@@ -17,13 +17,7 @@ class Eval:
         self.dependencies = dependencies
         self.exception = """
     except Exception as e:
-        match e.args[0]:
-            case 0:
-                if e.args[1:]: print(e.args[1])
-            case 1:
-                print(f"ERROR: {e.args[1]}")
-            case _:
-                raise e
+        raise e
 """
 
       
@@ -55,9 +49,9 @@ def validate(parsed, solution: any) -> str:
     if str(parsed) == solution: return solution
     
     result = _evaluate(parsed)
-    
     if result == solution: return solution
-    raise ValueError(f"value of '{{parsed}}' should be {{solution}}, but received {{result}}")
+    
+    raise ValidationError(f"value of '{{parsed}}' should be {{solution}}, but received {{result}}")
 """ 
         
         else:
@@ -75,8 +69,9 @@ def process(string: str) -> any:
 
 
 
-from datatypes import Rule
+from datatypes import Rule, Token
 from parser import parse, Parsed
+from utils import *
 
 from collections.abc import Sequence
 
@@ -141,6 +136,7 @@ def _evaluate(expression: Parsed):
 def _eval(expr: Expr, *args, **kwargs):
     return (
         _get_function(expr._node)(expr, *args, **kwargs) if isinstance(expr, Expr)
+        else expr.tok if isinstance(expr, Token)
         else expr
     )
 

@@ -8,18 +8,6 @@ def applicative(func):
     wrapper.__qualname__ = f"{func.__name__.removeprefix("f_")}"
     return wrapper
 
-def scoped(func):
-    def wrapper(*args, localScope=None):
-        g_env.append(localScope)
-        value = func(args)
-        g_env.pop()
-        return value
-    
-    return wrapper
-
-def head(x): return x[0]
-def tail(x): return x[1:]
-
 
 ### PROCEDURES ###
 
@@ -76,8 +64,8 @@ def f_eq(a, b):
 def f_cxr(x: str, output: list) -> any:
     """Tail-recursive evaluation of `cxr` expressions (arbitrary combinations of `car` and `cdr`)."""
     if not x: return output
-    elif x.endswith("a"): return f_cxr(x.removesuffix("a"), head(output))
-    elif x.endswith("d"): return f_cxr(x.removesuffix("d"), tail(output))
+    elif x.endswith("a"): return f_cxr(x.removesuffix("a"), output[0])
+    elif x.endswith("d"): return f_cxr(x.removesuffix("d"), output[1:])
 
 def f_quote(x):
     return x

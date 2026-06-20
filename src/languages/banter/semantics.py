@@ -3,6 +3,11 @@ g_markers = {}
 
 
 
+class Goto(Exception): pass
+class ReturnValue(Exception): pass
+
+
+
 def find_markers(node, path: list = None) -> None:
     """Find paths to all marker statements in program and store in `g_markers`."""
 
@@ -34,14 +39,15 @@ def p_program(expr):
     find_markers(program)
 
     while nodes:
-        try:
-            out = nodes.pop(0)()
+        try: out = nodes.pop(0)()
 
-        except Exception as e:
-            if e.args[:2] == (2, "goto"):
-                nodes = sequence(program, g_markers[e.args[2]])
-            else: raise e
-
+        except ReturnValue as e:
+            print(e.args[0])
+            quit()
+        
+        except Goto as e:
+            nodes = sequence(program, g_markers[e.args[2]])
+        
     return out
     
 
@@ -54,7 +60,7 @@ def p_label(expr):
     try:
         return g_env[expr(0)]
     except KeyError:
-        raise Exception(1, f"Error: variable {expr(0)} not declared.")
+        raise UnboundLocalError(f"variable {expr(0)} not declared.")
 
 def p_bool(expr):
     return expr(0) == "True"
@@ -79,11 +85,11 @@ def p_block(expr):
 
 
 def p_return(expr):
-    raise Exception(0, expr(1))
+    raise ReturnValue(expr(1))
 
 
 def p_goto(expr):
-    raise Exception(2, "goto", expr(2))
+    raise Goto(expr(2))
 
 def p_marker(expr):
     expr(3)

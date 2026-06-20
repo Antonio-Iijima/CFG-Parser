@@ -6,156 +6,47 @@ from datatypes import *
 def parse(expr: str, state_limit: int = 2**100) -> Parsed:
     """To-do: Implement GLR parser."""
     
-    from AST import (
-        expects, expected_patterns,
-        PROGRAM, K, 
-        EXPECTED_TOKENS,
-        EXPECTED_PATTERNS
-    )
-
     dFlag = get_config("flags", "debug")
 
-    remaining_tokens = tokenize(expr)
-    tokens = []
+    tokens = tokenize(expr)
     
-    # from glr import GLR
-    # GLR().parse(remaining_tokens)
-    # quit()
+    from lr1 import LALR_Parser
+    try:
+        parsed = LALR_Parser(dFlag).parse(tokens)
+    except Exception as e:
+        raise e
 
-
-    current_states = OrderedSet((State(),))
-    future_states = OrderedSet()
-
-    if dFlag:
-        print("EXPECTED TOKENS:")
-        for key, expected in sorted(EXPECTED_TOKENS.items(), key=lambda x: str(x)):
-            print(key, end=" :: ")
-            print(expected)
-            print()
-
-        print()
-        
-        print("EXPECTED PATTERNS:")
-        for key, expected in sorted(EXPECTED_PATTERNS.items(), key=lambda x: str(x)):
-            print(key, end=" :: ")
-            print(expected)
-            print()
-
-        print()
-
-    max_states = 0
-
-    # Process tokens sequentially, pursuing all valid shift/reduce paths in parallel.
-    while remaining_tokens:
-        token = remaining_tokens.pop(0)
-
-        # Otherwise set up to process states at this token
-        tokens.append(token)
-
-        next_token = remaining_tokens[0] if remaining_tokens else None
-
-        for state in current_states: state.append(token)
-        
-        reducible_states = current_states.copy()
-
-        # We need to iteratively reduce all states as far as possible,
-        # adding valid future states to the list as appropriate.
-        while reducible_states:
-
-            state = reducible_states.pop()
-            
-            if dFlag: print("State", stringify(state))
-
-            for (rule, module, variant, pattern) in expected_patterns(state[-1]):
-
-                idx = len(state) - len(pattern)
-                reducible = state[idx:]
-
-                # Reduce only if pattern matches the reducible part of the state.
-                if list(map(type, reducible)) == pattern:
-
-                    reduced = State(state[:idx] + [rule(reducible, module, variant)])
-
-                    if dFlag: print("Reduced", stringify(reduced))
-
-                    reducible_states.add(reduced)
-                    
-                    # Accept as future state if the following:
-                    # 1) EOI (no next token) or next token is expected
-                    # 2) Each token correctly expects the next token
-                    if (
-                        expects(reduced[-1], next_token)
-                        and (
-                            all(idx == k or expects(reduced[idx-k-1], reduced[idx-k]) 
-                                for k in range(min(K, len(reduced))))
-                        )
-                    ):
-                        if dFlag: print("Future", stringify(reduced)) or print()
-                        future_states.add(reduced)
- 
-                # If the current pattern does not match, but could match if given more tokens.
-                # elif (
-                #     (type(state[-1]) in pattern)
-                #     and (expects(state[-1], next_token))
-                # ): 
-                #     future_states.add(state)
-
-        max_states = max(max_states, len(future_states))
-        if max_states > state_limit: raise RuntimeError(f"Too many states to consider: {max_states}")
-        
-        current_states, future_states = future_states or current_states, OrderedSet()
-
-    accepting_states: OrderedSet = OrderedSet(
-        state[0] for state in current_states if (
-            len(state) == 1
-            and isinstance(state[0], PROGRAM)
-        ))
-    
-    if dFlag:
-        print()
-        print(list(str(state) for state in accepting_states))
-    
-    if not accepting_states: 
-        raise SyntaxError("parser terminated without any accepting states.")
-    
-    if (len(accepting_states) > 1):
-        accepted = min(accepting_states, key=lambda state: state.depth())
-        print(f"WARNING: {len(accepting_states)} parse trees found (ambiguous grammar)")
-        print(f"Resolving for minimum depth parse tree (d={accepted.depth()})")
-    else: accepted = accepting_states.pop()
-
-    return Parsed(expr, accepted, max_states)
+    return Parsed(expr, parsed, 0)
 
 
 def tokenize(unprocessed: str) -> list:
     from AST import TERMINALS
     
     string = preprocess_input(unprocessed)
-
-    past = ""
-
     tokens = []
 
+    lineno, i = 0, 0
     while string:
         matches = []
         
-        for rule, (module, regex) in TERMINALS.items():
-            match = regex.match(string)
-            if match: matches.append((match.group(), rule, module))
+        for regex in TERMINALS:
+            match = re.match(regex, string)
+            if match: matches.append((match.group(), regex))
 
         if not matches: 
-            raise SyntaxError(f"line {past.count("\n")+1}, unrecognized token '{string[0]}'")
+            raise SyntaxError(f"invalid token '{string[0]}' at line {lineno}, col {i}")
 
-        match, rule, module = max(matches, key=lambda tup: len(tup[0]))
-                
-        if (tokens or ("\n" not in match)): tokens.append(rule([match], module))
+        match, regex = max(matches, key=lambda tup: len(tup[0]))
+        
+        if (tokens or ("\n" not in match)): tokens.append(Token(match, regex, lineno, i))
+        lineno += match.count("\n")
+        i = match.rfind("\n") if ("\n" in match) else (i+len(match))
         
         string = string.removeprefix(match).lstrip(" ")
-        past += match
 
     filtered = list(filter(None, tokens))
 
-    return filtered
+    return filtered + [ EOI() ]
 
 
 def autoIndent(lines: list[str]) -> list:

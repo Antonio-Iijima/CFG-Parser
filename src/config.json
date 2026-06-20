@@ -1,16 +1,16 @@
 {
    "version": "0.0.0",
-   "language": "lisp",
+   "language": "test2",
    "flags": {
-      "force": true,
+      "debug": true,
       "interactive": false,
-      "debug": false,
+      "force": false,
       "clear": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/lisp"
+      "language": "languages/test2"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
@@ -19,7 +19,7 @@
       "newlines": false
    },
    "input": [
-      "in.lsp"
+      "in.test2"
    ],
    "output": "out.cpp",
    "tests": []

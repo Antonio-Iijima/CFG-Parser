@@ -13,8 +13,6 @@ import re
 
 
 class Grammar:
-    TERMINALS = {}
-    K = 0
     WARNINGS = {
         "dependency" : [],
         "main"       : []
@@ -33,10 +31,6 @@ class Grammar:
 
         self.modules = {}
         self.dependencies = self.traverse_dependencies(self.main, main=True)
-
-        # from rich import print
-        # print(self.dependencies)
-        # quit()
 
         for module, lines in self.modules.items():
             self.modules[module] = Module("MAIN" if module == self.main else module, lines)
@@ -111,12 +105,6 @@ class Grammar:
         return dependencies
 
     
-    @staticmethod
-    def add_terminal(rule: 'Nonterminal', regex: str) -> None:
-        """Adds a new terminal to the `Grammar`, binding it to the provided regular expression."""
-        Grammar.TERMINALS[rule] = regex
-
-
     def __str__(self) -> str:
         return "\n\n".join(module._str() for module in self.modules.values())
     
@@ -126,7 +114,7 @@ class Grammar:
 
         
 
-from datatypes import Rule
+from datatypes import *
 from utils import *
 
 
@@ -142,59 +130,28 @@ from utils import *
 
 MODULES = {self.embed()}
 
-GRAMMAR = {{}}
+GRAMMAR = {{ START : {{ ProductionData(START, "MAIN", 0, [PROGRAM]) }} }}
 
-for module, subgrammar in MODULES.items():
-    for rule, alternatives in subgrammar.items():
-        if not rule in GRAMMAR: GRAMMAR[rule] = {{}}
-        if not module in GRAMMAR[rule]: GRAMMAR[rule][module] = []
-
-        GRAMMAR[rule][module] += alternatives
-
+for module, grammar in MODULES.items():
+    for rule, alternatives in grammar.items():
+        if not rule in GRAMMAR: GRAMMAR[rule] = set()
         
-                
+        for variant, pattern in enumerate(alternatives):
+            GRAMMAR[rule].add(ProductionData(rule, module, variant, pattern))
+
+
+
 ##### ADDENDA #####
 
 
 
 TERMINALS = {{
-    rule : (module, re.compile(alternatives[0][0]))
-            for rule, modules in GRAMMAR.items()
-        for module, alternatives in modules.items() if (
-    1 == len(alternatives) == len(alternatives[0])
-    and isinstance(alternatives[0][0], str)
-    )
+    token 
+                for options in GRAMMAR.values()
+            for metadata in options
+        for token in metadata.pattern
+    if isinstance(token, str)
 }}
-
-K = {Grammar.K}
-
-
-
-##### HELPER FUNCTIONS #####
-
-
-
-def expected_patterns(x) -> tuple[Rule, int, list]:
-    return EXPECTED_PATTERNS.get(type(x), [])
-
-
-def nullable(x): return type(x) in NULLS
-
-
-def expects(previous: Rule|str, next: str|None) -> bool:
-    '''Check if `previous` expects `next` or either are `None`.'''
-    return (previous == None) or (next == None) or (type(next) in EXPECTED_TOKENS.get(type(previous), []))
-
-
-
-##### GRAMMAR POSTPROCESSING / EXPANSION #####
-
-
-
-NULLS             = find_nullable_rules(GRAMMAR)
-GRAMMAR           = eliminate_nulls(GRAMMAR, NULLS)
-EXPECTED_TOKENS   = build_expected_tokens(GRAMMAR)
-EXPECTED_PATTERNS = build_expected_patterns(GRAMMAR)
 """
         
         return text
@@ -318,31 +275,6 @@ class Pattern:
                     self.pattern.extend(Terminal(token) for token in pattern.split())
                     pattern = None
 
-        Grammar.K = max(Grammar.K, len(self.pattern))
-
-        if not (
-            (len(self.pattern) == 1) 
-            and (variants == 1)
-        ): self.optimize()
-
-
-    def optimize(self) -> None:
-        """Pattern optimization by substituting terminals with single-alternative nonterminals."""
-
-        for i, token in enumerate(self.pattern):
-            if isinstance(token, Terminal):
-                if (token.regex in Grammar.TERMINALS.values()):
-                    for new_rule, regex in Grammar.TERMINALS.items():
-                        if (regex == token.regex):
-                            self.pattern[i] = new_rule
-                            break     
-                else:
-                    new_rule, regex = Nonterminal(token.asRule()), token.regex
-                    self.pattern[i] = new_rule
-                    
-                    Grammar.add_terminal(new_rule, regex)
-                    self.module.add_rule(new_rule.name, regex)
-                    
 
     def _str(self) -> str:
         return " ".join(str(token) for token in self.pattern)
@@ -380,11 +312,6 @@ class Terminal:
         self.regex = name
 
 
-    def asRule(self) -> str:
-        """Constructs a unique nonterminal identifier for grammar optimization."""
-        return f"<T_{str(hash(self.regex))[2:7]}>"
-
-
     def __str__(self):
         return self.regex
     
@@ -394,4 +321,4 @@ class Terminal:
     
 
     def embed(self) -> str:
-        return f"r'{self.regex}'"
+        return "EPSILON" if self.regex == "ε" else f"r'{self.regex}'"

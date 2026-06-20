@@ -1,8 +1,23 @@
 from io import TextIOWrapper
 from json import load, dump
+from rich.table import Table
 
 import re
 import os
+
+
+
+### Errors and Exceptions ###
+
+
+
+class ParseError(Exception): pass
+class TableGenerationError(Exception): pass
+class ValidationError(Exception): pass
+
+
+
+### Utility Functions ###
 
 
 
@@ -54,7 +69,7 @@ def get_input(prompt: str = "", s: str = "") -> str:
     return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
 
 
-def regularize(path):
+def regularize(path: str) -> None:
     if os.path.isdir(path):
         for file in os.listdir(path):
             regularize(os.path.join(path, file))
@@ -87,106 +102,6 @@ def regularize(path):
             file.write(text)
 
 
-def find_nullable_rules(grammar: dict) -> set:
-    """Collect nullable rules (i.e. rules that can be expanded from EPSILON)."""
-
-    nulls = {"ε"}
-
-    count = 0
-    
-    while count < len(nulls):
-        for rule, modules in grammar.items():
-            for _, alternatives in modules.items():
-                for pattern in alternatives:
-                    if (
-                        len(pattern) == 1
-                        and pattern[0] in nulls
-                        and rule not in nulls
-                    ):
-                        nulls.add(rule)
-        count += 1
-
-    return nulls
-
-
-def eliminate_nulls(grammar: dict, nulls: set) -> dict:
-
-    for rule, modules in list(grammar.items()):
-        for module, alternatives in list(modules.items()):
-            
-            grammar[rule][module] = []
-            
-            for variant, pattern in enumerate(alternatives):
-                expanded_null_patterns = [(variant, [])]
-                
-                for token in pattern:
-
-                    # For non-epsilon tokens, append to each state;
-                    # if token is nullable, also add a new alternative where it is not included. 
-                    if not token == "ε":
-                        expanded_null_patterns = list((variant, state + [token]) for (variant, state) in expanded_null_patterns)
-                        if token in nulls:
-                            expanded_null_patterns += list((variant, state[:-1]) for (variant, state) in expanded_null_patterns)
-
-                # Filter out duplicates / infinite recursion
-                for (variant, expanded_null_pattern) in expanded_null_patterns:
-                    
-                    if expanded_null_pattern and not (
-                        expanded_null_pattern in grammar[rule][module]
-                        or len(expanded_null_pattern) == 1 and expanded_null_pattern[0] == rule
-                    ):
-                        grammar[rule][module].append((variant, expanded_null_pattern))
-            
-            if not grammar[rule][module]:
-                grammar[rule].pop(module)
-
-        if not grammar[rule]:
-            grammar.pop(rule)
-    
-    return grammar
-
-
-def build_expected_tokens(grammar: dict[str, dict]) -> dict:
-    """Constructs a dictionary mapping every token to a set of all possible subsequent tokens."""
-
-    def extend_expected_tokens(curr, next) -> list:    
-        if not curr in expected_tokens: expected_tokens[curr] = []
-        if not next in expected_tokens[curr]: expected_tokens[curr].append(next)
-
-        # Recurse into subsequent grammar rules
-        for module in grammar.get(next, []):
-            for (variant, pattern) in grammar[next][module]:
-                token = pattern[0]
-                if (not isinstance(token, str)) and (not token in expected_tokens[curr]):
-                    extend_expected_tokens(curr, token)
-
-    expected_tokens: dict[any, list] = {}
-
-    for modules in grammar.values():
-        for alternatives in modules.values():
-            for pattern in (p for (v, p) in alternatives if p):
-                for curr, next in zip(pattern[:-1], pattern[1:]):
-                    extend_expected_tokens(curr, next)
-                        
-    return expected_tokens
-
-
-def build_expected_patterns(grammar: dict):
-
-    expected_patterns: dict[any, list] = {}
-
-    for rule, modules in grammar.items():
-        for module, alternatives in modules.items():
-            for (variant, pattern) in alternatives:
-                for token in (t for t in pattern if not isinstance(t, str)):
-                    if not (token in expected_patterns): expected_patterns[token] = []
-                    
-                    if not (pattern in expected_patterns[token]):
-                        expected_patterns[token].append((rule, module, variant, pattern))
-
-    return expected_patterns
-
-
 def pathToFunc(path: str) -> str:
     """Converts a path .lib/path/to/somewhere to a function prefix p_path_to_somewhere_<fname>."""
     return f"p_{path.lower().removeprefix(".lib/").replace("/", "_")}_".lower()
@@ -202,13 +117,34 @@ def print_warnings(msg: str, log: dict) -> None:
                 print(f"       | {path}")
 
 
-def stringify(l: list[object]) -> list[str]:
+def tostr(l: list) -> list[str]:
+    """Shorthand for `list(map(str, l))`"""
     return list(map(str, l))
 
 
 def lib(path: str) -> str:
     """Prepend `.lib/` to `path` and replace all `.` with `/`."""
     return f".lib/{path.replace(".", "/")}"
+
+
+def table(title: str, headers: dict, rows: list = None, grid: bool = False) -> Table:
+    """Construct a renderable table from the headers and data."""
+
+    rows = rows or []
+
+    if grid:
+        display = Table.grid()
+    else:
+        display = Table()
+        for header, kwargs in headers.items():
+            display.add_column(header, **kwargs)
+    
+    for row in rows:
+        display.add_row(*row)
+
+    display.title = title
+
+    return display
 
 
 
