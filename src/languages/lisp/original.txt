@@ -1,0 +1,15 @@
+#require datatypes.identifier
+#require datatypes.numeric
+#require datatypes.string
+
+
+<PROGRAM>  ::= <LISPEXPR> | <LISPEXPR> <PROGRAM>
+<LISPEXPR> ::= <ATOM> | <LIST> | <QUOTE>
+
+<ATOM>     ::= c[ad]+r | <NUMBER> | <STRING> | [^\d\s\'()]+
+
+<LIST>     ::= \( \) | \( <ELEMS> \)
+<ELEMS>    ::= <ELEM> | <ELEM> <ELEMS>
+<ELEM>     ::= <LISPEXPR>
+
+<QUOTE>    ::= \' <ELEM>

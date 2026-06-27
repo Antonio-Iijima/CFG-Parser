@@ -1,6 +1,6 @@
 {
    "version": "0.0.0",
-   "language": "test2",
+   "language": "test4",
    "flags": {
       "debug": true,
       "interactive": false,
@@ -10,7 +10,7 @@
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/test2"
+      "language": "languages/test4"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
@@ -19,7 +19,7 @@
       "newlines": false
    },
    "input": [
-      "in.test2"
+      "in.test4"
    ],
    "output": "out.cpp",
    "tests": []

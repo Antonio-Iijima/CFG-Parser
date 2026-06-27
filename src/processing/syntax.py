@@ -145,13 +145,15 @@ for module, grammar in MODULES.items():
 
 
 
-TERMINALS = {{
+TOKENS = {{
     token 
-                for options in GRAMMAR.values()
-            for metadata in options
-        for token in metadata.pattern
-    if isinstance(token, str)
+            for options in GRAMMAR.values()
+        for metadata in options
+    for token in metadata.pattern
 }}
+
+TERMINALS = set(filter(lambda x: isinstance(x, str), TOKENS))
+# NONTERMINALS = TOKENS.difference(TERMINALS)
 """
         
         return text
@@ -321,4 +323,5 @@ class Terminal:
     
 
     def embed(self) -> str:
+        # return f"r'{self.regex}'"
         return "EPSILON" if self.regex == "ε" else f"r'{self.regex}'"

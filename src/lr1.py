@@ -15,14 +15,17 @@ class LALR_Parser:
 
         self.debug = debug
 
-        # for rule in GRAMMAR: self.first[rule] = self.compute_first(rule)
-
         self.construct_automaton({
             Item(0, ProductionData(START, "MAIN", 0, [ PROGRAM ])) : { EOI }
             })
         self.construct_table()
         
         if self.debug:
+
+            print()
+
+            print("GRAMMAR")
+            print(GRAMMAR)
             
             print()
 
@@ -35,21 +38,13 @@ class LALR_Parser:
 
 
     def isNullable(self, rule: Rule|str) -> bool:
-        if isinstance(rule, Rule):
-        
-            if rule in self.nulls:
-                return True
-            
-            else:
-                for productionData in GRAMMAR[rule]:
-                    if (
-                        (productionData.pattern == []) 
-                        or all(self.isNullable(token) for token in productionData.pattern if not (token == rule))
-                    ): 
-                        self.nulls.add(productionData.rule)
-                        return True
-                    
-        return False
+        return (
+            (not isinstance(rule, str))
+            and any(
+                    (productionData.isNull or all(self.isNullable(token) for token in productionData.pattern if not (token == rule)))
+                    for productionData in GRAMMAR[rule]
+                )
+            )
 
 
     def construct_automaton(self, kernel: dict[Item, set]) -> None:
@@ -64,26 +59,34 @@ class LALR_Parser:
             
         state = len(self.automaton)
         self.automaton[state] = self.closure(kernel)
-        transitions: dict[str|type, dict[Item, set]] = {}
 
-        for item, lookahead in self.automaton[state].items():
+        for items in self.get_transitions(self.automaton[state]).values():
+
+            nextKernel = {
+                Item(item.dot+1, item.production) : lookahead
+                for item, lookahead in items.items()
+            }
+
+            nextClosure = self.closure(nextKernel)
+            for closure in self.automaton.values():
+                if merge(closure, nextClosure): break
+            else: 
+                self.construct_automaton(nextKernel)
+
+
+    def get_transitions(self, closure: dict[Item, set]) -> dict[str|Rule, dict[Item, set]]:
+        "Organize transitions out of a given state closure by token."
+
+        transitions = {}
+
+        for item, lookahead in closure.items():
             if item.isReduction: continue
 
             if not item.current in transitions: transitions[item.current] = {}
 
             transitions[item.current].update({item : lookahead})
 
-        for token in transitions:
-
-            nextKernel = {
-                Item(item.dot+1, item.production) : lookahead
-                for item, lookahead in transitions[token].items()
-            }
-
-            for closure in self.automaton.values():
-                if merge(closure, self.closure(nextKernel)): break
-            else: 
-                self.construct_automaton(nextKernel)
+        return transitions
 
 
     def construct_table(self) -> None:
@@ -92,22 +95,26 @@ class LALR_Parser:
         for state, fromClosure in self.automaton.items():
             self.table[state] = {}
 
-            for item, lookahead in fromClosure.items():
-                if item.isReduction:
+            transitions = self.get_transitions(fromClosure)
+            reductions = { item : lookahead for item, lookahead in fromClosure.items() if item.isReduction }
 
-                    for token in lookahead:
-                        self.table[state][token] = self.table[state].get(token, set()).union({
-                            ("A", True) if (item.production.rule, token) == (START, EOI) 
-                            else ("R", self.rules.index(item.production))
-                        })
+            for item, lookahead in reductions.items():
+                for token in lookahead:
+                    self.table[state][token] = self.table[state].get(token, set()).union({
+                        ("A", True) if (item.production.rule, token) == (START, EOI)
+                        else ("R", self.rules.index(item.production))
+                    })
 
-                else:
-                    nextItem = Item(item.dot+1, item.production)
-                    action = ("S" if isinstance(item.current, str) else "G")
-                    
-                    self.table[state][item.current] = self.table[state].get(item.current, set()).union({ 
-                            (action, toState) for toState, toClosure in self.automaton.items() if nextItem in toClosure
-                        })
+            for token, items in transitions.items():
+                nextItems = {
+                        Item(item.dot+1, item.production)
+                        for item in items
+                    }
+                action = ("S" if isinstance(token, str) else "G")
+                
+                self.table[state][token] = self.table[state].get(token, set()).union({ 
+                        (action, toState) for toState, toClosure in self.automaton.items() if nextItems.issubset(toClosure)
+                    })
 
             self.table[state] = { token : list(actions) for token, actions in self.table[state].items() }
                             
@@ -119,84 +126,75 @@ class LALR_Parser:
                     print(f"{"/".join(action[0] for action in actions)} conflict in state {state} on token {token}")
 
 
-
     def closure(self, kernel: dict[Item, set]) -> dict[Item, set]:
         """Computes the closure of a given configuration."""
 
         items: dict[Item, set] = {}
-        expansions: dict[Item, set] = {}
 
         for initialItem, initialLookahead in kernel.items():
 
-            expansions[initialItem] = initialLookahead
+            expansions = [(initialItem, initialLookahead)]
 
             while expansions:
 
                 # add the most recent rule to the expansion
-                item, lookahead = expansions.popitem()
+                item, lookahead = expansions.pop()
 
-                if item.isEpsilon: continue
+                if item in items:
+                    items[item].update(lookahead)
+                    continue
 
                 items[item] = lookahead
 
                 # if the current token is a nonterminal, we must add further expansions
                 if not (item.isReduction or isinstance(item.current, str)):
-                    # compute the lookahead; if no following tokens, we have A -> .B, where lookahead is a subset of follow(A)
-                    lookahead = self.FIRST(item.next, initialLookahead)
+                    
+                    newLookahead = self.FIRST(item.next, initialLookahead)
 
-                    # add new configuration;
-                    # dot will always be at the beginning for a new nonterminal configuration
                     for productionData in GRAMMAR[item.current]:
-                        newItem = Item(0, productionData)
-                        if newItem in items:
-                            items[newItem].update(lookahead)
-                        else:
-                            expansions[newItem] = expansions.get(newItem, set()).union(lookahead)
-                            # if newItem in expansions:
-                            #     expansions[newItem].update(lookahead)
-                            # else:
-                            #     expansions[newItem] = lookahead
-                
+                        expansions.append((Item(0, productionData), newLookahead))
+
         return items
 
 
-    def FIRST(self, rules: list[Rule|str], lookahead: set = None) -> set[str]:
-        def compute_first(rule: Rule, exclude: list = None) -> set:
-            if rule in self.first: return self.first[rule]
+    def FIRST(self, sequence: list[Rule|str], lookahead: set = None) -> set[str]:
+        
+        def compute_first(rule: Rule|str, exclude: list = None) -> set:
+
+            if isinstance(rule, str): return { rule }
 
             exclude = exclude or set()
             first = set()
 
             for productionData in GRAMMAR[rule]:
                 for token in productionData.pattern:
+
+                    # terminals
                     if isinstance(token, str):
                         first.add(token)
-                        break
 
+                    # only nonterminals we have not seen yet, to avoid infinite recursion
                     elif token not in exclude:
-                        if token not in self.first:
-                            self.first[token] = compute_first(token, exclude.union({token}))
-                        first.update(self.first[token])
-                        if self.isNullable(token):
-                            first.add(EPSILON)
-                        else:
-                            break
+                        first.update(compute_first(token, exclude.union({token})))
+
+                    # add epsilon and process the next token if nullable;
+                    # break from this production otherwise
+                    # if self.isNullable(token):
+                    #     first.add("ε") 
+                    # else: break
+                    if not self.isNullable(token): break
 
             return first
-
-
+    
         out = set()
 
-        for rule in rules:
-            if isinstance(rule, str):
-                out.add(rule)
-            else:
-                if rule not in self.first:
-                    self.first[rule] = compute_first(rule)
-                out.update(self.first[rule])
+        for rule in sequence:
+            
+            if not rule in self.first: self.first[rule] = compute_first(rule)
+            
+            out.update(self.first[rule])
 
-            if self.isNullable(rule): out.add(EPSILON) # add epsilon and continue processing rules
-            else: break # otherwise done
+            if not self.isNullable(rule): break
 
         # if all rules are nullable
         else: out.update(lookahead)
@@ -229,57 +227,61 @@ class LALR_Parser:
             )
         
         step = -1
-        while input:
-            step += 1
-
-            action, data = self.table[state[-1]].get(input[0].regex, [("E", False)])[0]
-            
-            if self.debug:
-                parserOutput.add_row(
-                    str(step), 
-                    " ".join(tostr(state)), 
-                    " ".join(tostr(symbols)), 
-                    " ".join(tostr(input)), 
-                    { "A" : "ACC", "E" : "ERR" }.get(action, f"{action} {data}")
-                )
- 
-            match action:
+        try:
+            while input:
+                step += 1
                 
-                case "S":
-                    symbols.append(input.pop(0))
-                    state.append(data)
-
-                case "R":
-                    production: ProductionData = self.rules[data]
-                    reduction = []
-
-                    for _ in production.pattern:
-                        reduction.append(symbols.pop())
-                        state.pop()
-                    
-                    symbols.append(production.rule(reversed(reduction), production.module, production.variant))
-                    
-                    # Handle goto as part of reduce action
-                    action, data = self.table[state[-1]][production.rule][0]
-                    if action == "G": state.append(data)
-                    else: raise ParseError(f"expected goto on token {state[-1]}")
-
-                case "A":
-                    if len(symbols) == 1 and isinstance(symbols[0], PROGRAM):
-                        if self.debug: print(parserOutput)
-                        return symbols.pop()
-                    raise ParseError("could not parse expression")
+                action, data = self.table[state[-1]].get(input[0].regex, [("E", False)])[0]
                 
-                case "E": 
-                    expected = set({None : "EOI"}.get(item.current, item.current) for item in self.automaton[state[-1]])
+                if self.debug:
+                    parserOutput.add_row(
+                        str(step), 
+                        " ".join(tostr(state)), 
+                        " ".join(tostr(symbols)), 
+                        " ".join(tostr(input)), 
+                        { "A" : "ACC", "E" : "ERR" }.get(action, f"{action} {data}")
+                    )
+    
+                match action:
                     
-                    if self.debug: print(parserOutput)
+                    case "S":
+                        symbols.append(input.pop(0))
+                        state.append(data)
+
+                    case "R":
+                        production: ProductionData = self.rules[data]
+                        reduction = []
+
+                        for _ in production.pattern:
+                            reduction.append(symbols.pop())
+                            state.pop()
+                        
+                        symbols.append(production.rule(reversed(reduction), production.module, production.variant))
+                        
+                        # Handle goto as part of reduce action
+                        action, data = self.table[state[-1]][production.rule][0]
+                        if action == "G": state.append(data)
+                        else: raise ParseError(f"expected goto on token {state[-1]}")
+
+                    case "A":
+                        if len(symbols) == 1 and isinstance(symbols[0], PROGRAM): break
+                        raise ParseError("could not parse expression")
                     
-                    msg = f"unexpected input" \
-                        + (f" {input[0].info}" if isinstance(input[0], Token) else f" {input[0]}") \
-                        + f" (expected {expected})"
+                    case "E": 
+                        expected = set(self.table[state[-1]].keys())
+
+                        msg = f"unexpected input" \
+                            + (f" {input[0].info}" if isinstance(input[0], Token) else f" {input[0]}") \
+                            + f" (expected {expected})"
+                        
+                        raise ParseError(msg)
                     
-                    raise ParseError(msg)
+                    case _: raise ParseError(f"unknown action {action} in state {state}")
+        
+        finally:
+            if self.debug: print(parserOutput, "")
+
+        return symbols.pop()
 
     
     def show_tables(self) -> None:

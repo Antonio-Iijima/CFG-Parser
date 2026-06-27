@@ -7,10 +7,10 @@ class Rule:
         self.__name__ = type(self).__name__
         self.fname = pathToFunc(modulename) + self.__name__.lower()
         self.variant = variant
-        self.children = tuple(filter(None, children))
+        self.children = tuple(children)
         self.modulename = modulename
         self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in children)
-        self.depth = 1 + max(child.depth for child in self.children)
+        self.depth = (1 + max((child.depth for child in self.children), default=0))
 
 
     def __eq__(self, other: 'Rule'):
@@ -40,6 +40,7 @@ class ProductionData:
         self.module = module
         self.variant = variant
         self.pattern = list(t for t in pattern if not t == EPSILON)
+        self.isNull = (self.pattern == [])
         
 
     def __hash__(self):
