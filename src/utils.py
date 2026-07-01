@@ -21,11 +21,11 @@ class ValidationError(Exception): pass
 
 
 
-def get_config(*keys): 
+def get_json(filename: str, *keys): 
     """Look up a value from the config, applying keys sequentially.
     No arguments returns the config itself."""
     
-    with open(os.path.join(os.path.dirname(__file__), "config.json")) as file:
+    with open(os.path.join(os.path.dirname(__file__), filename)) as file:
         cfg = load(file)
 
     for key in keys: cfg = cfg[key]
@@ -33,11 +33,19 @@ def get_config(*keys):
     return cfg
 
 
-def set_config(cfg: dict, indent: int = 3):
+def set_json(filename: str, cfg: dict, indent: int = 3):
     """Writes a provided `dict` to the config.json file."""
     
-    with open(os.path.join(os.path.dirname(__file__), "config.json"), "w") as file:
+    with open(os.path.join(os.path.dirname(__file__), filename), "w") as file:
         dump(cfg, file, indent=indent)
+
+
+def get_config(*keys):
+    return get_json("config.json", *keys)
+
+
+def set_config(*keys):
+    return set_json("config.json", *keys)
 
 
 def preprocess_text(text: TextIOWrapper) -> list[str]: 

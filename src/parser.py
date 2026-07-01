@@ -1,5 +1,6 @@
 from utils import *
 from datatypes import *
+from lalr import LALR_Parser
 
 
 
@@ -9,14 +10,10 @@ def parse(expr: str, state_limit: int = 2**100) -> Parsed:
     dFlag = get_config("flags", "debug")
 
     tokens = tokenize(expr)
-    
-    from lr1 import LALR_Parser
-    try:
-        parsed = LALR_Parser(dFlag).parse(tokens)
-    except Exception as e:
-        raise e
+    parser = LALR_Parser(dFlag)
+    parser.load()
 
-    return Parsed(expr, parsed, 0)
+    return Parsed(expr, parser.parse(tokens), 0)
 
 
 def tokenize(unprocessed: str) -> list:

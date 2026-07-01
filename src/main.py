@@ -1,4 +1,5 @@
 from utils import get_config, set_config, get_input
+from lalr import LALR_Parser
 
 import processing
 

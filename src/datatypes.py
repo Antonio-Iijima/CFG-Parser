@@ -1,4 +1,4 @@
-from utils import pathToFunc
+from utils import pathToFunc, tostr
 
 
 
@@ -52,7 +52,11 @@ class ProductionData:
 
 
     def __repr__(self):
-        return self.__str__()
+        return f"""ProductionData( # {str(self)}
+            {self.rule.__name__}, '{self.module}', {self.variant}, [{
+                ", ".join(f"r'{token}'" if isinstance(token, str) 
+                else token.__name__ for token in self.pattern)
+                }])"""
 
 
 

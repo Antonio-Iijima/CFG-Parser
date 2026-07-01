@@ -1,8 +1,7 @@
-#require datatypes.list
-
-
 <PROGRAM>  ::= <BOOLEXPR> | <BOOLEXPR> \n+ <PROGRAM>
 <BOOLEXPR> ::= \( <LIST> , <EXPR> \)
+<LIST>     ::= \[ \] | \[ <ATOMS> \]
+<ATOMS>    ::= <ATOM> | <ATOM> , <ATOMS>
 <ATOM>     ::= <VAR>
 <EXPR>     ::= <AND> \| <EXPR> | <AND>
 <AND>      ::= <NOT> & <AND> | <NOT>

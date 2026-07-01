@@ -1,26 +1,24 @@
 {
    "version": "0.0.0",
-   "language": "test4",
+   "language": "banter",
    "flags": {
-      "debug": true,
-      "interactive": false,
+      "interactive": true,
+      "debug": false,
       "force": false,
       "clear": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/test4"
+      "language": "languages/banter"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
       "dedent": " //DEDENTATION-MARKER// ",
-      "indentation": false,
-      "newlines": false
+      "indentation": true,
+      "newlines": true
    },
-   "input": [
-      "in.test4"
-   ],
+   "input": [],
    "output": "out.cpp",
    "tests": []
 }

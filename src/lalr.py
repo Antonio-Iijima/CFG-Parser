@@ -1,6 +1,9 @@
 from AST import *
+
 from rich import print
 from rich.table import Table
+
+from importlib import reload
 
 
 
@@ -14,7 +17,17 @@ class LALR_Parser:
         self.first: dict[Rule] = {}
 
         self.debug = debug
+    
 
+    def load(self):
+        import parsetable
+        reload(parsetable)
+        self.rules = parsetable.RULES
+        self.table = parsetable.TABLE
+
+
+    def generate(self):
+        
         self.construct_automaton({
             Item(0, ProductionData(START, "MAIN", 0, [ PROGRAM ])) : { EOI }
             })
@@ -36,6 +49,35 @@ class LALR_Parser:
             
             self.show_tables()
 
+        with open("parsetable.py", "w") as file:
+            file.write(self.tableToStr)
+
+
+    @property
+    def tableToStr(self) -> str:
+        def norm(x): return (
+            f"r'{x}'" if isinstance(x, str) 
+            else x.__repr__() if isinstance(x, ProductionData)
+            else x if isinstance(x, (int, float, bool, type(None))) 
+            else x.__name__
+        )
+
+        return f"""from AST import *
+
+
+        
+RULES = (
+    {",\n    ".join(f"{norm(rule)}" for rule in self.rules)}
+)
+
+
+
+TABLE = {{ 
+    {",\n    ".join(f"""{state} : {{
+        {",\n        ".join(f"{norm(token)} : {actions}" for token, actions in transitions.items())}
+    }}""" for state, transitions in self.table.items())}
+}}"""
+        
 
     def isNullable(self, rule: Rule|str) -> bool:
         return (
@@ -129,77 +171,58 @@ class LALR_Parser:
     def closure(self, kernel: dict[Item, set]) -> dict[Item, set]:
         """Computes the closure of a given configuration."""
 
-        items: dict[Item, set] = {}
+        items: list[tuple[Item, set]] = []
 
-        for initialItem, initialLookahead in kernel.items():
+        expansions = list(kernel.items())
 
-            expansions = [(initialItem, initialLookahead)]
+        while expansions:
 
-            while expansions:
+            # add the most recent rule to the expansion
+            item, lookahead = expansions.pop()
 
-                # add the most recent rule to the expansion
-                item, lookahead = expansions.pop()
+            if (item, lookahead) in items: continue
 
-                if item in items:
-                    items[item].update(lookahead)
-                    continue
+            items.append((item, lookahead))
 
-                items[item] = lookahead
+            # if the current token is a nonterminal, we must add further expansions
+            if not (item.isReduction or isinstance(item.current, str)):
+                
+                newLookahead = self.FIRST(item.next, lookahead)
 
-                # if the current token is a nonterminal, we must add further expansions
-                if not (item.isReduction or isinstance(item.current, str)):
-                    
-                    newLookahead = self.FIRST(item.next, initialLookahead)
+                for productionData in GRAMMAR[item.current]:
+                    expansions.append((Item(0, productionData), newLookahead))
 
-                    for productionData in GRAMMAR[item.current]:
-                        expansions.append((Item(0, productionData), newLookahead))
+        out: dict[Item, set] = {}
 
-        return items
-
-
-    def FIRST(self, sequence: list[Rule|str], lookahead: set = None) -> set[str]:
-        
-        def compute_first(rule: Rule|str, exclude: list = None) -> set:
-
-            if isinstance(rule, str): return { rule }
-
-            exclude = exclude or set()
-            first = set()
-
-            for productionData in GRAMMAR[rule]:
-                for token in productionData.pattern:
-
-                    # terminals
-                    if isinstance(token, str):
-                        first.add(token)
-
-                    # only nonterminals we have not seen yet, to avoid infinite recursion
-                    elif token not in exclude:
-                        first.update(compute_first(token, exclude.union({token})))
-
-                    # add epsilon and process the next token if nullable;
-                    # break from this production otherwise
-                    # if self.isNullable(token):
-                    #     first.add("ε") 
-                    # else: break
-                    if not self.isNullable(token): break
-
-            return first
-    
-        out = set()
-
-        for rule in sequence:
-            
-            if not rule in self.first: self.first[rule] = compute_first(rule)
-            
-            out.update(self.first[rule])
-
-            if not self.isNullable(rule): break
-
-        # if all rules are nullable
-        else: out.update(lookahead)
+        for (item, lookahead) in items:
+            if item in out:
+                out[item].update(lookahead)
+            else:
+                out[item] = lookahead
 
         return out
+
+
+    def FIRST(self, sequence: list[Rule|str], lookahead: set = None, exclude: set = None) -> set[str]:
+    
+        exclude = exclude or set()
+        first = set()
+
+        for token in sequence:
+            if isinstance(token, str):
+                first.add(token)
+                break
+
+            elif not token in exclude:
+                for productionData in GRAMMAR[token]: 
+                    first.update(self.FIRST(productionData.pattern, set(), exclude.union({token})))
+                
+                if self.isNullable(token): continue
+                else: break
+
+        else: first.update(lookahead)
+
+        return first
 
             
     def parse(self, input: list[Token], symbols: list = None, state: list = None) -> Rule:
@@ -208,12 +231,12 @@ class LALR_Parser:
 
         if self.debug:
 
-            print()
+            # print()
             
-            print("FIRST")
-            print(self.first)
+            # print("FIRST")
+            # print(self.first)
             
-            print()
+            # print()
 
             parserOutput = table(
                 title="Parser Output",
@@ -268,7 +291,7 @@ class LALR_Parser:
                         raise ParseError("could not parse expression")
                     
                     case "E": 
-                        expected = set(self.table[state[-1]].keys())
+                        expected = set(tok for tok in self.table[state[-1]].keys() if isinstance(tok, str))
 
                         msg = f"unexpected input" \
                             + (f" {input[0].info}" if isinstance(input[0], Token) else f" {input[0]}") \
