@@ -1,4 +1,4 @@
-from AST import *
+from parser.AST import *
 
 from rich import print
 from rich.table import Table
@@ -7,7 +7,9 @@ from importlib import reload
 
 
 
-class LALR_Parser:
+class LALR1:
+    """LALR(1) Parser."""
+
     def __init__(self, debug: bool = False):
         self.rules = list(e for opts in GRAMMAR.values() for e in opts)
         self.nulls: set = set()
@@ -18,12 +20,13 @@ class LALR_Parser:
 
         self.debug = debug
     
-
-    def load(self):
-        import parsetable
+    
+    def cache(self) -> 'LALR1':
+        import parser.parsetable as parsetable
         reload(parsetable)
         self.rules = parsetable.RULES
         self.table = parsetable.TABLE
+        return self
 
 
     def generate(self):
@@ -49,11 +52,10 @@ class LALR_Parser:
             
             self.show_tables()
 
-        with open("parsetable.py", "w") as file:
-            file.write(self.tableToStr)
+        with open("parser/parsetable.py", "w") as file:
+            file.write(self.tableToStr())
 
 
-    @property
     def tableToStr(self) -> str:
         def norm(x): return (
             f"r'{x}'" if isinstance(x, str) 
@@ -62,7 +64,7 @@ class LALR_Parser:
             else x.__name__
         )
 
-        return f"""from AST import *
+        return f"""from parser.AST import *
 
 
         

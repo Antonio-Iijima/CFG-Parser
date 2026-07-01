@@ -1,4 +1,4 @@
-from utils import pathToFunc, tostr
+from utils import pathToFunc
 
 
 

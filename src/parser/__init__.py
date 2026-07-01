@@ -1,8 +1,39 @@
+from parser.lalr import (
+    LALR1
+)
+
+# try:
+from parser.AST import (
+    GRAMMAR,
+    TERMINALS,
+    TOKENS,
+    START,
+    PROGRAM
+)
+# except:
+
+from parser.eval import _evaluate, Expr
+
 from utils import *
 from datatypes import *
-from lalr import LALR_Parser
+from parser.lalr import LALR1
 
 
+
+# potential future logic to swap parsing algorithms
+Parser = LALR1
+
+
+
+def evaluate(string: str) -> any:
+    """Eval-Print"""
+    try:
+        out = _evaluate(Expr(parse(string).AST))
+        if out is not None: print(out)
+
+    except Exception as e:
+        raise e
+    
 
 def parse(expr: str, state_limit: int = 2**100) -> Parsed:
     """To-do: Implement GLR parser."""
@@ -10,14 +41,14 @@ def parse(expr: str, state_limit: int = 2**100) -> Parsed:
     dFlag = get_config("flags", "debug")
 
     tokens = tokenize(expr)
-    parser = LALR_Parser(dFlag)
-    parser.load()
+    parser = Parser(dFlag).cache()
 
     return Parsed(expr, parser.parse(tokens), 0)
 
 
 def tokenize(unprocessed: str) -> list:
-    from AST import TERMINALS
+    """Fully tokenize a raw unprocessed string and add EOI marker."""
+    # from parser.AST import TERMINALS
     
     string = preprocess_input(unprocessed)
     tokens = []

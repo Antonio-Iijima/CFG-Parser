@@ -1,0 +1,6 @@
+<PROGRAM>     ::= <RULE> | <RULE> <PROGRAM>
+<RULE>        ::= <NON-TERMINAL> -> <EXPRESSION>
+<EXPRESSION>  ::= <TERM> | <TERM> \| <EXPRESSION>
+<TERM>        ::= <TERMINAL> | <NONTERMINAL>
+<NONTERMINAL> ::= \<[_a-zA-Z][_a-zA-Z0-9]*\>
+<TERMINAL>    ::= .*

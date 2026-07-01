@@ -1,5 +1,4 @@
 from utils import get_config, set_config, get_input
-from lalr import LALR_Parser
 
 import processing
 
@@ -77,18 +76,18 @@ def run(input: tuple, **flags):
         processing.compile()
 
 
-    from eval import process
+    from parser import evaluate
 
 
     for filename in input:
         with open(filename) as file:
-            process(file.read())
+            evaluate(file.read())
 
     if cfg["flags"]["interactive"]:
         for line in iter(lambda: get_input("</> "), "quit"):
             if line.strip():
                 if cfg["flags"]["debug"]: start = time()
-                process(line)
+                evaluate(line)
                 if cfg["flags"]["debug"]: print(f"Runtime: {time() - start}")    
 
 

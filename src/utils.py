@@ -7,13 +7,13 @@ import os
 
 
 
-### Errors and Exceptions ###
+### Custom Errors and Exceptions ###
 
 
 
-class ParseError(Exception): pass
 class TableGenerationError(Exception): pass
 class ValidationError(Exception): pass
+class ParseError(Exception): pass
 
 
 

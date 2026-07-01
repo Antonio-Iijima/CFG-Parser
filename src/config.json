@@ -1,8 +1,8 @@
 {
    "version": "0.0.0",
-   "language": "banter",
+   "language": "boolexpr",
    "flags": {
-      "interactive": true,
+      "interactive": false,
       "debug": false,
       "force": false,
       "clear": false
@@ -10,15 +10,17 @@
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/banter"
+      "language": "languages/boolexpr"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
       "dedent": " //DEDENTATION-MARKER// ",
-      "indentation": true,
+      "indentation": false,
       "newlines": true
    },
-   "input": [],
+   "input": [
+      "../examples/b.bool"
+   ],
    "output": "out.cpp",
    "tests": []
 }

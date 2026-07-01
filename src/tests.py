@@ -1,5 +1,5 @@
 from utils import get_config
-from eval import validate
+from parser.eval import validate
 from parser import parse
 
 from sys import setrecursionlimit
