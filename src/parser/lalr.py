@@ -233,13 +233,6 @@ TABLE = {{
 
         if self.debug:
 
-            # print()
-            
-            # print("FIRST")
-            # print(self.first)
-            
-            # print()
-
             parserOutput = table(
                 title="Parser Output",
                 headers={

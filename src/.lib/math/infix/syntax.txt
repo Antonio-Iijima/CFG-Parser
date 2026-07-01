@@ -8,9 +8,9 @@
 <VALUE>      ::= <NUMBER>
 
 <COMPARISON> ::= <LE> | <LEQ> | <GE> | <GEQ> | <EQ> | <NEQ>
-<LE>         ::= <MATHEXPR> < <MATHEXPR>
-<LEQ>        ::= <MATHEXPR> <= <MATHEXPR>
-<GE>         ::= <MATHEXPR> > <MATHEXPR>
-<GEQ>        ::= <MATHEXPR> >= <MATHEXPR>
-<EQ>         ::= <MATHEXPR> == <MATHEXPR>
-<NEQ>        ::= <MATHEXPR> != <MATHEXPR>
+<LE>         ::= <MATHEXPR> < <COMPARISON>
+<LEQ>        ::= <MATHEXPR> <= <COMPARISON>
+<GE>         ::= <MATHEXPR> > <COMPARISON>
+<GEQ>        ::= <MATHEXPR> >= <COMPARISON>
+<EQ>         ::= <MATHEXPR> == <COMPARISON>
+<NEQ>        ::= <MATHEXPR> != <COMPARISON>

@@ -5,42 +5,142 @@ from parser.AST import *
 RULES = (
     ProductionData( # <START> ::= <PROGRAM>
             START, 'MAIN', 0, [PROGRAM]),
-    ProductionData( # <PROGRAM> ::= <BOOLEXPR>
-            PROGRAM, 'MAIN', 0, [BOOLEXPR]),
-    ProductionData( # <PROGRAM> ::= <BOOLEXPR> \n+ <PROGRAM>
-            PROGRAM, 'MAIN', 1, [BOOLEXPR, r'\n+', PROGRAM]),
-    ProductionData( # <BOOLEXPR> ::= \( <LIST> , <EXPR> \)
-            BOOLEXPR, 'MAIN', 0, [r'\(', LIST, r',', EXPR, r'\)']),
-    ProductionData( # <LIST> ::= \[ \]
-            LIST, 'MAIN', 0, [r'\[', r'\]']),
-    ProductionData( # <LIST> ::= \[ <ATOMS> \]
-            LIST, 'MAIN', 1, [r'\[', ATOMS, r'\]']),
-    ProductionData( # <ATOMS> ::= <ATOM>
-            ATOMS, 'MAIN', 0, [ATOM]),
-    ProductionData( # <ATOMS> ::= <ATOM> , <ATOMS>
-            ATOMS, 'MAIN', 1, [ATOM, r',', ATOMS]),
-    ProductionData( # <ATOM> ::= <VAR>
-            ATOM, 'MAIN', 0, [VAR]),
-    ProductionData( # <EXPR> ::= <AND> \| <EXPR>
-            EXPR, 'MAIN', 0, [AND, r'\|', EXPR]),
-    ProductionData( # <EXPR> ::= <AND>
-            EXPR, 'MAIN', 1, [AND]),
-    ProductionData( # <AND> ::= <NOT> & <AND>
-            AND, 'MAIN', 0, [NOT, r'&', AND]),
-    ProductionData( # <AND> ::= <NOT>
-            AND, 'MAIN', 1, [NOT]),
-    ProductionData( # <NOT> ::= <VAR>
-            NOT, 'MAIN', 2, [VAR]),
-    ProductionData( # <NOT> ::= ~ <NOT>
-            NOT, 'MAIN', 0, [r'~', NOT]),
-    ProductionData( # <NOT> ::= <LITERAL>
-            NOT, 'MAIN', 1, [LITERAL]),
-    ProductionData( # <LITERAL> ::= t
-            LITERAL, 'MAIN', 0, [r't']),
-    ProductionData( # <LITERAL> ::= f
-            LITERAL, 'MAIN', 1, [r'f']),
-    ProductionData( # <VAR> ::= [a-eg-su-z]
-            VAR, 'MAIN', 0, [r'[a-eg-su-z]'])
+    ProductionData( # <PROGRAM> ::= <STATEMENT_LIST>
+            PROGRAM, 'MAIN', 0, [STATEMENT_LIST]),
+    ProductionData( # <PROGRAM> ::= <EXPRESSION>
+            PROGRAM, 'MAIN', 1, [EXPRESSION]),
+    ProductionData( # <STATEMENT_LIST> ::= <STATEMENT>
+            STATEMENT_LIST, 'MAIN', 0, [STATEMENT]),
+    ProductionData( # <STATEMENT_LIST> ::= <STATEMENT> \n+ <STATEMENT_LIST>
+            STATEMENT_LIST, 'MAIN', 1, [STATEMENT, r'\n+', STATEMENT_LIST]),
+    ProductionData( # <STATEMENT> ::= <ASSIGNMENT>
+            STATEMENT, 'MAIN', 0, [ASSIGNMENT]),
+    ProductionData( # <STATEMENT> ::= <RETURN>
+            STATEMENT, 'MAIN', 2, [RETURN]),
+    ProductionData( # <STATEMENT> ::= <PRINT>
+            STATEMENT, 'MAIN', 5, [PRINT]),
+    ProductionData( # <STATEMENT> ::= <CONDITIONAL>
+            STATEMENT, 'MAIN', 1, [CONDITIONAL]),
+    ProductionData( # <STATEMENT> ::= <MARKER>
+            STATEMENT, 'MAIN', 4, [MARKER]),
+    ProductionData( # <STATEMENT> ::= <GOTO>
+            STATEMENT, 'MAIN', 3, [GOTO]),
+    ProductionData( # <EXPRESSION> ::= <MATHEXPR>
+            EXPRESSION, 'MAIN', 0, [MATHEXPR]),
+    ProductionData( # <VALUE> ::= <LABEL>
+            VALUE, 'MAIN', 1, [LABEL]),
+    ProductionData( # <VALUE> ::= <BOOL>
+            VALUE, 'MAIN', 2, [BOOL]),
+    ProductionData( # <VALUE> ::= <NUMBER>
+            VALUE, 'MATH_INFIX', 0, [NUMBER]),
+    ProductionData( # <VALUE> ::= <STRING>
+            VALUE, 'MAIN', 0, [STRING]),
+    ProductionData( # <LABEL> ::= <ID>
+            LABEL, 'MAIN', 0, [ID]),
+    ProductionData( # <BOOL> ::= True
+            BOOL, 'MAIN', 0, [r'True']),
+    ProductionData( # <BOOL> ::= False
+            BOOL, 'MAIN', 1, [r'False']),
+    ProductionData( # <BOOL> ::= True
+            BOOL, 'DATATYPES_NUMERIC', 0, [r'True']),
+    ProductionData( # <BOOL> ::= False
+            BOOL, 'DATATYPES_NUMERIC', 1, [r'False']),
+    ProductionData( # <ASSIGNMENT> ::= let <ID> be <EXPRESSION>
+            ASSIGNMENT, 'MAIN', 0, [r'let', ID, r'be', EXPRESSION]),
+    ProductionData( # <CONDITIONAL> ::= <IF_THEN>
+            CONDITIONAL, 'MAIN', 0, [IF_THEN]),
+    ProductionData( # <CONDITIONAL> ::= <IF_THEN_ELSE>
+            CONDITIONAL, 'MAIN', 1, [IF_THEN_ELSE]),
+    ProductionData( # <IF_THEN> ::= if <COMPARISON> , then <BLOCK>
+            IF_THEN, 'MAIN', 0, [r'if', COMPARISON, r',', r'then', BLOCK]),
+    ProductionData( # <IF_THEN_ELSE> ::= if <COMPARISON> , then <BLOCK> \n+ else <BLOCK>
+            IF_THEN_ELSE, 'MAIN', 0, [r'if', COMPARISON, r',', r'then', BLOCK, r'\n+', r'else', BLOCK]),
+    ProductionData( # <INDENT> ::= //INDENTATION-MARKER//
+            INDENT, 'MAIN', 0, [r'//INDENTATION-MARKER//']),
+    ProductionData( # <DEDENT> ::= //DEDENTATION-MARKER//
+            DEDENT, 'MAIN', 0, [r'//DEDENTATION-MARKER//']),
+    ProductionData( # <BLOCK> ::= \n+ <INDENT> <STATEMENT_LIST> <DEDENT>
+            BLOCK, 'MAIN', 0, [r'\n+', INDENT, STATEMENT_LIST, DEDENT]),
+    ProductionData( # <RETURN> ::= return <EXPRESSION>
+            RETURN, 'MAIN', 0, [r'return', EXPRESSION]),
+    ProductionData( # <GOTO> ::= goto instruction <MARK>
+            GOTO, 'MAIN', 0, [r'goto', r'instruction', MARK]),
+    ProductionData( # <MARKER> ::= @ <MARK> \n+ <STATEMENT_LIST>
+            MARKER, 'MAIN', 0, [r'@', MARK, r'\n+', STATEMENT_LIST]),
+    ProductionData( # <MARK> ::= <ID>
+            MARK, 'MAIN', 0, [ID]),
+    ProductionData( # <MARK> ::= <NUMBER>
+            MARK, 'MAIN', 1, [NUMBER]),
+    ProductionData( # <PRINT> ::= print <EXPRESSION>
+            PRINT, 'MAIN', 0, [r'print', EXPRESSION]),
+    ProductionData( # <PRINT> ::= print
+            PRINT, 'MAIN', 1, [r'print']),
+    ProductionData( # <ID> ::= [_a-zA-Z][_a-zA-Z0-9]*
+            ID, 'DATATYPES_IDENTIFIER', 0, [r'[_a-zA-Z][_a-zA-Z0-9]*']),
+    ProductionData( # <STRING> ::= "[^"\n]*"
+            STRING, 'DATATYPES_STRING', 0, [r'"[^"\n]*"']),
+    ProductionData( # <NUMBER> ::= <INT>
+            NUMBER, 'DATATYPES_NUMERIC', 0, [INT]),
+    ProductionData( # <NUMBER> ::= <FLOAT>
+            NUMBER, 'DATATYPES_NUMERIC', 1, [FLOAT]),
+    ProductionData( # <NUMBER> ::= <BOOL>
+            NUMBER, 'DATATYPES_NUMERIC', 2, [BOOL]),
+    ProductionData( # <INT> ::= 0
+            INT, 'DATATYPES_NUMERIC', 0, [r'0']),
+    ProductionData( # <INT> ::= [1-9]\d*
+            INT, 'DATATYPES_NUMERIC', 1, [r'[1-9]\d*']),
+    ProductionData( # <FLOAT> ::= \d*\.\d+
+            FLOAT, 'DATATYPES_NUMERIC', 0, [r'\d*\.\d+']),
+    ProductionData( # <MATHEXPR> ::= <TERM>
+            MATHEXPR, 'MATH_INFIX', 2, [TERM]),
+    ProductionData( # <MATHEXPR> ::= <COMPARISON>
+            MATHEXPR, 'MATH_INFIX', 3, [COMPARISON]),
+    ProductionData( # <MATHEXPR> ::= <ADD>
+            MATHEXPR, 'MATH_INFIX', 0, [ADD]),
+    ProductionData( # <MATHEXPR> ::= <SUBTRACT>
+            MATHEXPR, 'MATH_INFIX', 1, [SUBTRACT]),
+    ProductionData( # <ADD> ::= <MATHEXPR> \+ <TERM>
+            ADD, 'MATH_INFIX', 0, [MATHEXPR, r'\+', TERM]),
+    ProductionData( # <SUBTRACT> ::= <MATHEXPR> - <TERM>
+            SUBTRACT, 'MATH_INFIX', 0, [MATHEXPR, r'-', TERM]),
+    ProductionData( # <TERM> ::= <MULTIPLY>
+            TERM, 'MATH_INFIX', 0, [MULTIPLY]),
+    ProductionData( # <TERM> ::= <DIVIDE>
+            TERM, 'MATH_INFIX', 1, [DIVIDE]),
+    ProductionData( # <TERM> ::= <FACTOR>
+            TERM, 'MATH_INFIX', 2, [FACTOR]),
+    ProductionData( # <MULTIPLY> ::= <TERM> \* <FACTOR>
+            MULTIPLY, 'MATH_INFIX', 0, [TERM, r'\*', FACTOR]),
+    ProductionData( # <DIVIDE> ::= <TERM> / <FACTOR>
+            DIVIDE, 'MATH_INFIX', 0, [TERM, r'/', FACTOR]),
+    ProductionData( # <FACTOR> ::= \( <MATHEXPR> \)
+            FACTOR, 'MATH_INFIX', 0, [r'\(', MATHEXPR, r'\)']),
+    ProductionData( # <FACTOR> ::= <VALUE>
+            FACTOR, 'MATH_INFIX', 1, [VALUE]),
+    ProductionData( # <COMPARISON> ::= <GEQ>
+            COMPARISON, 'MATH_INFIX', 3, [GEQ]),
+    ProductionData( # <COMPARISON> ::= <LE>
+            COMPARISON, 'MATH_INFIX', 0, [LE]),
+    ProductionData( # <COMPARISON> ::= <GE>
+            COMPARISON, 'MATH_INFIX', 2, [GE]),
+    ProductionData( # <COMPARISON> ::= <NEQ>
+            COMPARISON, 'MATH_INFIX', 5, [NEQ]),
+    ProductionData( # <COMPARISON> ::= <LEQ>
+            COMPARISON, 'MATH_INFIX', 1, [LEQ]),
+    ProductionData( # <COMPARISON> ::= <EQ>
+            COMPARISON, 'MATH_INFIX', 4, [EQ]),
+    ProductionData( # <LE> ::= <MATHEXPR> < <COMPARISON>
+            LE, 'MATH_INFIX', 0, [MATHEXPR, r'<', COMPARISON]),
+    ProductionData( # <LEQ> ::= <MATHEXPR> <= <COMPARISON>
+            LEQ, 'MATH_INFIX', 0, [MATHEXPR, r'<=', COMPARISON]),
+    ProductionData( # <GE> ::= <MATHEXPR> > <COMPARISON>
+            GE, 'MATH_INFIX', 0, [MATHEXPR, r'>', COMPARISON]),
+    ProductionData( # <GEQ> ::= <MATHEXPR> >= <COMPARISON>
+            GEQ, 'MATH_INFIX', 0, [MATHEXPR, r'>=', COMPARISON]),
+    ProductionData( # <EQ> ::= <MATHEXPR> == <COMPARISON>
+            EQ, 'MATH_INFIX', 0, [MATHEXPR, r'==', COMPARISON]),
+    ProductionData( # <NEQ> ::= <MATHEXPR> != <COMPARISON>
+            NEQ, 'MATH_INFIX', 0, [MATHEXPR, r'!=', COMPARISON])
 )
 
 
@@ -48,158 +148,1362 @@ RULES = (
 TABLE = { 
     0 : {
         PROGRAM : [('G', 1)],
-        BOOLEXPR : [('G', 2)],
-        r'\(' : [('S', 5)]
+        EXPRESSION : [('G', 2)],
+        MATHEXPR : [('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        COMPARISON : [('G', 9), ('G', 47), ('G', 5), ('G', 75), ('G', 43), ('G', 33), ('G', 55), ('G', 45)],
+        EQ : [('G', 6)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)],
+        STATEMENT_LIST : [('G', 56)],
+        STATEMENT : [('G', 57)],
+        GOTO : [('G', 60)],
+        r'goto' : [('S', 61)],
+        MARKER : [('G', 67)],
+        r'@' : [('S', 68)],
+        CONDITIONAL : [('G', 72)],
+        IF_THEN_ELSE : [('G', 73)],
+        r'if' : [('S', 74)],
+        IF_THEN : [('G', 87)],
+        PRINT : [('G', 88)],
+        r'print' : [('S', 89)],
+        RETURN : [('G', 91)],
+        r'return' : [('S', 92)],
+        ASSIGNMENT : [('G', 94)],
+        r'let' : [('S', 95)]
     },
     1 : {
         EOI : [('A', True)]
     },
     2 : {
-        EOI : [('R', 1)],
-        r'\n+' : [('S', 3)]
-    },
-    3 : {
-        PROGRAM : [('G', 4)],
-        BOOLEXPR : [('G', 2)],
-        r'\(' : [('S', 5)]
-    },
-    4 : {
         EOI : [('R', 2)]
     },
+    3 : {
+        EOI : [('R', 11)],
+        r'//DEDENTATION-MARKER//' : [('R', 11)],
+        r'\n+' : [('R', 11)],
+        r'>=' : [('S', 4)],
+        r'<' : [('S', 8)],
+        r'>' : [('S', 32)],
+        r'!=' : [('S', 42)],
+        r'<=' : [('S', 44)],
+        r'==' : [('S', 46)],
+        r'\+' : [('S', 48)],
+        r'-' : [('S', 52)]
+    },
+    4 : {
+        COMPARISON : [('G', 5)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
     5 : {
-        LIST : [('G', 6)],
-        r'\[' : [('S', 23)]
+        r'<' : [('R', 66), ('R', 45)],
+        r'\+' : [('R', 66), ('R', 45)],
+        r'<=' : [('R', 66), ('R', 45)],
+        r'>=' : [('R', 66), ('R', 45)],
+        r'>' : [('R', 66), ('R', 45)],
+        r'-' : [('R', 66), ('R', 45)],
+        r'!=' : [('R', 66), ('R', 45)],
+        r'==' : [('R', 66), ('R', 45)],
+        r'//DEDENTATION-MARKER//' : [('R', 66)],
+        r'\n+' : [('R', 66)],
+        r'\)' : [('R', 66)],
+        EOI : [('R', 66)]
     },
     6 : {
-        r',' : [('S', 7)]
+        r'//DEDENTATION-MARKER//' : [('R', 62)],
+        r'<' : [('R', 62)],
+        r'\+' : [('R', 62)],
+        r'<=' : [('R', 62)],
+        r'>=' : [('R', 62)],
+        r'\n+' : [('R', 62)],
+        r'>' : [('R', 62)],
+        r'\)' : [('R', 62)],
+        r'-' : [('R', 62)],
+        EOI : [('R', 62)],
+        r'!=' : [('R', 62)],
+        r',' : [('R', 62)],
+        r'==' : [('R', 62)]
     },
     7 : {
-        EXPR : [('G', 8)],
-        AND : [('G', 10)],
-        NOT : [('G', 13)],
-        LITERAL : [('G', 16)],
-        r'f' : [('S', 17)],
-        r't' : [('S', 18)],
-        r'~' : [('S', 19)],
-        VAR : [('G', 21)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'>=' : [('S', 4)],
+        r'<' : [('S', 8)],
+        r'>' : [('S', 32)],
+        r'!=' : [('S', 42)],
+        r'<=' : [('S', 44)],
+        r'\+' : [('S', 48)],
+        r'-' : [('S', 52)],
+        r'==' : [('S', 46)]
     },
     8 : {
-        r'\)' : [('S', 9)]
+        COMPARISON : [('G', 9)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
     },
     9 : {
-        r'\n+' : [('R', 3)],
-        EOI : [('R', 3)]
+        r'<' : [('R', 45), ('R', 63)],
+        r'\+' : [('R', 45), ('R', 63)],
+        r'<=' : [('R', 45), ('R', 63)],
+        r'>=' : [('R', 45), ('R', 63)],
+        r'>' : [('R', 45), ('R', 63)],
+        r'-' : [('R', 45), ('R', 63)],
+        r'!=' : [('R', 45), ('R', 63)],
+        r'==' : [('R', 45), ('R', 63)],
+        r'\)' : [('R', 63)],
+        EOI : [('R', 63)],
+        r',' : [('R', 63)]
     },
     10 : {
-        r'\)' : [('R', 10)],
-        r'\|' : [('S', 11)]
+        r'//DEDENTATION-MARKER//' : [('R', 47)],
+        r'<' : [('R', 47)],
+        r'\+' : [('R', 47)],
+        r'<=' : [('R', 47)],
+        r'>=' : [('R', 47)],
+        r'\n+' : [('R', 47)],
+        r'>' : [('R', 47)],
+        r'\)' : [('R', 47)],
+        r'-' : [('R', 47)],
+        EOI : [('R', 47)],
+        r'!=' : [('R', 47)],
+        r'==' : [('R', 47)]
     },
     11 : {
-        EXPR : [('G', 12)],
-        AND : [('G', 10)],
-        NOT : [('G', 13)],
-        LITERAL : [('G', 16)],
-        r'f' : [('S', 17)],
-        r't' : [('S', 18)],
-        r'~' : [('S', 19)],
-        VAR : [('G', 21)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'//DEDENTATION-MARKER//' : [('R', 46)],
+        r'<' : [('R', 46)],
+        r'\+' : [('R', 46)],
+        r'<=' : [('R', 46)],
+        r'>=' : [('R', 46)],
+        r'\n+' : [('R', 46)],
+        r'>' : [('R', 46)],
+        r'\)' : [('R', 46)],
+        r'-' : [('R', 46)],
+        EOI : [('R', 46)],
+        r'!=' : [('R', 46)],
+        r'==' : [('R', 46)]
     },
     12 : {
-        r'\)' : [('R', 9)]
+        r'//DEDENTATION-MARKER//' : [('R', 44)],
+        r'<' : [('R', 44)],
+        r'\+' : [('R', 44)],
+        r'<=' : [('R', 44)],
+        r'>=' : [('R', 44)],
+        r'\n+' : [('R', 44)],
+        r'>' : [('R', 44)],
+        r'\)' : [('R', 44)],
+        r'-' : [('R', 44)],
+        EOI : [('R', 44)],
+        r'!=' : [('R', 44)],
+        r'==' : [('R', 44)],
+        r'\*' : [('S', 13)],
+        r'/' : [('S', 50)]
     },
     13 : {
-        r'\)' : [('R', 12)],
-        r'\|' : [('R', 12)],
-        r'&' : [('S', 14)]
+        FACTOR : [('G', 14)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)]
     },
     14 : {
-        AND : [('G', 15)],
-        NOT : [('G', 13)],
-        LITERAL : [('G', 16)],
-        r'f' : [('S', 17)],
-        r't' : [('S', 18)],
-        r'~' : [('S', 19)],
-        VAR : [('G', 21)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'//DEDENTATION-MARKER//' : [('R', 53)],
+        r'<' : [('R', 53)],
+        r'\+' : [('R', 53)],
+        r'<=' : [('R', 53)],
+        r'>=' : [('R', 53)],
+        r'/' : [('R', 53)],
+        r'\n+' : [('R', 53)],
+        r'>' : [('R', 53)],
+        r'\)' : [('R', 53)],
+        r'-' : [('R', 53)],
+        r'\*' : [('R', 53)],
+        EOI : [('R', 53)],
+        r'!=' : [('R', 53)],
+        r'==' : [('R', 53)]
     },
     15 : {
-        r'\)' : [('R', 11)],
-        r'\|' : [('R', 11)]
+        r'//DEDENTATION-MARKER//' : [('R', 56)],
+        r'<' : [('R', 56)],
+        r'\+' : [('R', 56)],
+        r'<=' : [('R', 56)],
+        r'>=' : [('R', 56)],
+        r'/' : [('R', 56)],
+        r'\n+' : [('R', 56)],
+        r'>' : [('R', 56)],
+        r'\)' : [('R', 56)],
+        r'-' : [('R', 56)],
+        r'\*' : [('R', 56)],
+        EOI : [('R', 56)],
+        r'!=' : [('R', 56)],
+        r'==' : [('R', 56)]
     },
     16 : {
+        r'//DEDENTATION-MARKER//' : [('R', 15)],
+        r'<' : [('R', 15)],
+        r'\+' : [('R', 15)],
+        r'<=' : [('R', 15)],
+        r'>=' : [('R', 15)],
+        r'/' : [('R', 15)],
+        r'\n+' : [('R', 15)],
+        r'>' : [('R', 15)],
         r'\)' : [('R', 15)],
-        r'&' : [('R', 15)],
-        r'\|' : [('R', 15)]
+        r'-' : [('R', 15)],
+        r'\*' : [('R', 15)],
+        EOI : [('R', 15)],
+        r'!=' : [('R', 15)],
+        r'==' : [('R', 15)]
     },
     17 : {
-        r'\)' : [('R', 17)],
-        r'&' : [('R', 17)],
-        r'\|' : [('R', 17)]
+        r'//DEDENTATION-MARKER//' : [('R', 37)],
+        r'<' : [('R', 37)],
+        r'\+' : [('R', 37)],
+        r'<=' : [('R', 37)],
+        r'>=' : [('R', 37)],
+        r'/' : [('R', 37)],
+        r'\n+' : [('R', 37)],
+        r'>' : [('R', 37)],
+        r'\)' : [('R', 37)],
+        r'-' : [('R', 37)],
+        r'\*' : [('R', 37)],
+        EOI : [('R', 37)],
+        r'!=' : [('R', 37)],
+        r'==' : [('R', 37)]
     },
     18 : {
-        r'\)' : [('R', 16)],
-        r'&' : [('R', 16)],
-        r'\|' : [('R', 16)]
+        r'//DEDENTATION-MARKER//' : [('R', 14)],
+        r'<' : [('R', 14)],
+        r'\+' : [('R', 14)],
+        r'<=' : [('R', 14)],
+        r'>=' : [('R', 14)],
+        r'/' : [('R', 14)],
+        r'\n+' : [('R', 14)],
+        r'>' : [('R', 14)],
+        r'\)' : [('R', 14)],
+        r'-' : [('R', 14)],
+        r'\*' : [('R', 14)],
+        EOI : [('R', 14)],
+        r'!=' : [('R', 14)],
+        r'==' : [('R', 14)]
     },
     19 : {
-        NOT : [('G', 20)],
-        LITERAL : [('G', 16)],
-        r'f' : [('S', 17)],
-        r't' : [('S', 18)],
-        r'~' : [('S', 19)],
-        VAR : [('G', 21)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'//DEDENTATION-MARKER//' : [('R', 13), ('R', 40)],
+        r'<' : [('R', 13), ('R', 40)],
+        r'\+' : [('R', 13), ('R', 40)],
+        r'<=' : [('R', 13), ('R', 40)],
+        r'>=' : [('R', 13), ('R', 40)],
+        r'/' : [('R', 13), ('R', 40)],
+        r'\n+' : [('R', 13), ('R', 40)],
+        r'>' : [('R', 13), ('R', 40)],
+        r'\)' : [('R', 13), ('R', 40)],
+        r'-' : [('R', 13), ('R', 40)],
+        r'\*' : [('R', 13), ('R', 40)],
+        EOI : [('R', 13), ('R', 40)],
+        r'!=' : [('R', 13), ('R', 40)],
+        r'==' : [('R', 13), ('R', 40)]
     },
     20 : {
-        r'\)' : [('R', 14)],
-        r'&' : [('R', 14)],
-        r'\|' : [('R', 14)]
+        r'//DEDENTATION-MARKER//' : [('R', 20), ('R', 18)],
+        r'<' : [('R', 20), ('R', 18)],
+        r'\+' : [('R', 20), ('R', 18)],
+        r'<=' : [('R', 20), ('R', 18)],
+        r'>=' : [('R', 20), ('R', 18)],
+        r'/' : [('R', 20), ('R', 18)],
+        r'\n+' : [('R', 20), ('R', 18)],
+        r'>' : [('R', 20), ('R', 18)],
+        r'\)' : [('R', 20), ('R', 18)],
+        r'-' : [('R', 20), ('R', 18)],
+        r'\*' : [('R', 20), ('R', 18)],
+        EOI : [('R', 20), ('R', 18)],
+        r'!=' : [('R', 20), ('R', 18)],
+        r'==' : [('R', 20), ('R', 18)]
     },
     21 : {
-        r'\)' : [('R', 13)],
-        r'&' : [('R', 13)],
-        r'\|' : [('R', 13)]
+        r'//DEDENTATION-MARKER//' : [('R', 19), ('R', 17)],
+        r'<' : [('R', 19), ('R', 17)],
+        r'\+' : [('R', 19), ('R', 17)],
+        r'<=' : [('R', 19), ('R', 17)],
+        r'>=' : [('R', 19), ('R', 17)],
+        r'/' : [('R', 19), ('R', 17)],
+        r'\n+' : [('R', 19), ('R', 17)],
+        r'>' : [('R', 19), ('R', 17)],
+        r'\)' : [('R', 19), ('R', 17)],
+        r'-' : [('R', 19), ('R', 17)],
+        r'\*' : [('R', 19), ('R', 17)],
+        EOI : [('R', 19), ('R', 17)],
+        r'!=' : [('R', 19), ('R', 17)],
+        r'==' : [('R', 19), ('R', 17)]
     },
     22 : {
-        r'\)' : [('R', 18)],
-        r',' : [('R', 18)],
-        r'\]' : [('R', 18)],
-        r'&' : [('R', 18)],
-        r'\|' : [('R', 18)]
+        r'//DEDENTATION-MARKER//' : [('R', 39)],
+        r'<' : [('R', 39)],
+        r'\+' : [('R', 39)],
+        r'<=' : [('R', 39)],
+        r'>=' : [('R', 39)],
+        r'/' : [('R', 39)],
+        r'\n+' : [('R', 39)],
+        r'>' : [('R', 39)],
+        r'\)' : [('R', 39)],
+        r'-' : [('R', 39)],
+        r'\*' : [('R', 39)],
+        EOI : [('R', 39)],
+        r'!=' : [('R', 39)],
+        r'==' : [('R', 39)]
     },
     23 : {
-        r'\]' : [('S', 24)],
-        ATOMS : [('G', 25)],
-        ATOM : [('G', 27)],
-        VAR : [('G', 30)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'//DEDENTATION-MARKER//' : [('R', 43)],
+        r'<' : [('R', 43)],
+        r'\+' : [('R', 43)],
+        r'<=' : [('R', 43)],
+        r'>=' : [('R', 43)],
+        r'/' : [('R', 43)],
+        r'\n+' : [('R', 43)],
+        r'>' : [('R', 43)],
+        r'\)' : [('R', 43)],
+        r'-' : [('R', 43)],
+        r'\*' : [('R', 43)],
+        EOI : [('R', 43)],
+        r'!=' : [('R', 43)],
+        r'==' : [('R', 43)]
     },
     24 : {
-        r',' : [('R', 4)]
+        r'//DEDENTATION-MARKER//' : [('R', 38)],
+        r'<' : [('R', 38)],
+        r'\+' : [('R', 38)],
+        r'<=' : [('R', 38)],
+        r'>=' : [('R', 38)],
+        r'/' : [('R', 38)],
+        r'\n+' : [('R', 38)],
+        r'>' : [('R', 38)],
+        r'\)' : [('R', 38)],
+        r'-' : [('R', 38)],
+        r'\*' : [('R', 38)],
+        EOI : [('R', 38)],
+        r'!=' : [('R', 38)],
+        r'==' : [('R', 38)]
     },
     25 : {
-        r'\]' : [('S', 26)]
+        r'//DEDENTATION-MARKER//' : [('R', 42)],
+        r'<' : [('R', 42)],
+        r'\+' : [('R', 42)],
+        r'<=' : [('R', 42)],
+        r'>=' : [('R', 42)],
+        r'/' : [('R', 42)],
+        r'\n+' : [('R', 42)],
+        r'>' : [('R', 42)],
+        r'\)' : [('R', 42)],
+        r'-' : [('R', 42)],
+        r'\*' : [('R', 42)],
+        EOI : [('R', 42)],
+        r'!=' : [('R', 42)],
+        r'==' : [('R', 42)]
     },
     26 : {
-        r',' : [('R', 5)]
+        r'//DEDENTATION-MARKER//' : [('R', 41)],
+        r'<' : [('R', 41)],
+        r'\+' : [('R', 41)],
+        r'<=' : [('R', 41)],
+        r'>=' : [('R', 41)],
+        r'/' : [('R', 41)],
+        r'\n+' : [('R', 41)],
+        r'>' : [('R', 41)],
+        r'\)' : [('R', 41)],
+        r'-' : [('R', 41)],
+        r'\*' : [('R', 41)],
+        EOI : [('R', 41)],
+        r'!=' : [('R', 41)],
+        r'==' : [('R', 41)]
     },
     27 : {
-        r'\]' : [('R', 6)],
-        r',' : [('S', 28)]
+        r'//DEDENTATION-MARKER//' : [('R', 12)],
+        r'<' : [('R', 12)],
+        r'\+' : [('R', 12)],
+        r'<=' : [('R', 12)],
+        r'>=' : [('R', 12)],
+        r'/' : [('R', 12)],
+        r'\n+' : [('R', 12)],
+        r'>' : [('R', 12)],
+        r'\)' : [('R', 12)],
+        r'-' : [('R', 12)],
+        r'\*' : [('R', 12)],
+        EOI : [('R', 12)],
+        r'!=' : [('R', 12)],
+        r'==' : [('R', 12)]
     },
     28 : {
-        ATOMS : [('G', 29)],
-        ATOM : [('G', 27)],
-        VAR : [('G', 30)],
-        r'[a-eg-su-z]' : [('S', 22)]
+        r'//DEDENTATION-MARKER//' : [('R', 16)],
+        r'<' : [('R', 16)],
+        r'\+' : [('R', 16)],
+        r'<=' : [('R', 16)],
+        r'>=' : [('R', 16)],
+        r'/' : [('R', 16)],
+        r'\n+' : [('R', 16)],
+        r'>' : [('R', 16)],
+        r'\)' : [('R', 16)],
+        r'-' : [('R', 16)],
+        r'\*' : [('R', 16)],
+        EOI : [('R', 16)],
+        r'!=' : [('R', 16)],
+        r'==' : [('R', 16)]
     },
     29 : {
-        r'\]' : [('R', 7)]
+        r'//DEDENTATION-MARKER//' : [('R', 36)],
+        r'<' : [('R', 36)],
+        r'\+' : [('R', 36)],
+        r'<=' : [('R', 36)],
+        r'>=' : [('R', 36)],
+        r'/' : [('R', 36)],
+        r'\n+' : [('R', 36)],
+        r'>' : [('R', 36)],
+        r'be' : [('R', 36)],
+        r'\)' : [('R', 36)],
+        r'-' : [('R', 36)],
+        r'\*' : [('R', 36)],
+        EOI : [('R', 36)],
+        r'!=' : [('R', 36)],
+        r'==' : [('R', 36)]
     },
     30 : {
-        r'\]' : [('R', 8)],
-        r',' : [('R', 8)]
+        MATHEXPR : [('G', 31)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        COMPARISON : [('G', 9), ('G', 47), ('G', 5), ('G', 75), ('G', 43), ('G', 33), ('G', 55), ('G', 45)],
+        EQ : [('G', 6)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    31 : {
+        r'>=' : [('S', 4)],
+        r'<' : [('S', 8)],
+        r'>' : [('S', 32)],
+        r'!=' : [('S', 42)],
+        r'<=' : [('S', 44)],
+        r'==' : [('S', 46)],
+        r'\+' : [('S', 48)],
+        r'-' : [('S', 52)],
+        r'\)' : [('S', 54)]
+    },
+    32 : {
+        COMPARISON : [('G', 33)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    33 : {
+        r'<' : [('R', 65), ('R', 45)],
+        r'\+' : [('R', 65), ('R', 45)],
+        r'<=' : [('R', 65), ('R', 45)],
+        r'>=' : [('R', 65), ('R', 45)],
+        r'>' : [('R', 65), ('R', 45)],
+        r'-' : [('R', 65), ('R', 45)],
+        r'!=' : [('R', 65), ('R', 45)],
+        r'==' : [('R', 65), ('R', 45)],
+        r'\)' : [('R', 65)],
+        EOI : [('R', 65)]
+    },
+    34 : {
+        r'//DEDENTATION-MARKER//' : [('R', 52)],
+        r'<' : [('R', 52)],
+        r'\+' : [('R', 52)],
+        r'<=' : [('R', 52)],
+        r'>=' : [('R', 52)],
+        r'/' : [('R', 52)],
+        r'\n+' : [('R', 52)],
+        r'>' : [('R', 52)],
+        r'\)' : [('R', 52)],
+        r'-' : [('R', 52)],
+        r'\*' : [('R', 52)],
+        EOI : [('R', 52)],
+        r'!=' : [('R', 52)],
+        r'==' : [('R', 52)]
+    },
+    35 : {
+        r'//DEDENTATION-MARKER//' : [('R', 51)],
+        r'<' : [('R', 51)],
+        r'\+' : [('R', 51)],
+        r'<=' : [('R', 51)],
+        r'>=' : [('R', 51)],
+        r'/' : [('R', 51)],
+        r'\n+' : [('R', 51)],
+        r'>' : [('R', 51)],
+        r'\)' : [('R', 51)],
+        r'-' : [('R', 51)],
+        r'\*' : [('R', 51)],
+        EOI : [('R', 51)],
+        r'!=' : [('R', 51)],
+        r'==' : [('R', 51)]
+    },
+    36 : {
+        r'//DEDENTATION-MARKER//' : [('R', 50)],
+        r'<' : [('R', 50)],
+        r'\+' : [('R', 50)],
+        r'<=' : [('R', 50)],
+        r'>=' : [('R', 50)],
+        r'/' : [('R', 50)],
+        r'\n+' : [('R', 50)],
+        r'>' : [('R', 50)],
+        r'\)' : [('R', 50)],
+        r'-' : [('R', 50)],
+        r'\*' : [('R', 50)],
+        EOI : [('R', 50)],
+        r'!=' : [('R', 50)],
+        r'==' : [('R', 50)]
+    },
+    37 : {
+        r'//DEDENTATION-MARKER//' : [('R', 61)],
+        r'<' : [('R', 61)],
+        r'\+' : [('R', 61)],
+        r'<=' : [('R', 61)],
+        r'>=' : [('R', 61)],
+        r'\n+' : [('R', 61)],
+        r'>' : [('R', 61)],
+        r'\)' : [('R', 61)],
+        r'-' : [('R', 61)],
+        EOI : [('R', 61)],
+        r'!=' : [('R', 61)],
+        r',' : [('R', 61)],
+        r'==' : [('R', 61)]
+    },
+    38 : {
+        r'//DEDENTATION-MARKER//' : [('R', 60)],
+        r'<' : [('R', 60)],
+        r'\+' : [('R', 60)],
+        r'<=' : [('R', 60)],
+        r'>=' : [('R', 60)],
+        r'\n+' : [('R', 60)],
+        r'>' : [('R', 60)],
+        r'\)' : [('R', 60)],
+        r'-' : [('R', 60)],
+        EOI : [('R', 60)],
+        r'!=' : [('R', 60)],
+        r',' : [('R', 60)],
+        r'==' : [('R', 60)]
+    },
+    39 : {
+        r'//DEDENTATION-MARKER//' : [('R', 59)],
+        r'<' : [('R', 59)],
+        r'\+' : [('R', 59)],
+        r'<=' : [('R', 59)],
+        r'>=' : [('R', 59)],
+        r'\n+' : [('R', 59)],
+        r'>' : [('R', 59)],
+        r'\)' : [('R', 59)],
+        r'-' : [('R', 59)],
+        EOI : [('R', 59)],
+        r'!=' : [('R', 59)],
+        r',' : [('R', 59)],
+        r'==' : [('R', 59)]
+    },
+    40 : {
+        r'//DEDENTATION-MARKER//' : [('R', 58)],
+        r'<' : [('R', 58)],
+        r'\+' : [('R', 58)],
+        r'<=' : [('R', 58)],
+        r'>=' : [('R', 58)],
+        r'\n+' : [('R', 58)],
+        r'>' : [('R', 58)],
+        r'\)' : [('R', 58)],
+        r'-' : [('R', 58)],
+        EOI : [('R', 58)],
+        r'!=' : [('R', 58)],
+        r',' : [('R', 58)],
+        r'==' : [('R', 58)]
+    },
+    41 : {
+        r'//DEDENTATION-MARKER//' : [('R', 57)],
+        r'<' : [('R', 57)],
+        r'\+' : [('R', 57)],
+        r'<=' : [('R', 57)],
+        r'>=' : [('R', 57)],
+        r'\n+' : [('R', 57)],
+        r'>' : [('R', 57)],
+        r'\)' : [('R', 57)],
+        r'-' : [('R', 57)],
+        EOI : [('R', 57)],
+        r'!=' : [('R', 57)],
+        r',' : [('R', 57)],
+        r'==' : [('R', 57)]
+    },
+    42 : {
+        COMPARISON : [('G', 43)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    43 : {
+        r'<' : [('R', 45), ('R', 68)],
+        r'\+' : [('R', 45), ('R', 68)],
+        r'<=' : [('R', 45), ('R', 68)],
+        r'>=' : [('R', 45), ('R', 68)],
+        r'>' : [('R', 45), ('R', 68)],
+        r'-' : [('R', 45), ('R', 68)],
+        r'!=' : [('R', 45), ('R', 68)],
+        r'==' : [('R', 45), ('R', 68)],
+        r'\)' : [('R', 68)],
+        EOI : [('R', 68)]
+    },
+    44 : {
+        COMPARISON : [('G', 45)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    45 : {
+        r'<' : [('R', 64), ('R', 45)],
+        r'\+' : [('R', 64), ('R', 45)],
+        r'<=' : [('R', 64), ('R', 45)],
+        r'>=' : [('R', 64), ('R', 45)],
+        r'>' : [('R', 64), ('R', 45)],
+        r'-' : [('R', 64), ('R', 45)],
+        r'!=' : [('R', 64), ('R', 45)],
+        r'==' : [('R', 64), ('R', 45)],
+        r'\)' : [('R', 64)],
+        EOI : [('R', 64)]
+    },
+    46 : {
+        COMPARISON : [('G', 47)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    47 : {
+        r'<' : [('R', 67), ('R', 45)],
+        r'\+' : [('R', 67), ('R', 45)],
+        r'<=' : [('R', 67), ('R', 45)],
+        r'>=' : [('R', 67), ('R', 45)],
+        r'>' : [('R', 67), ('R', 45)],
+        r'-' : [('R', 67), ('R', 45)],
+        r'!=' : [('R', 67), ('R', 45)],
+        r'==' : [('R', 67), ('R', 45)],
+        r'\)' : [('R', 67)],
+        EOI : [('R', 67)]
+    },
+    48 : {
+        TERM : [('G', 49)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)]
+    },
+    49 : {
+        r'<' : [('R', 48)],
+        r'\+' : [('R', 48)],
+        r'<=' : [('R', 48)],
+        r'>=' : [('R', 48)],
+        r'>' : [('R', 48)],
+        r'\)' : [('R', 48)],
+        r'-' : [('R', 48)],
+        EOI : [('R', 48)],
+        r'!=' : [('R', 48)],
+        r'==' : [('R', 48)],
+        r'\*' : [('S', 13)],
+        r'/' : [('S', 50)]
+    },
+    50 : {
+        FACTOR : [('G', 51)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)]
+    },
+    51 : {
+        r'<' : [('R', 54)],
+        r'\+' : [('R', 54)],
+        r'<=' : [('R', 54)],
+        r'>=' : [('R', 54)],
+        r'/' : [('R', 54)],
+        r'>' : [('R', 54)],
+        r'\)' : [('R', 54)],
+        r'-' : [('R', 54)],
+        r'\*' : [('R', 54)],
+        EOI : [('R', 54)],
+        r'!=' : [('R', 54)],
+        r'==' : [('R', 54)]
+    },
+    52 : {
+        TERM : [('G', 53)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)]
+    },
+    53 : {
+        r'<' : [('R', 49)],
+        r'\+' : [('R', 49)],
+        r'<=' : [('R', 49)],
+        r'>=' : [('R', 49)],
+        r'>' : [('R', 49)],
+        r'\)' : [('R', 49)],
+        r'-' : [('R', 49)],
+        EOI : [('R', 49)],
+        r'!=' : [('R', 49)],
+        r'==' : [('R', 49)],
+        r'\*' : [('S', 13)],
+        r'/' : [('S', 50)]
+    },
+    54 : {
+        r'//DEDENTATION-MARKER//' : [('R', 55)],
+        r'<' : [('R', 55)],
+        r'\+' : [('R', 55)],
+        r'<=' : [('R', 55)],
+        r'>=' : [('R', 55)],
+        r'/' : [('R', 55)],
+        r'\n+' : [('R', 55)],
+        r'>' : [('R', 55)],
+        r'\)' : [('R', 55)],
+        r'-' : [('R', 55)],
+        r'\*' : [('R', 55)],
+        EOI : [('R', 55)],
+        r'!=' : [('R', 55)],
+        r'==' : [('R', 55)]
+    },
+    55 : {
+        r'//DEDENTATION-MARKER//' : [('R', 45)],
+        r'<' : [('R', 45)],
+        r'\+' : [('R', 45)],
+        r'<=' : [('R', 45)],
+        r'>=' : [('R', 45)],
+        r'\n+' : [('R', 45)],
+        r'>' : [('R', 45)],
+        r'\)' : [('R', 45)],
+        r'-' : [('R', 45)],
+        EOI : [('R', 45)],
+        r'!=' : [('R', 45)],
+        r'==' : [('R', 45)]
+    },
+    56 : {
+        EOI : [('R', 1)]
+    },
+    57 : {
+        r'//DEDENTATION-MARKER//' : [('R', 3)],
+        r'\n+' : [('S', 58), ('R', 3)],
+        EOI : [('R', 3)]
+    },
+    58 : {
+        STATEMENT_LIST : [('G', 59)],
+        STATEMENT : [('G', 57)],
+        GOTO : [('G', 60)],
+        r'goto' : [('S', 61)],
+        MARKER : [('G', 67)],
+        r'@' : [('S', 68)],
+        CONDITIONAL : [('G', 72)],
+        IF_THEN_ELSE : [('G', 73)],
+        r'if' : [('S', 74)],
+        IF_THEN : [('G', 87)],
+        PRINT : [('G', 88)],
+        r'print' : [('S', 89)],
+        RETURN : [('G', 91)],
+        r'return' : [('S', 92)],
+        ASSIGNMENT : [('G', 94)],
+        r'let' : [('S', 95)]
+    },
+    59 : {
+        r'//DEDENTATION-MARKER//' : [('R', 4)],
+        r'\n+' : [('R', 4)],
+        EOI : [('R', 4)]
+    },
+    60 : {
+        EOI : [('R', 10)],
+        r'//DEDENTATION-MARKER//' : [('R', 10)],
+        r'\n+' : [('R', 10)]
+    },
+    61 : {
+        r'instruction' : [('S', 62)]
+    },
+    62 : {
+        MARK : [('G', 63)],
+        NUMBER : [('G', 64)],
+        BOOL : [('G', 19), ('G', 65)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        ID : [('G', 66)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)]
+    },
+    63 : {
+        EOI : [('R', 30)],
+        r'//DEDENTATION-MARKER//' : [('R', 30)],
+        r'\n+' : [('R', 30)]
+    },
+    64 : {
+        r'\n+' : [('R', 33)],
+        EOI : [('R', 33)]
+    },
+    65 : {
+        r'\n+' : [('R', 40)],
+        EOI : [('R', 40)]
+    },
+    66 : {
+        r'\n+' : [('R', 32)],
+        EOI : [('R', 32)]
+    },
+    67 : {
+        EOI : [('R', 9)],
+        r'//DEDENTATION-MARKER//' : [('R', 9)],
+        r'\n+' : [('R', 9)]
+    },
+    68 : {
+        MARK : [('G', 69)],
+        NUMBER : [('G', 64)],
+        BOOL : [('G', 19), ('G', 65)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        ID : [('G', 66)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)]
+    },
+    69 : {
+        r'\n+' : [('S', 70)]
+    },
+    70 : {
+        STATEMENT_LIST : [('G', 71)],
+        STATEMENT : [('G', 57)],
+        GOTO : [('G', 60)],
+        r'goto' : [('S', 61)],
+        MARKER : [('G', 67)],
+        r'@' : [('S', 68)],
+        CONDITIONAL : [('G', 72)],
+        IF_THEN_ELSE : [('G', 73)],
+        r'if' : [('S', 74)],
+        IF_THEN : [('G', 87)],
+        PRINT : [('G', 88)],
+        r'print' : [('S', 89)],
+        RETURN : [('G', 91)],
+        r'return' : [('S', 92)],
+        ASSIGNMENT : [('G', 94)],
+        r'let' : [('S', 95)]
+    },
+    71 : {
+        EOI : [('R', 31)],
+        r'//DEDENTATION-MARKER//' : [('R', 31)],
+        r'\n+' : [('R', 31)]
+    },
+    72 : {
+        EOI : [('R', 8)],
+        r'//DEDENTATION-MARKER//' : [('R', 8)],
+        r'\n+' : [('R', 8)]
+    },
+    73 : {
+        EOI : [('R', 23)],
+        r'//DEDENTATION-MARKER//' : [('R', 23)],
+        r'\n+' : [('R', 23)]
+    },
+    74 : {
+        COMPARISON : [('G', 75)],
+        EQ : [('G', 6)],
+        MATHEXPR : [('G', 7), ('G', 31), ('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    75 : {
+        r'<' : [('R', 45)],
+        r'\+' : [('R', 45)],
+        r'<=' : [('R', 45)],
+        r'>=' : [('R', 45)],
+        r'>' : [('R', 45)],
+        r'-' : [('R', 45)],
+        r'!=' : [('R', 45)],
+        r'==' : [('R', 45)],
+        r',' : [('S', 76)]
+    },
+    76 : {
+        r'then' : [('S', 77)]
+    },
+    77 : {
+        BLOCK : [('G', 78)],
+        r'\n+' : [('S', 82)]
+    },
+    78 : {
+        EOI : [('R', 24)],
+        r'//DEDENTATION-MARKER//' : [('R', 24)],
+        r'\n+' : [('S', 79), ('R', 24)]
+    },
+    79 : {
+        r'else' : [('S', 80)]
+    },
+    80 : {
+        BLOCK : [('G', 81)],
+        r'\n+' : [('S', 82)]
+    },
+    81 : {
+        EOI : [('R', 25)],
+        r'//DEDENTATION-MARKER//' : [('R', 25)],
+        r'\n+' : [('R', 25)]
+    },
+    82 : {
+        INDENT : [('G', 83)],
+        r'//INDENTATION-MARKER//' : [('S', 99)]
+    },
+    83 : {
+        STATEMENT_LIST : [('G', 84)],
+        STATEMENT : [('G', 57)],
+        GOTO : [('G', 60)],
+        r'goto' : [('S', 61)],
+        MARKER : [('G', 67)],
+        r'@' : [('S', 68)],
+        CONDITIONAL : [('G', 72)],
+        IF_THEN_ELSE : [('G', 73)],
+        r'if' : [('S', 74)],
+        IF_THEN : [('G', 87)],
+        PRINT : [('G', 88)],
+        r'print' : [('S', 89)],
+        RETURN : [('G', 91)],
+        r'return' : [('S', 92)],
+        ASSIGNMENT : [('G', 94)],
+        r'let' : [('S', 95)]
+    },
+    84 : {
+        DEDENT : [('G', 85)],
+        r'//DEDENTATION-MARKER//' : [('S', 86)]
+    },
+    85 : {
+        r'\n+' : [('R', 28)],
+        EOI : [('R', 28)]
+    },
+    86 : {
+        r'\n+' : [('R', 27)],
+        EOI : [('R', 27)]
+    },
+    87 : {
+        EOI : [('R', 22)],
+        r'//DEDENTATION-MARKER//' : [('R', 22)],
+        r'\n+' : [('R', 22)]
+    },
+    88 : {
+        EOI : [('R', 7)],
+        r'//DEDENTATION-MARKER//' : [('R', 7)],
+        r'\n+' : [('R', 7)]
+    },
+    89 : {
+        EOI : [('R', 35)],
+        r'//DEDENTATION-MARKER//' : [('R', 35)],
+        r'\n+' : [('R', 35)],
+        EXPRESSION : [('G', 90)],
+        MATHEXPR : [('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        COMPARISON : [('G', 9), ('G', 47), ('G', 5), ('G', 75), ('G', 43), ('G', 33), ('G', 55), ('G', 45)],
+        EQ : [('G', 6)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    90 : {
+        EOI : [('R', 34)],
+        r'//DEDENTATION-MARKER//' : [('R', 34)],
+        r'\n+' : [('R', 34)]
+    },
+    91 : {
+        EOI : [('R', 6)],
+        r'//DEDENTATION-MARKER//' : [('R', 6)],
+        r'\n+' : [('R', 6)]
+    },
+    92 : {
+        EXPRESSION : [('G', 93)],
+        MATHEXPR : [('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        COMPARISON : [('G', 9), ('G', 47), ('G', 5), ('G', 75), ('G', 43), ('G', 33), ('G', 55), ('G', 45)],
+        EQ : [('G', 6)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    93 : {
+        EOI : [('R', 29)],
+        r'//DEDENTATION-MARKER//' : [('R', 29)],
+        r'\n+' : [('R', 29)]
+    },
+    94 : {
+        EOI : [('R', 5)],
+        r'//DEDENTATION-MARKER//' : [('R', 5)],
+        r'\n+' : [('R', 5)]
+    },
+    95 : {
+        ID : [('G', 96)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)]
+    },
+    96 : {
+        r'be' : [('S', 97)]
+    },
+    97 : {
+        EXPRESSION : [('G', 98)],
+        MATHEXPR : [('G', 3)],
+        SUBTRACT : [('G', 10)],
+        ADD : [('G', 11)],
+        COMPARISON : [('G', 9), ('G', 47), ('G', 5), ('G', 75), ('G', 43), ('G', 33), ('G', 55), ('G', 45)],
+        EQ : [('G', 6)],
+        TERM : [('G', 12)],
+        FACTOR : [('G', 34)],
+        VALUE : [('G', 15)],
+        STRING : [('G', 16)],
+        r'"[^"\n]*"' : [('S', 17)],
+        NUMBER : [('G', 18)],
+        BOOL : [('G', 19)],
+        r'False' : [('S', 20)],
+        r'True' : [('S', 21)],
+        FLOAT : [('G', 22)],
+        r'\d*\.\d+' : [('S', 23)],
+        INT : [('G', 24)],
+        r'[1-9]\d*' : [('S', 25)],
+        r'0' : [('S', 26)],
+        LABEL : [('G', 27)],
+        ID : [('G', 28)],
+        r'[_a-zA-Z][_a-zA-Z0-9]*' : [('S', 29)],
+        r'\(' : [('S', 30)],
+        DIVIDE : [('G', 35)],
+        MULTIPLY : [('G', 36)],
+        LEQ : [('G', 37)],
+        NEQ : [('G', 38)],
+        GE : [('G', 39)],
+        LE : [('G', 40)],
+        GEQ : [('G', 41)]
+    },
+    98 : {
+        EOI : [('R', 21)],
+        r'//DEDENTATION-MARKER//' : [('R', 21)],
+        r'\n+' : [('R', 21)]
+    },
+    99 : {
+        r'return' : [('R', 26)],
+        r'if' : [('R', 26)],
+        r'goto' : [('R', 26)],
+        r'let' : [('R', 26)],
+        r'print' : [('R', 26)],
+        r'@' : [('R', 26)]
     }
 }
