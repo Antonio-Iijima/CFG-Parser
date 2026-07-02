@@ -18,6 +18,7 @@
   - [EBNF Syntax](#ebnf-syntax)
     - [Nonterminals](#nonterminals)
     - [Terminals](#terminals)
+    - [Escaping Regex](#escaping-regex)
     - [Modularity and `#require`](#modularity-and-require)
   - [Semantic Attributes](#semantic-attributes)
     - [Function Names](#function-names)

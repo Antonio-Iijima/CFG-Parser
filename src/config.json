@@ -2,8 +2,8 @@
    "version": "0.0.0",
    "language": "banter",
    "flags": {
-      "debug": true,
-      "interactive": false,
+      "interactive": true,
+      "debug": false,
       "force": false,
       "clear": false
    },
@@ -18,9 +18,7 @@
       "indentation": true,
       "newlines": true
    },
-   "input": [
-      "../examples/1.banter"
-   ],
+   "input": [],
    "output": "out.cpp",
    "tests": []
 }

@@ -6,11 +6,10 @@ from utils import get_config
 import sys
 
 
-
 def compile() -> None:
     
-    # Disable recompilation if running from PyInstaller bundle; cf. PyInstaller docs.
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'): return None
+    if (getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')):
+        return print("Cannot compile from bundled language.")
     
     print(f"Compiling...")
     print()
