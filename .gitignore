@@ -209,3 +209,4 @@ __marimo__/
 
 AST.py
 eval.py
+parsetable.py
