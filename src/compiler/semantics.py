@@ -26,7 +26,7 @@ class Eval:
 
 
 
-from datatypes import Rule, Token, Parsed
+from datatypes import Rule, Token
 from utils import *
 
 from collections.abc import Sequence
@@ -85,14 +85,12 @@ def _get_function(node: Rule):
     )
 
 
-def _evaluate(expr: Expr, *args, **kwargs):
+def _evaluate(expr, *args, **kwargs):
     return (
         _get_function(expr._node)(expr, *args, **kwargs) if isinstance(expr, Expr)
         else expr.tok if isinstance(expr, Token)
         else expr
     )
-
-{self.embed_process(Eval.LITERAL)}
 """
         
         print_warnings("semantics not found", self.WARNINGS)
@@ -110,36 +108,6 @@ def _default(x: Expr): return x(0)
         else: 
             return """
 def _default(x: Expr): return " ".join((e() if isinstance(e, Expr) else str(e)) for e in x)
-"""
-
-
-    def embed_process(self, isLiteral: bool):
-        return ""
-        if (get_config("implementation") == "interpreter"):
-            return f"""
-def process(string: str) -> any:
-    try:
-        {"print(str(parse(string)).strip())" if isLiteral
-        else """out = _evaluateuate(parse(string))
-        if out is not None: print(out)"""}
-{self.exception}
-        
-def validate(parsed, solution: any) -> str:
-    if str(parsed) == solution: return solution
-    
-    result = _evaluateuate(parsed)
-    if result == solution: return solution
-    
-    raise ValidationError(f"value of '{{parsed}}' should be {{solution}}, but received {{result}}")
-""" 
-        
-        else:
-            return f"""
-def process(string: str) -> any:
-    try:
-        with open("{get_config("output")}", "w") as file:
-            file.write(_evaluateuate(parse(string)))
-{self.exception}
 """
 
 

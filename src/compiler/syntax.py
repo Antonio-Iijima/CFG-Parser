@@ -1,11 +1,5 @@
 from datatypes import OrderedSet
-from utils import (
-    preprocess_text, 
-    print_warnings,
-    get_config,
-    set_config,
-    lib
-)
+from utils import *
 
 import os
 import re
@@ -153,7 +147,6 @@ TOKENS = {{
 }}
 
 TERMINALS = set(filter(lambda x: isinstance(x, str), TOKENS))
-# NONTERMINALS = TOKENS.difference(TERMINALS)
 """
         
         return text
@@ -323,5 +316,4 @@ class Terminal:
     
 
     def embed(self) -> str:
-        # return f"r'{self.regex}'"
         return "EPSILON" if self.regex == "ε" else f"r'{self.regex}'"

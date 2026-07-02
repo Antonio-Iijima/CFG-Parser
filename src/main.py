@@ -1,6 +1,6 @@
 from utils import *
 
-import processing
+import compiler
 
 import click
 import os
@@ -31,7 +31,7 @@ def main(input: tuple, **flags):
     # check if the config has been modified (ignoring flags and input files)
     isModified = any(
         (cfg[category] != get_config(category))
-        for category in cfg.keys() if not category in ("flags", "input")
+        for category in cfg.keys() if not category in cfg["ignore"]["categories"]
     )
 
     set_config(cfg)
@@ -41,11 +41,8 @@ def main(input: tuple, **flags):
 
 
     if cfg["flags"]["clear"]:
-        for filename in (
-            "parser/AST.py", 
-            "parser/eval.py",
-            "parser/parsetable.py"
-        ):
+        for filename in cfg["ignore"]["generated"]:
+            filename = f"{cfg["paths"]["generated"]}/{filename}"
             if os.path.exists(filename):
                 os.remove(filename) or print(f"Removed {filename}")
             else:
@@ -54,7 +51,7 @@ def main(input: tuple, **flags):
 
 
     if cfg["flags"]["force"] or isModified:
-        processing.compile()
+        compiler.compile()
 
 
     from parser import evaluate

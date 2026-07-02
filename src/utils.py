@@ -52,14 +52,6 @@ def preprocess_text(text: TextIOWrapper) -> list[str]:
     return list(filter(lambda line: any(line.startswith(s) for s in ("<", "#require")), map(lambda s: s.strip(), text.read().splitlines())))
 
 
-def is_nonterminal(prod: str) -> bool: 
-    return isinstance(prod, str) and re.fullmatch(r"<.*>", prod)
-
-
-def is_terminal(prod: str) -> bool: 
-    return not is_nonterminal(prod)
-
-
 def get_input(prompt: str = "", s: str = "") -> str:
     if s.endswith("\nquit"):
         from sys import exit
@@ -115,7 +107,21 @@ def pathToFunc(path: str) -> str:
     return f"p_{path.lower().removeprefix(".lib/").replace("/", "_")}_".lower()
 
 
-def print_warnings(msg: str, log: dict) -> None:
+def print_warnings(msg: str, log: dict[str, list]) -> None:
+    """Prints warnings. Uses the following structure, where `key[i]` and `val[i]` come from `log`:
+```
+WARNING: <msg> (<key1>)
+       | <val1>
+       | <val2>
+...
+WARNING: <msg> (<keyn>)
+       | <val1>
+       | <val2>
+```
+    
+    :param msg: The warning message.
+    :param log: Dictionary of applicable info for the warning."""
+    
     from datatypes import OrderedSet
 
     for type, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):

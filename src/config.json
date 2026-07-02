@@ -2,15 +2,16 @@
    "version": "0.0.0",
    "language": "banter",
    "flags": {
-      "interactive": true,
+      "clear": true,
+      "interactive": false,
       "debug": false,
-      "force": false,
-      "clear": false
+      "force": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/banter"
+      "language": "languages/banter",
+      "generated": "parser"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
@@ -20,5 +21,17 @@
    },
    "input": [],
    "output": "out.cpp",
-   "tests": []
+   "tests": [],
+   "ignore": {
+      "categories": [
+         "ignore",
+         "flags",
+         "input"
+      ],
+      "generated": [
+         "AST.py",
+         "eval.py",
+         "parsetable.py"
+      ]
+   }
 }

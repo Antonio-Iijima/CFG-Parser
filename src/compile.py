@@ -1,7 +1,7 @@
 from utils import get_config, set_config
 from main import CONTEXT
 
-import processing
+import compiler
 
 import PyInstaller.__main__
 import click
@@ -27,7 +27,7 @@ def main(path: str, implementation: bool, onefile: bool):
 
     set_config(cfg)
 
-    processing.compile()
+    compiler.compile()
 
     if onefile:
 
