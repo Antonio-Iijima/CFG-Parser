@@ -21,7 +21,8 @@ def evaluate(string: str) -> any:
         if out is not None: print(out)
 
     except Exception as e:
-        raise e
+        if get_config("flags", "debug"): raise e
+        else: print(f"{type(e).__name__}: {e}")
     
 
 def parse(expr: str) -> Parsed:
@@ -62,7 +63,7 @@ def tokenize(unprocessed: str) -> list:
         
         # Print warning in case of ambiguity between multiple free patterns,
         # but assume exact matches are keywords 
-        if len(matches) > 1 and (not match == regex):
+        if len(matches) > 1 and (not re.escape(match) == regex):
             print_warnings(
                 msg=f"multiple token matches at line {lineno}, col {col}",
                 log={

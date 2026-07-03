@@ -5,7 +5,7 @@ def applicative(func):
     def wrapper(*args):
         return func(*map(evaluate, args))
 
-    wrapper.__qualname__ = f"{func.__name__.removeprefix("f_")}"
+    wrapper.__qualname__ = func.__name__.removeprefix("f_")
     return wrapper
 
 
@@ -92,8 +92,7 @@ def f_ternary(a, b, c):
     return evaluate(b) if evaluate(a) else evaluate(c)
 
 def f_cond(*options):
-    for option in options:
-        condition, body = option
+    for (condition, body) in options:
         if condition == "else" or evaluate(condition): return evaluate(body)
 
 
@@ -169,8 +168,6 @@ def isnull(expr): return expr == []
 
 def isliteral(expr): return isinstance(expr, (int, float, bool))
 
-def isprocedure(expr): return isinstance(expr, type(callable))
-
 
 def lookup(var):
     from re import fullmatch
@@ -189,7 +186,7 @@ def lookup(var):
             return val
 
     # otherwise not found
-    raise Exception(1, f"variable {var} not found.")
+    raise NameError(f"variable {var} not found.")
 
 
 def evaluate(expr):
