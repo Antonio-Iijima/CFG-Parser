@@ -100,7 +100,7 @@ class Grammar:
 
     
     def __str__(self) -> str:
-        return "\n\n".join(module._str() for module in self.modules.values())
+        return "\n\n\n".join(module._str() for module in self.modules.values())
     
 
     def compile(self) -> str:
@@ -174,7 +174,7 @@ class Module:
 
 
     def _str(self) -> str:
-        return f"{self.name}\n" + "\n".join(production._str(self.indent) for production in self.rules)
+        return f"{self.name}\n\n" + "\n".join(production._str(self.indent) for production in self.rules)
 
 
     def compile(self) -> str:

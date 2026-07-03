@@ -1,22 +1,11 @@
-from parser.lalr import (
-    LALR1
-)
-
-# try:
-from parser.AST import (
-    GRAMMAR,
-    TERMINALS,
-    TOKENS,
-    START,
-    PROGRAM
-)
-# except:
-
 from parser.eval import _evaluate, Expr
-
-from utils import *
-from datatypes import *
+from parser.AST import TERMINALS
 from parser.lalr import LALR1
+
+from datatypes import *
+from utils import *
+
+import re
 
 
 
@@ -35,7 +24,7 @@ def evaluate(string: str) -> any:
         raise e
     
 
-def parse(expr: str, state_limit: int = 2**100) -> Parsed:
+def parse(expr: str) -> Parsed:
     """To-do: Implement GLR parser."""
     
     dFlag = get_config("flags", "debug")
@@ -48,12 +37,11 @@ def parse(expr: str, state_limit: int = 2**100) -> Parsed:
 
 def tokenize(unprocessed: str) -> list:
     """Fully tokenize a raw unprocessed string and add EOI marker."""
-    # from parser.AST import TERMINALS
-    
+
     string = preprocess_input(unprocessed)
     tokens = []
 
-    lineno, i = 0, 0
+    lineno, col = 1, 1
     while string:
         matches = []
         
@@ -62,13 +50,31 @@ def tokenize(unprocessed: str) -> list:
             if match: matches.append((match.group(), regex))
 
         if not matches: 
-            raise SyntaxError(f"invalid token '{string[0]}' at line {lineno}, col {i}")
+            raise SyntaxError(f"invalid token '{string[0]}' at line {lineno}, col {col}")
 
-        match, regex = max(matches, key=lambda tup: len(tup[0]))
+        # Prioritize the longest match; if multiple regular expressions
+        # match the same characters, prioritize exact matches to handle reserved words.
+        match, regex = max(matches, key=lambda tup: len(tup[0]) + int(tup[0] == tup[1]))
         
-        if (tokens or ("\n" not in match)): tokens.append(Token(match, regex, lineno, i))
+        if match.startswith("\n"): col = 1
+
+        if (tokens or ("\n" not in match)): tokens.append(Token(match, regex, lineno, col))
+        
+        # Print warning in case of ambiguity between multiple free patterns,
+        # but assume exact matches are keywords 
+        if len(matches) > 1 and (not match == regex):
+            print_warnings(
+                msg=f"multiple token matches at line {lineno}, col {col}",
+                log={
+                    "found " \
+                    + ", ".join(set(tup[0] for tup in matches)) \
+                    + f" | matched {match}" : [tup[1] for tup in matches]
+                }
+            )
+
         lineno += match.count("\n")
-        i = match.rfind("\n") if ("\n" in match) else (i+len(match))
+        col += len(match)
+        if ("\n" in match): col -= match.rfind("\n")
         
         string = string.removeprefix(match).lstrip(" ")
 

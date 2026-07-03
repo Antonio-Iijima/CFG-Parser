@@ -19,6 +19,10 @@ def compile() -> None:
         file.write(Eval(grammar.dependencies).compile().strip()+"\n")
 
     debug = get_config("flags", "debug")
+    
+    print()
+    print(grammar)
+    print()
 
     from parser import Parser
     Parser(debug).generate()

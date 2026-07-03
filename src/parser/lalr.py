@@ -32,9 +32,9 @@ class LALR1:
 
     def generate(self):
         
-        self.construct_automaton({
+        self.construct_automaton(self.closure({
             Item(0, ProductionData(START, "MAIN", 0, [ PROGRAM ])) : { EOI }
-            })
+            }))
         self.construct_table()
         
         if self.debug:
@@ -53,7 +53,7 @@ class LALR1:
             
             self.show_tables()
 
-        with open("parser/parsetable.py", "w") as file:
+        with open(f"{get_config("paths", "generated")}/parsetable.py", "w") as file:
             file.write(self.tableToStr())
 
 
@@ -72,7 +72,17 @@ class LALR1:
 from parser.AST import *
 
 
-        
+
+# ---{{ GRAMMAR }}---
+{"\n".join(f"# Rule {i:<4} {str(rule)}" for i, rule in enumerate(self.rules))}
+
+
+
+# Parsetable constructed with {len(self.table)} state{"s"*(len(self.table)!=1)}.
+# {self.conflicts.replace("\n", "\n# ")}
+
+
+
 RULES = (
     {",\n    ".join(f"{norm(rule)}" for rule in self.rules)}
 )
@@ -84,8 +94,6 @@ TABLE = {{
         {",\n        ".join(f"{norm(token)} : {actions}" for token, actions in transitions.items())}
     }}""" for state, transitions in self.table.items())}
 }}
-
-# {self.conflicts.replace("\n", "\n# ")}
 """
         
 
@@ -99,18 +107,18 @@ TABLE = {{
             )
 
 
-    def construct_automaton(self, kernel: dict[Item, set]) -> None:
+    def construct_automaton(self, closure: dict[Item, set]) -> None:
         """Constructs the LALR automaton."""
 
-        def merge(a: dict[Item, set], b: dict[Item, set]) -> bool:
-            if a.keys() == b.keys():
-                for item, lookahead in b.items():
-                    a[item].update(lookahead)
+        def merge(existingState: dict[Item, set], newState: dict[Item, set]) -> bool:
+            if (existingState.keys() == newState.keys()):
+                for item, lookahead in newState.items():
+                    existingState[item].update(lookahead)
                 return True
             return False
             
         state = len(self.automaton)
-        self.automaton[state] = self.closure(kernel)
+        self.automaton[state] = closure
 
         for items in self.get_transitions(self.automaton[state]).values():
 
@@ -123,20 +131,20 @@ TABLE = {{
             for closure in self.automaton.values():
                 if merge(closure, nextClosure): break
             else: 
-                self.construct_automaton(nextKernel)
+                self.construct_automaton(nextClosure)
 
 
-    def get_transitions(self, closure: dict[Item, set]) -> dict[str|Rule, dict[Item, set]]:
+    def get_transitions(self, state: dict[Item, set]) -> dict[str|Rule, dict[Item, set]]:
         "Organize transitions out of a given state closure by token."
 
         transitions = {}
 
-        for item, lookahead in closure.items():
+        for item, lookahead in state.items():
             if item.isReduction: continue
 
             if not item.current in transitions: transitions[item.current] = {}
 
-            transitions[item.current].update({item : lookahead})
+            transitions[item.current][item] = lookahead
 
         return transitions
 
@@ -144,11 +152,13 @@ TABLE = {{
     def construct_table(self) -> None:
         """Constructs the LALR table."""
 
-        for state, fromClosure in self.automaton.items():
+        conflicts = {}
+
+        for state, closure in self.automaton.items():
             self.table[state] = {}
 
-            transitions = self.get_transitions(fromClosure)
-            reductions = { item : lookahead for item, lookahead in fromClosure.items() if item.isReduction }
+            transitions = self.get_transitions(closure)
+            reductions = { item : lookahead for item, lookahead in closure.items() if item.isReduction }
 
             for item, lookahead in reductions.items():
                 for token in lookahead:
@@ -157,10 +167,10 @@ TABLE = {{
                         else ("R", self.rules.index(item.production))
                     })
 
-            for token, items in transitions.items():
+            for token, kernel in transitions.items():
                 nextItems = {
                         Item(item.dot+1, item.production)
-                        for item in items
+                        for item in kernel
                     }
                 action = ("S" if isinstance(token, str) else "G")
                 
@@ -168,16 +178,19 @@ TABLE = {{
                         (action, toState) for toState, toClosure in self.automaton.items() if nextItems.issubset(toClosure)
                     })
 
-            self.table[state] = { token : list(actions) for token, actions in self.table[state].items() }
-
-        conflicts = {}
-        for state, transitions in self.table.items():
-            for token, actions in transitions.items():
+            for token, actions in self.table[state].items():
+                self.table[state][token] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
+                
                 if len(actions) > 1:
-                    actions = self.table[state][token] = sorted(actions, key=lambda tup: tup[0] == "R")
-                    if not state in conflicts: conflicts[state] = {}
-                    conflict = "/".join(action[0] for action in actions)
-                    if not conflict in conflicts: conflicts[state][conflict] = []
+    
+                    if not state in conflicts:
+                        conflicts[state] = {}
+
+                    conflict = "/".join(action[0] for action in self.table[state][token])
+
+                    if not conflict in conflicts:
+                        conflicts[state][conflict] = []
+                    
                     conflicts[state][conflict].append(token)
 
         if conflicts: 
@@ -310,12 +323,12 @@ TABLE = {{
                     
                     case "E": 
                         expected = set(tok for tok in self.table[state[-1]].keys() if isinstance(tok, str))
-
-                        msg = f"unexpected input" \
-                            + (f" {input[0].info}" if isinstance(input[0], Token) else f" {input[0]}") \
-                            + f" (expected {expected})"
                         
-                        raise ParseError(msg)
+                        raise ParseError(f"""unexpected {
+                            f"{input[0].info} (Token matched r'{input[0].regex}')" if isinstance(input[0], Token) 
+                            else f" {input[0]}"
+                        }
+    expected {", ".join(expected)}""")
                     
                     case _: raise ParseError(f"unknown action {action} in state {state}")
         

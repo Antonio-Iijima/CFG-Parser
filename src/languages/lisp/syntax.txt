@@ -3,13 +3,14 @@
 #require datatypes.string
 
 
-<PROGRAM>  ::= <LISPEXPR> | <LISPEXPR> <PROGRAM>
-<LISPEXPR> ::= <ATOM> | <LIST> | <QUOTE>
+<PROGRAM>   ::= <LISP_EXPR> | <LISP_EXPR> <PROGRAM>
+<LISP_EXPR> ::= \' <S_EXPR> | <S_EXPR>
+<S_EXPR>    ::= <ATOM> | <LIST>
 
-<ATOM>     ::= c[ad]+r | <NUMBER> | <STRING> | [^\d\s\'()]+
+<ATOM>      ::= <NUMBER> | <STRING> | <OPERATOR> | <ID>
 
-<LIST>     ::= \( \) | \( <ELEMS> \)
-<ELEMS>    ::= <ELEM> | <ELEM> <ELEMS>
-<ELEM>     ::= <LISPEXPR>
+<LIST>      ::= \( \) | \( <ELEMS> \)
+<ELEMS>     ::= <ELEM> | <ELEM> <ELEMS>
+<ELEM>      ::= <LISP_EXPR>
 
-<QUOTE>    ::= \' <ELEM>
+<OPERATOR>  ::= \+ | - | \* | / | // | \*\* | % | \? | < | > | <= | >= | ==

@@ -3,27 +3,62 @@
 #require math.infix
 
 
-<PROGRAM>        ::= <STATEMENT_LIST> | <EXPRESSION>
+<PROGRAM>      ::= <STATEMENTS> | <EXPRESSION>
 
-<STATEMENT_LIST> ::= <STATEMENT> | <STATEMENT> \n+ <STATEMENT_LIST>
-<STATEMENT>      ::= <ASSIGNMENT> | <CONDITIONAL> | <RETURN> | <GOTO> | <MARKER> | <PRINT>
+<STATEMENTS>   ::= <STATEMENT> | <STATEMENT> \n+ <STATEMENTS>
+<STATEMENT>    ::= <ASSIGNMENT> | <CONDITIONAL> | <RETURN> | <GOTO> | <MARKER> | <PRINT>
 
-<EXPRESSION>     ::= <MATHEXPR>
-<VALUE>          ::= <STRING> | <LABEL> | <BOOL>
-<LABEL>          ::= <ID>
-<BOOL>           ::= True | False
+<ASSIGNMENT>   ::= let <ID> be <EXPRESSION>
 
-<ASSIGNMENT>     ::= let <ID> be <EXPRESSION>
+<CONDITIONAL>  ::= <IF_THEN> | <IF_THEN_ELSE>
+<IF_THEN>      ::= if <EXPRESSION>, then <BLOCK>
+<IF_THEN_ELSE> ::= if <EXPRESSION>, then <BLOCK> \n+ else <BLOCK>
+<BLOCK>        ::= \n+ <INDENT> <STATEMENTS> <DEDENT>
 
-<CONDITIONAL>    ::= <IF_THEN> | <IF_THEN_ELSE>
-<IF_THEN>        ::= if <COMPARISON>, then <BLOCK>
-<IF_THEN_ELSE>   ::= if <COMPARISON>, then <BLOCK> \n+ else <BLOCK>
-<BLOCK>          ::= \n+ <INDENT> <STATEMENT_LIST> <DEDENT>
+<RETURN>       ::= return <EXPRESSION>
 
-<RETURN>         ::= return <EXPRESSION>
+<GOTO>         ::= goto instruction <MARK>
+<MARKER>       ::= @ <MARK>
+<MARK>         ::= <ID> | <NUMBER>
 
-<GOTO>           ::= goto instruction <MARK>
-<MARKER>         ::= @ <MARK> \n+ <STATEMENT_LIST>
-<MARK>           ::= <ID> | <NUMBER>
+<PRINT>        ::= print <EXPRESSION> | print
 
-<PRINT>          ::= print <EXPRESSION> | print
+<EXPRESSION>   ::= <MATHEXPR>
+<VALUE>        ::= <STRING> | <LABEL>
+<LABEL>        ::= <ID>
+
+
+
+Rule 0     S' -> input
+Rule 1     input -> program ENDMARKER
+Rule 2     program -> program NEWLINE
+Rule 3     program -> program command
+Rule 4     program -> command
+Rule 5     program -> expression
+Rule 6     command -> stmt
+Rule 7     stmt -> statement NEWLINE
+Rule 8     stmt -> statement
+Rule 9     stmts -> stmts stmt
+Rule 10    stmts -> stmt
+Rule 11    block -> NEWLINE INDENT stmts DEDENT
+Rule 12    block -> stmt
+Rule 13    statement -> LET MNEUMONIC BE expression
+Rule 14    statement -> IF comparison COMMA THEN block
+Rule 15    statement -> IF comparison COMMA THEN block ELSE block
+Rule 16    statement -> RETURN expression
+Rule 17    statement -> PRINT expression
+Rule 18    statement -> PRINT
+Rule 19    statement -> GOTO INSTRUCTION NUMBER
+Rule 20    statement -> MARKER NUMBER
+Rule 21    expression -> expression PLUS expression
+Rule 22    expression -> expression MINUS expression
+Rule 23    expression -> expression TIMES expression
+Rule 24    expression -> expression DIVIDE expression
+Rule 25    expression -> MINUS expression
+Rule 26    expression -> NUMBER
+Rule 27    expression -> STRING
+Rule 28    expression -> MNEUMONIC
+Rule 29    expression -> BOOL
+Rule 30    expression -> LP expression RP
+Rule 31    expression -> comparison
+Rule 32    comparison -> expression COMP_OP expression

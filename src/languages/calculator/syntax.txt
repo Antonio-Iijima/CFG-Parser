@@ -1,4 +1,4 @@
-#require math.infix.extended
+#require math.infix
 
 
 <PROGRAM> ::= <MATHEXPR> | <MATHEXPR> \n+ <PROGRAM>

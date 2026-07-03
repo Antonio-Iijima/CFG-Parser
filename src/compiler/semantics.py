@@ -1,7 +1,8 @@
-from utils import pathToFunc, print_warnings, get_config
 from datatypes import OrderedSet
+from utils import *
 
-import os, re
+import os
+import re
 
 
 
@@ -47,11 +48,13 @@ from collections.abc import Sequence
 class Expr(Sequence):
     '''Immutable, callable `Sequence` object which returns its elements as instances of itself.'''
 
-    def __new__(cls, node: Rule):
-        if isinstance(node, Rule):
-            return super().__new__(cls)            
-        return node
-
+    def __new__(cls, node):
+        return (
+            super().__new__(cls) if isinstance(node, Rule)
+            else node.tok if isinstance(node, Token)
+            else node
+        )
+        
     def __init__(self, node: Rule):
         self._children = node.children
         self._node = node
@@ -88,7 +91,6 @@ def _get_function(node: Rule):
 def _evaluate(expr, *args, **kwargs):
     return (
         _get_function(expr._node)(expr, *args, **kwargs) if isinstance(expr, Expr)
-        else expr.tok if isinstance(expr, Token)
         else expr
     )
 """
@@ -160,9 +162,10 @@ class File:
     def process(self, text: str) -> str:
 
         def replace_fname(match: re.Match) -> str:
-            return \
-                pathToFunc(self.path if self.type == "DEPENDENCY" else "main") \
+            return (
+                pathToFunc(self.path if self.type == "DEPENDENCY" else "main")
                 + match.group().split("p_", 1)[1].lower()
+            )
 
         return re.sub(
             pattern=r"p_.*\(",

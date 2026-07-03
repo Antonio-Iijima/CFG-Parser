@@ -140,6 +140,10 @@ def p_program_1(expr):
     expr(1)
 
 
+def p_lisp_expr_0(expr):
+    return ["quote", expr(1)]
+
+
 def p_list_0(expr):
     return []
 
@@ -152,10 +156,6 @@ def p_elems_0(expr):
 
 def p_elems_1(expr):
     return (expr(0), *expr(1))
-
-
-def p_quote(expr):
-    return ["quote", expr(1)]
 
 
 ### INTERPRETER ###
@@ -173,9 +173,14 @@ def isprocedure(expr): return isinstance(expr, type(callable))
 
 
 def lookup(var):
+    from re import fullmatch
 
     # follow operator aliases (e.g. + : "add")
     var = g_aliases.get(var, var)
+
+    # prioritize car/cdr operators
+    if fullmatch(r"c[ad]+r", var):
+        return lambda expr: f_cxr(var[1:-1], evaluate(expr))
 
     # try to find declared or builtin values / procedures
     for scope in reversed(g_env):
@@ -183,10 +188,6 @@ def lookup(var):
         if not (val == LookupError):
             return val
 
-    # check cxr-form operators
-    if var[0] == "c" and var[-1] == "r" and set(var[1:-1]).issubset({"a", "d"}):
-        return lambda expr: f_cxr(var[1:-1], evaluate(expr))
-    
     # otherwise not found
     raise Exception(1, f"variable {var} not found.")
 

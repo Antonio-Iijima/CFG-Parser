@@ -2,7 +2,6 @@ from io import TextIOWrapper
 from json import load, dump
 from rich.table import Table
 
-import re
 import os
 
 
@@ -108,15 +107,15 @@ def pathToFunc(path: str) -> str:
 
 
 def print_warnings(msg: str, log: dict[str, list]) -> None:
-    """Prints warnings. Uses the following structure, where `key[i]` and `val[i]` come from `log`:
+    """Prints warnings. Uses the following structure, where `key[i]` and `val[i,j]` come from `log`:
 ```
-WARNING: <msg> (<key1>)
-       | <val1>
-       | <val2>
+WARNING: <msg> (<key[1]>)
+       | <val[1,1]>
+       | <val[1,2]>
 ...
-WARNING: <msg> (<keyn>)
-       | <val1>
-       | <val2>
+WARNING: <msg> (<key[n]>)
+       | <val[n,1]>
+       | <val[n,2]>
 ```
     
     :param msg: The warning message.
@@ -129,6 +128,7 @@ WARNING: <msg> (<keyn>)
             print("WARNING: " + msg + f" ({type})")
             for path in OrderedSet(warnings):
                 print(f"       | {path}")
+    print()
 
 
 def tostr(l: list) -> list[str]:

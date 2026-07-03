@@ -9,16 +9,14 @@ class Rule:
         self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename
-        self._hash = self.__name__.__hash__() + sum(child.__hash__() for child in children)
         self.depth = (1 + max((child.depth for child in self.children), default=0))
-
 
     def __eq__(self, other: 'Rule'):
         return isinstance(other, Rule) and self.__hash__() == other.__hash__()
 
 
     def __hash__(self):
-        return self._hash
+        return hash((self.__name__, tuple(self.children)))
 
 
     def __repr__(self, i=0):
@@ -52,8 +50,7 @@ class ProductionData:
 
 
     def __repr__(self):
-        return f"""ProductionData( # {str(self)}
-            {self.rule.__name__}, '{self.module}', {self.variant}, [{
+        return f"""ProductionData({self.rule.__name__}, '{self.module}', {self.variant}, [{
                 ", ".join(f"r'{token}'" if isinstance(token, str) 
                 else token.__name__ for token in self.pattern)
                 }])"""
@@ -125,8 +122,12 @@ class Token:
         self.lineno = lineno
         self.i = i
 
-        self.info = f"'{tok}' at line {lineno}, col {self.i}"
         self.depth = 1
+
+    
+    @property
+    def info(self) -> str:
+        return f"{self.tok.__repr__()} at line {self.lineno}, col {self.i}"
 
 
     def __str__(self):
@@ -148,11 +149,11 @@ class Item:
 
 
     def __hash__(self):
-        return hash((self.dot, self.production))
+        return hash((self.dot, self.production.rule, tuple(self.production.pattern)))
     
 
-    def __eq__(self, value):
-        return isinstance(value, Item) and self.__hash__() == value.__hash__()
+    def __eq__(self, other):
+        return isinstance(other, Item) and self.__hash__() == other.__hash__()
     
 
     def __repr__(self):
