@@ -25,4 +25,5 @@ def compile() -> None:
     print()
 
     from parser import Parser
-    Parser(debug).generate()
+    from parser.AST import _GRAMMAR, _TERMINALS
+    Parser(_GRAMMAR, _TERMINALS, debug).generate()

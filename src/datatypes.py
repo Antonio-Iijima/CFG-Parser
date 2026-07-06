@@ -11,6 +11,7 @@ class Rule:
         self.modulename = modulename
         self.depth = (1 + max((child.depth for child in self.children), default=0))
 
+
     def __eq__(self, other: 'Rule'):
         return isinstance(other, Rule) and self.__hash__() == other.__hash__()
 

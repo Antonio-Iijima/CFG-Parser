@@ -122,16 +122,16 @@ from utils import *
 
 
 
-MODULES = {self.embed()}
+_MODULES = {self.embed()}
 
-GRAMMAR = {{ START : {{ ProductionData(START, "MAIN", 0, [PROGRAM]) }} }}
+_GRAMMAR = {{ START : {{ ProductionData(START, "MAIN", 0, [PROGRAM]) }} }}
 
-for module, grammar in MODULES.items():
+for module, grammar in _MODULES.items():
     for rule, alternatives in grammar.items():
-        if not rule in GRAMMAR: GRAMMAR[rule] = set()
+        if not rule in _GRAMMAR: _GRAMMAR[rule] = set()
         
         for variant, pattern in enumerate(alternatives):
-            GRAMMAR[rule].add(ProductionData(rule, module, variant, pattern))
+            _GRAMMAR[rule].add(ProductionData(rule, module, variant, pattern))
 
 
 
@@ -139,14 +139,14 @@ for module, grammar in MODULES.items():
 
 
 
-TOKENS = {{
+_TOKENS = {{
     token 
-            for options in GRAMMAR.values()
+            for options in _GRAMMAR.values()
         for metadata in options
     for token in metadata.pattern
 }}
 
-TERMINALS = set(filter(lambda x: isinstance(x, str), TOKENS))
+_TERMINALS = set(filter(lambda x: isinstance(x, str), _TOKENS))
 """
         
         return text

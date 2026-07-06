@@ -93,8 +93,9 @@ def main(input: tuple, **flags):
 
 
 if __name__ == "__main__":
+    debug = get_config("flags", "debug")
     try:
         main()
     except Exception as e:
-        if get_config("flags", "debug"): raise e
+        if debug: raise e
         print(f"{type(e).__name__}: {e}")

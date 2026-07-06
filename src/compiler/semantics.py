@@ -48,6 +48,8 @@ from collections.abc import Sequence
 class Expr(Sequence):
     '''Immutable, callable `Sequence` object which returns its elements as instances of itself.'''
 
+    ATTRIBUTES = {{ fname : func for fname, func in globals().items() if fname.startswith("p_")}}
+
     def __new__(cls, node):
         return (
             super().__new__(cls) if isinstance(node, Rule)
@@ -82,8 +84,8 @@ class Expr(Sequence):
 
 def _get_function(node: Rule):
     return (
-        globals().get(f"{{node.fname}}_{{node.variant}}")
-        or globals().get(node.fname)
+        Expr.ATTRIBUTES.get(f"{{node.fname}}_{{node.variant}}")
+        or Expr.ATTRIBUTES.get(node.fname)
         or _default
     )
 
@@ -93,6 +95,11 @@ def _evaluate(expr, *args, **kwargs):
         _get_function(expr._node)(expr, *args, **kwargs) if isinstance(expr, Expr)
         else expr
     )
+
+
+def parse(expr: str):
+    from parser.lalr import LALR1
+    return Expr(LALR1().cache().parse(expr))
 """
         
         print_warnings("semantics not found", self.WARNINGS)
