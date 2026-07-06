@@ -480,9 +480,9 @@ def preprocess_input(string: str) -> list:
 
     lines = string.splitlines()
 
-    # for i, line in enumerate(lines):
-    #     if "#" in line:
-    #         lines[i] = line[:line.index("#")]
+    for i, line in enumerate(lines):
+        if "#" in line:
+            lines[i] = line[:line.index("#")]
 
     formatting = get_config("formatting")
     indentation, newlines = formatting["indentation"], formatting["newlines"]

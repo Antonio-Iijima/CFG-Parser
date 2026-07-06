@@ -1,8 +1,8 @@
 {
    "version": "0.0.0",
-   "language": "calculator",
+   "language": "lisp",
    "flags": {
-      "interactive": false,
+      "interactive": true,
       "debug": false,
       "force": false,
       "clear": false
@@ -10,17 +10,17 @@
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "languages/calculator",
+      "language": "languages/lisp",
       "generated": "parser"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
       "dedent": " //DEDENTATION-MARKER// ",
       "indentation": false,
-      "newlines": true
+      "newlines": false
    },
    "input": [
-      "../examples/1.calc"
+      "../examples/interpreter.lsp"
    ],
    "output": "out.cpp",
    "tests": [],

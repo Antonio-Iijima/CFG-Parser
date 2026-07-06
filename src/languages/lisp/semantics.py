@@ -60,6 +60,32 @@ def f_geq(a, b):
 def f_eq(a, b):
     return a == b
 
+@applicative
+def f_list(*a):
+    return list(a)
+
+# predicates
+
+@applicative
+def q_eq(a, b):
+    return a == b
+
+@applicative
+def q_atom(a):
+    return isatom(a)
+
+@applicative
+def q_list(a):
+    return islist(a)
+
+@applicative
+def q_null(a):
+    return isnull(a)
+
+@applicative
+def q_bool(a):
+    return isinstance(a, bool)
+
 # is applicative, but handled in lookup
 def f_cxr(x: str, output: list) -> any:
     """Tail-recursive evaluation of `cxr` expressions (arbitrary combinations of `car` and `cdr`)."""
@@ -69,6 +95,10 @@ def f_cxr(x: str, output: list) -> any:
 
 def f_quote(x):
     return x
+
+@applicative
+def f_cons(a, b):
+    return [a] + b
 
 @applicative
 def f_eval(x):
@@ -87,6 +117,9 @@ def f_lambda(params, body):
 
 def f_define(name, body):
     g_env[-1][name] = evaluate(body)
+
+def f_defun(name, params, body):
+    g_env[-1][name] = f_lambda(params, body)
 
 def f_ternary(a, b, c):
     return evaluate(b) if evaluate(a) else evaluate(c)
@@ -115,9 +148,17 @@ g_aliases = {
     "==" : "eq",
 }
 
-g_env = [
-    { name.removeprefix("f_") : procedure for name, procedure in globals().items() if name.startswith("f_") }
-]
+g_env = [{}]
+
+# normal procedures
+g_env[0].update({
+     name.removeprefix("f_") : procedure for name, procedure in globals().items() if name.startswith("f_") 
+})
+
+# predicates
+g_env[0].update({
+    name.removeprefix("q_") + "?" : predicate for name, predicate in globals().items() if name.startswith("q_")
+})
 
 
 ### OUTPUT ###
