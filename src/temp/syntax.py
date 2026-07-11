@@ -10,6 +10,11 @@ from datatypes import *
 
 
 
+class START(Rule):
+    r'''```
+START -> PROGRAM
+    ```'''
+
 class PROGRAM(Rule):
     r'''```
 PROGRAM -> GRAMMAR
@@ -77,13 +82,13 @@ EXAMPLENONTERMINAL -> 'exampleTerminal'
 
 
 _TERMINALS = {
-    r'\n+',
     r'[_a-zA-Z]\w*',
+    r'->',
+    r'\'\S+\'',
     r'|',
     r'#require\s+\w+(\.\w+)*',
-    r'\'\S+\'',
     r'exampleTerminal',
-    r'->'
+    r'\n+'
 }
 
 
@@ -93,7 +98,7 @@ _TERMINALS = {
 
 
 # ---{ GRAMMAR }---
-# Rule 0    [PROGRAM]
+# Rule 0    START ::= PROGRAM
 # Rule 1    PROGRAM ::= GRAMMAR
 # Rule 2    GRAMMAR ::= LINE
 # Rule 3    GRAMMAR ::= LINE '\n+' GRAMMAR
@@ -120,7 +125,7 @@ _TERMINALS = {
 
 
 _RULES = (
-    [PROGRAM],
+    (START, 'bnf', 0, 1),
     (PROGRAM, 'bnf', 0, 1),
     (GRAMMAR, 'bnf', 0, 1),
     (GRAMMAR, 'bnf', 1, 3),
@@ -216,9 +221,9 @@ _TABLE = {
         EOI : [('R', 10)]
     },
     13 : {
+        r'|' : [('R', 11)],
         r'\n+' : [('R', 11)],
         EOI : [('R', 11)],
-        r'|' : [('R', 11)],
         PATTERN : [('G', 14)],
         TERM : [('G', 13)],
         NONTERMINAL : [('G', 15)],
@@ -227,38 +232,38 @@ _TABLE = {
         r'\'\S+\'' : [('S', 18)]
     },
     14 : {
+        r'|' : [('R', 12)],
         r'\n+' : [('R', 12)],
-        EOI : [('R', 12)],
-        r'|' : [('R', 12)]
+        EOI : [('R', 12)]
     },
     15 : {
-        r'\n+' : [('R', 14)],
         EOI : [('R', 14)],
-        r'[_a-zA-Z]\w*' : [('R', 14)],
+        r'\'\S+\'' : [('R', 14)],
         r'|' : [('R', 14)],
-        r'\'\S+\'' : [('R', 14)]
+        r'[_a-zA-Z]\w*' : [('R', 14)],
+        r'\n+' : [('R', 14)]
     },
     16 : {
-        r'\n+' : [('R', 15)],
+        r'->' : [('R', 15)],
         EOI : [('R', 15)],
-        r'[_a-zA-Z]\w*' : [('R', 15)],
-        r'|' : [('R', 15)],
         r'\'\S+\'' : [('R', 15)],
-        r'->' : [('R', 15)]
+        r'|' : [('R', 15)],
+        r'[_a-zA-Z]\w*' : [('R', 15)],
+        r'\n+' : [('R', 15)]
     },
     17 : {
-        r'\n+' : [('R', 13)],
         EOI : [('R', 13)],
-        r'[_a-zA-Z]\w*' : [('R', 13)],
+        r'\'\S+\'' : [('R', 13)],
         r'|' : [('R', 13)],
-        r'\'\S+\'' : [('R', 13)]
+        r'[_a-zA-Z]\w*' : [('R', 13)],
+        r'\n+' : [('R', 13)]
     },
     18 : {
-        r'\n+' : [('R', 16)],
         EOI : [('R', 16)],
-        r'[_a-zA-Z]\w*' : [('R', 16)],
+        r'\'\S+\'' : [('R', 16)],
         r'|' : [('R', 16)],
-        r'\'\S+\'' : [('R', 16)]
+        r'[_a-zA-Z]\w*' : [('R', 16)],
+        r'\n+' : [('R', 16)]
     },
     19 : {
         r'->' : [('R', 8)]

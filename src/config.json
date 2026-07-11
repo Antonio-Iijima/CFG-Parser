@@ -2,7 +2,7 @@
    "version": "0.0.0",
    "language": "lisp",
    "flags": {
-      "interactive": true,
+      "interactive": false,
       "debug": false,
       "force": false,
       "clear": false

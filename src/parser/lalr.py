@@ -364,7 +364,7 @@ TABLE = {{
         self.display_rules.title = "Rules"
         self.display_rules.add_column(style="bright_cyan")
         for i, production in enumerate(self.rules):
-            rule, pattern = str(production).split("::=")
+            rule, pattern = str(production).split("::=", 1)
             self.display_rules.add_row(f"{i} ", rule, "::=", pattern)
 
         print()
@@ -383,11 +383,11 @@ def lexer(unprocessed: str) -> list[Token]:
     
     lineno, col = 1, 1
     while string:
-        matches = []
-        
+        matches = set()
+
         for regex in _TERMINALS:
             match = re.match(regex, string)
-            if match: matches.append((match.group(), regex))
+            if match: matches.add((match.group(), regex))
 
         if not matches: 
             raise SyntaxError(f"invalid token '{string[0]}' at line {lineno}, col {col}")
@@ -418,9 +418,7 @@ def lexer(unprocessed: str) -> list[Token]:
         
         string = string.removeprefix(match).lstrip(" ")
 
-    filtered = list(filter(None, tokens))
-
-    return filtered + [ EOI() ]
+    return tokens + [ EOI() ]
 
 
 def autoIndent(lines: list[str]) -> list:

@@ -107,13 +107,15 @@ class EOI(Terminal):
 
 
 
-g_modules: dict[str, dict[str, list[list[Terminal|Nonterminal]]]] = {}
-g_grammar: dict[Nonterminal, list[Production]] = {
-    START() : [[Nonterminal("PROGRAM")]]
+g_language = get_config("language").lower()
+g_modules: dict[str, dict[str, list[list[Terminal|Nonterminal]]]] = {
+    g_language : {
+        START() : [[Nonterminal("PROGRAM")]]
+    }
 }
+g_grammar: dict[Nonterminal, list[Production]] = {}
 g_terminals: set = set()
 g_conflicts: str = ""
-g_language = get_config("language").lower()
 g_paths: list = [g_language]
 g_current_module: dict = {}
 g_implementation: str = get_config("implementation")
@@ -153,9 +155,11 @@ def p_main_bnf_program(expr, module: str = g_language):
 
     expr(0)
 
-    g_modules[module] = g_current_module
-
-    if module != g_language: return
+    if module == g_language: 
+        g_modules[module].update(g_current_module)
+    else:
+        g_modules[module] = g_current_module
+        return
 
     for path in g_paths:
 

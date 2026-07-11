@@ -165,7 +165,7 @@ class Module:
         self.indent = 7
 
         for line in lines:
-            self.add_rule(*line.split(sep))
+            self.add_rule(*line.split(sep, 1))
             self.indent = max(self.indent, line.index(sep)-len(sep))
 
 

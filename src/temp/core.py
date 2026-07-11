@@ -1,5 +1,5 @@
 # from data import *
-from syntax import (
+from temp.syntax import (
     _TERMINALS, 
     _RULES, 
     _TABLE,

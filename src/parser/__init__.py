@@ -1,11 +1,8 @@
 from parser.eval import _evaluate, Expr
-from parser.AST import _GRAMMAR, _TERMINALS
 from parser.lalr import LALR1
 
 from datatypes import *
 from utils import *
-
-import re
 
 
 
@@ -17,7 +14,7 @@ Parser = LALR1
 def evaluate(string: str) -> any:
     """Eval-Print"""
     try:
-        out = _evaluate(Expr(parse(string).AST))
+        out = _evaluate(Expr(parse(string).AST)) # can replace with Expr(parse(string)); parse should return AST (maybe)
         if out is not None: print(out)
 
     except Exception as e:
