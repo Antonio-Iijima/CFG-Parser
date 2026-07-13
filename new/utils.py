@@ -163,11 +163,6 @@ WARNING: <msg> (<key[n]>)
 #     return display
 
 
-def pathToFunc(path: str) -> str:
-    """Converts a path .lib/path/to/somewhere to a function prefix p_path_to_somewhere_<fname>."""
-    return f"p_{path.lower().removeprefix(".lib/").replace("/", "_")}_".lower()
-
-
 def get_input(prompt: str = "", s: str = "") -> str:
     if s.endswith("\nquit"):
         from sys import exit
@@ -202,7 +197,7 @@ def regularize(path: str) -> None:
         offset = 0
 
         for i, line in enumerate(s.strip() for s in text):
-            text[i] = [s.strip() for s in line.split("::=")]
+            text[i] = [s.strip() for s in line.split("->", 1)]
             if len(text[i]) == 2:
                 offset = max(offset, len(text[i][0]))
 
@@ -212,12 +207,13 @@ def regularize(path: str) -> None:
                     text[i] = line[0]
                 else:
                     rule, production = line
-                    text[i] = f"{rule[1:-1].upper()}{" " * (offset-len(rule))} -> {" ".join([s[1:-1].upper() if (len(s) > 1 and s[::len(s)-1] == "<>") else "|" if s == "|" else f"\"{s}\"" for s in production.split()])}"
+                    text[i] = f"{rule.upper()}{" " * (offset-len(rule))} -> {" ".join([s if (len(s) > 1 and s[::len(s)-1] == "\"\"") else s.upper() for s in production.split()])}"
 
         text = "\n".join(text).strip() + "\n"
 
         with open(path, "w") as file:
             file.write(text)
+
 
 
 if __name__ == "__main__":

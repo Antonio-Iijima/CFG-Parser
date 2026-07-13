@@ -73,7 +73,7 @@ class Item(Default):
     def __repr__(self):
         pattern = self.production.pattern[:]
         pattern.insert(self.dot, "∙")
-        return f"{self.production.rule} ::= {" ".join(map(str, pattern))}"
+        return f"{self.production.rule} -> {" ".join(map(str, pattern))}"
 
 
 
@@ -120,11 +120,8 @@ class Token:
 
 class Rule(Default):
     def __init__(self, children: list, modulename: str = None, variant: int = 0):
-        
-        from utils import pathToFunc
-        
         self.__name__ = type(self).__name__
-        self.fname = pathToFunc(modulename) + self.__name__.lower()
+        self.fname = f"p_{modulename}_{self.__name__.lower()}"
         self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename

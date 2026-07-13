@@ -39,10 +39,10 @@ class Config(DotDict):
     def isModified(self):
         with open(self.path) as file:
             old = DotDict(json.load(file))
-            return any(
-                self[category] != old[category]
-                for category in self.keys() if category not in old.ignore.categories
-            )
+        return any(
+            self[category] != old[category]
+            for category in self.keys() if category not in old.ignore.categories
+        )
 
 
 

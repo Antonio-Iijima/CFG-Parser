@@ -84,6 +84,7 @@ def p_main_program(expr, module: str = "main"):
     for path in g_paths:
 
         directory = CONFIG.paths.language if (path == "main") else f".lib/{path}"
+        modulename = path.replace("/", "_")
 
         if not path == "main":
 
@@ -91,7 +92,7 @@ def p_main_program(expr, module: str = "main"):
             filename = get_filename(directory, "syntax.txt")
             if filename is not None:
                 with open(filename) as file:
-                    Expr(parse(file.read()))(None, path.upper().replace(".", "_"))
+                    Expr(parse(file.read()))(None, modulename)
             
         # read semantics
         filename = get_filename(directory, "semantics.py")
@@ -100,7 +101,7 @@ def p_main_program(expr, module: str = "main"):
 
 
 
-{embed_eval(filename, path)}
+{embed_eval(filename, modulename)}
 
 
 """
@@ -481,20 +482,16 @@ table = {{
 
 
 
-def embed_eval(filename: str, path: str) -> str:
+def embed_eval(filename: str, modulename: str) -> str:
     
     def replace_fname(match: re.Match) -> str:
-        return f"p_{path.replace("/", "_")}_{match.group().removeprefix("p_")}"
+        return f"p_{modulename}_{match.group().removeprefix("p_")}"
 
     with open(filename) as file:
-        print("file", filename)
-        text = file.read()
-
-        print(f"embedding {path}")
         return re.sub(
-            pattern=r"p_[\w\d_]*\(",
+            pattern=r"p_\w*\(",
             repl=replace_fname,
-            string=text
+            string=file.read()
         )
 
 

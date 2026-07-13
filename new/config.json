@@ -5,7 +5,7 @@
    "version": "0.0.0",
    "language": "calculator",
    "flags": {
-      "interactive": true,
+      "interactive": false,
       "debug": false,
       "force": false,
       "reset": false
@@ -22,7 +22,9 @@
       "indentation": false,
       "newlines": true
    },
-   "input": [],
+   "input": [
+      "../examples/1.calc"
+   ],
    "output": "out.cpp",
    "tests": [],
    "ignore": {

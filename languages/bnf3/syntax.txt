@@ -8,4 +8,4 @@ ALTERNATIVES -> PATTERN | PATTERN "\|" ALTERNATIVES
 PATTERN      -> TERM | TERM PATTERN
 TERM         -> TERMINAL | NONTERMINAL
 NONTERMINAL  -> "[_a-zA-Z]\w*"
-TERMINAL     -> "\"\S+\""
+TERMINAL     -> "\"\S+\"" | "\"\""
