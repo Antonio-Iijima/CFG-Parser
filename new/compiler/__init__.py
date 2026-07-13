@@ -10,6 +10,8 @@ from compiler.evaluation import Expr
 
 import processing
 
+import sys
+
 
 
 def parse(input: str, symbols: list = None, state: list = None) -> object:
@@ -38,8 +40,9 @@ def evaluate(input: str) -> any:
     :param AST: An abstract syntax tree.
     :returns: The evaluated output (may write to a file instead if the language implements a compiler, or when metacompiling)."""
 
-    return processing.evaluate(
-        input=input,
-        parse=parse,
-        Expr=Expr
-    )
+    if not (getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')):
+        return processing.evaluate(
+            input=input,
+            parse=parse,
+            Expr=Expr
+        )

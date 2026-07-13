@@ -1,6 +1,6 @@
 {
    "version": "0.0.0",
-   "language": "calculator",
+   "language": "bnf3",
    "flags": {
       "interactive": true,
       "debug": false,
@@ -11,7 +11,7 @@
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "/home/ai/github/magicc/languages/calculator",
+      "language": "/home/ai/github/magicc/languages/bnf3",
       "root": "/home/ai/github/magicc/new",
       "config": "/home/ai/github/magicc/new/config.json"
    },
