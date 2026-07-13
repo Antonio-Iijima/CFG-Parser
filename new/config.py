@@ -22,25 +22,28 @@ class DotDict(dict):
 
 class Config(DotDict):
     def __init__(self, filename: str = "config.json", indent: int = 3):        
-        self.filename = filename
-        self.indent = indent
-        self.path = os.path.join(os.path.dirname(__file__), self.filename)
+        root = os.path.dirname(__file__)
+        config = os.path.join(root, filename)
         
-        with open(self.path) as file:
+        with open(config) as file:
             super().__init__(json.load(file))
+
+        self.paths.root = root
+        self.paths.config = config
+        self.indent = indent
 
 
     def save(self):
-        with open(self.path, "w") as file:
+        with open(self.paths.config, "w") as file:
             json.dump(self, file, indent=self.indent)
 
 
     @property
     def isModified(self):
-        with open(self.path) as file:
+        with open(self.paths.config) as file:
             old = DotDict(json.load(file))
         return any(
-            self[category] != old[category]
+            self[category] != old.get(category, KeyError)
             for category in self.keys() if category not in old.ignore.categories
         )
 

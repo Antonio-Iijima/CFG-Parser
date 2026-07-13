@@ -20,7 +20,7 @@ def main(input: tuple, **flags):
 
     CONFIG.input = list(input)
     CONFIG.output = flags.pop("output")
-    CONFIG.flags = flags
+    CONFIG.flags.update(flags)
 
     print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
 

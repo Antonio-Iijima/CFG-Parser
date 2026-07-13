@@ -13,12 +13,12 @@ from collections.abc import Sequence
 
 
 
-import re
 import os
 
 
 
-g_path = os.path.dirname(os.path.dirname(__file__))
+g_indentation = False
+g_newlines = False
 g_modules: dict[str, dict[str, list[list[Terminal|Nonterminal]]]] = {
     "main" : {
         START() : [[Nonterminal("PROGRAM")]]
@@ -83,7 +83,7 @@ def p_main_program(expr, module: str = "main"):
 
     for path in g_paths:
 
-        directory = CONFIG.paths.language if (path == "main") else f".lib/{path}"
+        directory = CONFIG.paths.language if (path == "main") else os.path.join(CONFIG.paths.lib, path)
         modulename = path.replace("/", "_")
 
         if not path == "main":
@@ -205,15 +205,15 @@ def _evaluate(expr, *args, **kwargs):
 
     if CONFIG.flags.metacompile:
         print("metacompiling...")
-        with open(os.path.join(g_path, "compiler/parserdata.py"), "w") as file:
+        with open(os.path.join(CONFIG.paths.root, "compiler/parserdata.py"), "w") as file:
             file.write(AST)
-        with open(os.path.join(g_path, "compiler/evaluation.py"), "w") as file:
+        with open(os.path.join(CONFIG.paths.root, "compiler/evaluation.py"), "w") as file:
             file.write(g_eval.strip() + "\n")
     else:    
         print("compiling...")
-        with open(os.path.join(g_path, "parser/parserdata.py"), "w") as file:
+        with open(os.path.join(CONFIG.paths.root, "parser/parserdata.py"), "w") as file:
             file.write(AST)
-        with open(os.path.join(g_path, "parser/evaluation.py"), "w") as file:
+        with open(os.path.join(CONFIG.paths.root, "parser/evaluation.py"), "w") as file:
             file.write(g_eval.strip() + "\n")
 
 
@@ -255,13 +255,24 @@ def p_main_pattern_1(expr):
 
 
 def p_main_nonterminal(expr):
-    return Nonterminal(expr(0))
+    global g_indentation
+
+    nonterminal = Nonterminal(expr(0))
+    g_indentation = g_indentation or (nonterminal.rule in ("INDENT", "DEDENT"))
+    
+    return nonterminal
 
 
 def p_main_terminal_0(expr):
+    global g_newlines
+    
     terminal = Terminal(expr(0)[1:-1])
+    g_newlines = g_newlines or (r"\n" in terminal.regex)
+    
     g_terminals.add(terminal)
+
     return terminal
+
 
 def p_main_terminal_1(expr):
     return EPSILON()
@@ -393,6 +404,8 @@ def get_parsetable_str():
     def construct_table() -> str:
         """Constructs the LALR table."""
 
+        global g_conflicts
+
         conflicts = {}
 
         for state, closure in automaton.items():
@@ -434,7 +447,6 @@ def get_parsetable_str():
                     
                     conflicts[state][conflict].append(token)
 
-        global g_conflicts
 
         if conflicts: 
             g_conflicts = f"Found {len(conflicts)} conflicts."
@@ -468,6 +480,11 @@ def get_parsetable_str():
 
 
 
+indentation = {g_indentation}
+newlines = {g_newlines}
+
+
+
 rules = (
     {",\n    ".join(rule.__repr__() for rule in rules)}
 )
@@ -483,12 +500,14 @@ table = {{
 
 
 def embed_eval(filename: str, modulename: str) -> str:
-    
-    def replace_fname(match: re.Match) -> str:
+    from re import Match
+    from re import sub
+
+    def replace_fname(match: Match) -> str:
         return f"p_{modulename}_{match.group().removeprefix("p_")}"
 
     with open(filename) as file:
-        return re.sub(
+        return sub(
             pattern=r"p_\w*\(",
             repl=replace_fname,
             string=file.read()
