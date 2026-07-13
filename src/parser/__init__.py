@@ -1,34 +1,45 @@
-from parser.eval import _evaluate, Expr
-from parser.lalr import LALR1
+from parser.parserdata import (
+    terminals,
+    rules,
+    table,
+    indentation,
+    newlines,
+    PROGRAM
+)
+from parser.evaluation import Expr
 
-from datatypes import *
-from utils import *
+import processing
 
 
 
-# potential future logic to swap parsing algorithms
-Parser = LALR1
-
-
-
-def evaluate(string: str) -> any:
-    """Eval-Print"""
-    try:
-        out = _evaluate(Expr(parse(string).AST)) # can replace with Expr(parse(string)); parse should return AST (maybe)
-        if out is not None: print(out)
-
-    except Exception as e:
-        if get_config("flags", "debug"): raise e
-        else: print(f"{type(e).__name__}: {e}")
+def parse(input: str, symbols: list = None, state: list = None) -> object:
+    """Parses input string to AST.
+    When metacompiling, the string must be a grammar specification.
     
+    :param input: Input as a string.
+    :returns: AST (recursive hierarchy of `Rule` types)."""
 
-def parse(expr: str) -> Parsed:
-    """To-do: Implement GLR parser."""
+    return processing.parse(
+        input=input,
+        terminals=terminals,
+        rules=rules,
+        table=table,
+        indentation=indentation,
+        newlines=newlines,
+        PROGRAM=PROGRAM,
+        symbols=symbols,
+        state=state
+    )
+
+
+def evaluate(input: str) -> any:
+    """Wrapper for parse and evaluation operations. Returns the value of the passed AST.
     
-    dFlag = get_config("flags", "debug")
+    :param AST: An abstract syntax tree.
+    :returns: The evaluated output (may write to a file instead if the language implements a compiler, or when metacompiling)."""
 
-    parser = Parser(debug=dFlag).cache()
-
-    # from temp.data import parse as PARSE
-    # return Parsed(expr, PARSE(tokens), 0)
-    return Parsed(expr, parser.parse(expr), 0)
+    return processing.evaluate(
+        input=input,
+        parse=parse,
+        Expr=Expr
+    )

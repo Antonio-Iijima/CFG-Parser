@@ -1,5 +1,9 @@
 from datatypes import *
 from utils import *
+
+from rich import print
+from time import time
+
 import re
 
 
@@ -14,7 +18,7 @@ def parse(
         PROGRAM: Rule,
         symbols: list = None, 
         state: list = None
-        ) -> Rule:
+    ) -> Rule:
     """Parses input string to AST.
     When metacompiling, the string must be a grammar specification.
     
@@ -26,51 +30,83 @@ def parse(
         terminals=terminals,
         indentation=indentation,
         newlines=newlines
-        )
+    )
+    
     if symbols is None: symbols = []
     if state is None: state = [0]
+    
+    if CONFIG.flags.debug: 
+        parserOutput = displayTable(
+            title="Parser Output",
+            headers={
+                "Step" : {"justify" : "center"},
+                "State" : {},
+                "Symbols" : {},
+                "Input" : {"justify" : "right"},
+                "Action" : {"justify" : "center"}
+            }
+        )
 
-    step = -1
-    while input:
-        step += 1
-        
-        action, data = table[state[-1]].get(input[0].regex, [("E", False)])[0]
+    if CONFIG.flags.time: start = time()
 
-        match action:
+    try:
+        step = -1
+        while input:
+            step += 1
             
-            case "S":
-                symbols.append(input.pop(0))
-                state.append(data)
+            action, data = table[state[-1]].get(input[0].regex, [("E", False)])[0]
 
-            case "R":
-                rule, module, variant, n = rules[data]
-                reduction = []
+            if CONFIG.flags.debug:
+                parserOutput.add_row(
+                    str(step), 
+                    lstToStr(state),
+                    lstToStr(symbols),
+                    lstToStr(input),
+                    { "A" : "ACC", "E" : "ERR" }.get(action, f"{action} {data}")
+                )
 
-                for _ in range(n):
-                    reduction.append(symbols.pop())
-                    state.pop()
+            match action:
                 
-                symbols.append(rule(reversed(reduction), module, variant))
-                
-                # Handle goto as part of reduce action
-                action, data = table[state[-1]][rule][0]
-                if action == "G": state.append(data)
-                else: raise ParseError(f"expected goto on token {state[-1]}")
+                case "S":
+                    symbols.append(input.pop(0))
+                    state.append(data)
 
-            case "A":
-                if len(symbols) == 1 and isinstance(symbols[0], PROGRAM): break
-                raise ParseError("could not parse expression")
-            
-            case "E": 
-                expected = set(tok for tok in table[state[-1]].keys() if isinstance(tok, str))
+                case "R":
+                    rule, module, variant, n = rules[data]
+                    reduction = []
+
+                    for _ in range(n):
+                        reduction.append(symbols.pop())
+                        state.pop()
+                    
+                    symbols.append(rule(reversed(reduction), module, variant))
+                    
+                    # Handle goto as part of reduce action
+                    action, data = table[state[-1]][rule][0]
+                    if action == "G": state.append(data)
+                    else: raise ParseError(f"expected goto on token {state[-1]}")
+
+                case "A":
+                    if len(symbols) == 1 and isinstance(symbols[0], PROGRAM): break
+                    raise ParseError("could not parse expression")
                 
-                raise ParseError(f'''unexpected {
-                    f"{input[0].info} (Token matched r'{input[0].regex}')" if isinstance(input[0], Token) 
-                    else f" {input[0]}"
-                }
-expected {", ".join(expected)}''')
-            
-            case _: raise ParseError(f"unknown action {action} in state {state}")
+                case "E": 
+                    expected = set(tok for tok in table[state[-1]].keys() if (isinstance(tok, str) or tok == EOI))
+                    
+                    raise ParseError(f'''unexpected {
+                        f"{input[0].info} (Token matched r'{input[0].regex}')" if isinstance(input[0], Token) 
+                        else f" {input[0]}"
+                    }
+    expected {", ".join(expected)}''')
+                
+                case _: raise ParseError(f"unknown action {action} in state {state}")
+
+    finally:
+        if CONFIG.flags.time:
+            end = time() - start
+            print(f"Parse time: {end*1000:.7} ms")
+
+        if CONFIG.flags.debug: print(parserOutput)
 
     return symbols.pop()
 
@@ -88,10 +124,12 @@ def lexer(unprocessed: str, terminals: set, indentation: bool, newlines: bool) -
     string = preprocess_input(
         string=unprocessed,
         indentation=indentation,
-        newlines=newlines)
+        newlines=newlines
+    )
+    
     tokens = []
-
     lineno, col = 1, 1
+    
     while string:
         matches = []
         
@@ -102,8 +140,8 @@ def lexer(unprocessed: str, terminals: set, indentation: bool, newlines: bool) -
         if not matches: 
             raise SyntaxError(f"invalid token '{string[0]}' at line {lineno}, col {col}")
 
-        # Prioritize the longest match; if multiple regular expressions
-        # match the same characters, prioritize exact matches to handle reserved words.
+        # Prioritize the longest match; if multiple regular expressions match
+        # the same characters, prioritize exact matches to handle reserved words.
         match, regex = max(matches, key=lambda tup: len(tup[0]) + int(tup[0] == tup[1]))
         
         if match.startswith("\n"): col = 1

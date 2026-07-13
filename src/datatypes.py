@@ -1,15 +1,132 @@
-from utils import pathToFunc
+"""Contains datatypes used throughout the project."""
 
 
 
-class Rule:
+class Default:
+    """Base class which handles `__eq__` if `__hash__` has been defined by the subclass."""
+    def __eq__(self, other): return isinstance(other, type(self)) and self.__hash__() == other.__hash__()
+
+
+
+class Terminal(Default):
+    def __init__(self, regex: str):
+        self.regex = regex
+
+    def __hash__(self):
+        return hash(self.regex)
+
+    def __str__(self):
+        return f"\"{self.regex}\""
+
+    def __repr__(self):
+        return f"r\"{self.regex}\""
+
+
+
+class Nonterminal(Default):
+    def __init__(self, rule: str):
+        self.rule = rule.upper()
+
+    def __hash__(self):
+        return hash(self.rule)
+    
+    def __len__(self):
+        return len(self.rule)
+
+    def __str__(self):
+        return self.rule
+
+    def __repr__(self):
+        return self.rule
+
+
+
+class Production(Default):
+    def __init__(self, rule: Nonterminal, module: str, variant: int, pattern: list):
+        self.rule = rule
+        self.module = module
+        self.variant = variant
+        self.pattern = pattern
+        
+    def __hash__(self):
+        return hash((self.rule, self.module, self.variant))
+    
+    def __str__(self):
+        return f"{self.rule} -> {" ".join(map(str, self.pattern))}"
+    
+    def __repr__(self):
+        return f"({self.rule}, {self.module.__repr__()}, {self.variant}, {len(self.pattern)})"
+
+
+
+class Item(Default):
+    def __init__(self, dot: int, production: Production):
+        self.dot = dot
+        self.production = production
+        self.isReduction = (dot == len(production.pattern))
+        self.current = (None if self.isReduction else production.pattern[dot])
+        self.next = production.pattern[dot+1:]
+
+    def __hash__(self):
+        return hash((self.dot, self.production.rule, tuple(self.production.pattern)))
+    
+    def __repr__(self):
+        pattern = self.production.pattern[:]
+        pattern.insert(self.dot, "∙")
+        return f"{self.production.rule} -> {" ".join(map(str, pattern))}"
+
+
+
+class EPSILON: pass
+
+
+
+class START(Nonterminal):
+    def __init__(self):
+        super().__init__("START")
+
+
+
+class EOI(Terminal):
+    def __init__(self): 
+        super().__init__(str(hash("EOI")))
+        self.regex = EOI
+    
+    def __str__(self): return "$"
+
+    def __repr__(self): return "EOI"
+    
+
+    
+class Token:
+    def __init__(self, tok: str, regex: str, lineno: int, col: int):
+        self.tok = tok
+        self.regex = regex
+        self.lineno = lineno
+        self.col = col
+
+    
+    @property
+    def info(self) -> str:
+        return f"{self.tok.__repr__()} at line {self.lineno}, col {self.col}"
+
+
+    def __str__(self):
+        return self.tok
+    
+
+    def __repr__(self):
+        return f"Token{self.tok, self.regex, self.lineno, self.col}"
+
+
+
+class Rule(Default):
     def __init__(self, children: list, modulename: str = None, variant: int = 0):
         self.__name__ = type(self).__name__
-        self.fname = pathToFunc(modulename) + self.__name__.lower()
+        self.fname = f"p_{modulename}_{self.__name__.lower()}"
         self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename
-        self.depth = (1 + max((child.depth for child in self.children), default=0))
 
 
     def __eq__(self, other: 'Rule'):
@@ -33,143 +150,10 @@ class Rule:
 
 
 
-class ProductionData:
-    def __init__(self, rule: Rule, module: str, variant: int, pattern: list):
-        self.rule = rule
-        self.module = module
-        self.variant = variant
-        self.pattern = list(t for t in pattern if not t == EPSILON)
-        self.isNull = (self.pattern == [])
-        
-
-    def __hash__(self):
-        return hash((self.rule, self.module, self.variant))
-
-
-    def __str__(self):
-        return f"<{self.rule.__name__}> ::= {(" ".join(s if isinstance(s, str) else f'<{s.__name__}>' for s in self.pattern) if self.pattern else "ε")}"
-
-
-    def __repr__(self):
-        return f"""ProductionData({self.rule.__name__}, '{self.module}', {self.variant}, [{
-                ", ".join(f"r'{token}'" if isinstance(token, str) 
-                else token.__name__ for token in self.pattern)
-                }])"""
+### Custom Errors and Exceptions ###
 
 
 
-class OrderedSet(dict):
-    """Implements an ordered set using a `dict`. 
-    `add()` and `remove()` methods provide `append()` and `pop()` functionality."""
-
-    def __init__(self, iterable = None):
-        super().__init__(dict.fromkeys(iterable) if iterable else {})
-
-
-    def add(self, item: any) -> None:
-        self[item] = None
-
-
-    def pop(self):
-        """Removes and returns the last value from the `OrderedSet`."""
-        return self.popitem()[0]
-
-
-    def copy(self):
-        return OrderedSet(self.keys())
-    
-
-    def extend(self, iterable) -> 'OrderedSet':
-        for item in iterable:
-            self.add(item)
-
-        return self
-    
-    
-    def show(self):
-        for item in self:
-            print(item)
-
-
-    def __repr__(self):
-        return self.__str__()
-    
-
-    def __str__(self) -> str:
-        return "{\n" + ",\n".join(f"   {e}" for e in self) + "\n}"
-    
-
-    def compile(self):
-        return "{\n" + ",\n".join(f"   r'{e}'" for e in sorted(self, key=len, reverse=True)) + "\n}"
-
-
-
-class Parsed:
-    def __init__(self, sentence: str, AST: Rule, max_states: int):
-        self.sentence = sentence
-        self.AST = AST
-        self.max_states = max_states
-
-
-    def __str__(self):
-        return self.sentence
-
-
-
-class Token:
-    def __init__(self, tok: str, regex: str, lineno: int, i: int):
-        self.tok = tok
-        self.regex = regex
-        self.lineno = lineno
-        self.i = i
-
-        self.depth = 1
-
-    
-    @property
-    def info(self) -> str:
-        return f"{self.tok.__repr__()} at line {self.lineno}, col {self.i}"
-
-
-    def __str__(self):
-        return f"{self.tok}"
-    
-
-    def __repr__(self):
-        return f"Token{self.tok, self.regex, self.lineno, self.i}"
-
-
-class Item:
-    def __init__(self, dot: int, production: ProductionData):
-        self.dot = dot
-        self.production = production
-        self.isReduction = (dot == len(production.pattern))
-        self.isEpsilon = (production.pattern == [])
-        self.current = (None if self.isReduction else production.pattern[dot])
-        self.next = production.pattern[dot+1:]
-
-
-    def __hash__(self):
-        return hash((self.dot, self.production.rule, tuple(self.production.pattern)))
-    
-
-    def __eq__(self, other):
-        return isinstance(other, Item) and self.__hash__() == other.__hash__()
-    
-
-    def __repr__(self):
-        out = self.production.pattern[:]
-        out.insert(self.dot, "∙")
-        return f"{self.production.rule.__name__} ::= {" ".join(e if isinstance(e, str) else e.__name__ for e in out)}"
-
-
- 
-class EOI: 
-    def __init__(self): self.regex = EOI
-    def __str__(self): return "$"
-    def __repr__(self): return "EOI()"
-    
-
-
-class START: pass
-class EPSILON: pass
+class TableGenerationError(Exception): pass
+class ValidationError(Exception): pass
+class ParseError(Exception): pass

@@ -1,29 +1,48 @@
-from compiler.syntax import Grammar
-from compiler.semantics import Eval
+from compiler.parserdata import (
+    terminals,
+    rules,
+    table,
+    indentation,
+    newlines,
+    PROGRAM
+)
+from compiler.evaluation import Expr
 
-from utils import get_config
+import processing
 
 import sys
 
 
-def compile() -> None:
-    
-    if (getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')):
-        return print("Cannot compile from bundled language.")
-    
-    with open(f"{get_config("paths", "generated")}/AST.py", "w") as file:
-        grammar = Grammar()
-        file.write(grammar.compile().strip()+"\n")
-    
-    with open(f"{get_config("paths", "generated")}/eval.py", "w") as file:
-        file.write(Eval(grammar.dependencies).compile().strip()+"\n")
 
-    debug = get_config("flags", "debug")
+def parse(input: str, symbols: list = None, state: list = None) -> object:
+    """Parses input string to AST.
+    When metacompiling, the string must be a grammar specification.
     
-    print()
-    print(grammar)
-    print()
+    :param input: Input as a string.
+    :returns: AST (recursive hierarchy of `Rule` types)."""
 
-    from parser import Parser
-    from parser.AST import _GRAMMAR, _TERMINALS
-    Parser(_GRAMMAR, _TERMINALS, debug).generate()
+    return processing.parse(
+        input=input,
+        terminals=terminals,
+        rules=rules,
+        table=table,
+        indentation=indentation,
+        newlines=newlines,
+        PROGRAM=PROGRAM,
+        symbols=symbols,
+        state=state
+    )
+
+
+def evaluate(input: str) -> any:
+    """Wrapper for parse and evaluation operations. Returns the value of the passed AST.
+    
+    :param AST: An abstract syntax tree.
+    :returns: The evaluated output (may write to a file instead if the language implements a compiler, or when metacompiling)."""
+
+    if not (getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')):
+        return processing.evaluate(
+            input=input,
+            parse=parse,
+            Expr=Expr
+        )

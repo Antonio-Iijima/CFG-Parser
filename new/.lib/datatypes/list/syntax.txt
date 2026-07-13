@@ -1,3 +1,0 @@
-#require datatypes.atom
-
-LIST -> "\(" ATOMS "\)"

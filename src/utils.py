@@ -1,109 +1,7 @@
-from io import TextIOWrapper
-from json import load, dump
+from config import CONFIG
+
 from rich.table import Table
 
-import os
-
-
-
-### Custom Errors and Exceptions ###
-
-
-
-class TableGenerationError(Exception): pass
-class ValidationError(Exception): pass
-class ParseError(Exception): pass
-
-
-
-### Utility Functions ###
-
-
-
-def get_json(filename: str, *keys): 
-    """Look up a value from the config, applying keys sequentially.
-    No arguments returns the config itself."""
-    
-    with open(os.path.join(os.path.dirname(__file__), filename)) as file:
-        cfg = load(file)
-
-    for key in keys: cfg = cfg[key]
-
-    return cfg
-
-
-def set_json(filename: str, cfg: dict, indent: int = 3):
-    """Writes a provided `dict` to the config.json file."""
-    
-    with open(os.path.join(os.path.dirname(__file__), filename), "w") as file:
-        dump(cfg, file, indent=indent)
-
-
-def get_config(*keys):
-    return get_json("config.json", *keys)
-
-
-def set_config(*keys):
-    return set_json("config.json", *keys)
-
-
-def preprocess_text(text: TextIOWrapper) -> list[str]: 
-    return list(filter(lambda line: any(line.startswith(s) for s in ("<", "#require")), map(lambda s: s.strip(), text.read().splitlines())))
-
-
-def get_input(prompt: str = "", s: str = "") -> str:
-    if s.endswith("\nquit"):
-        from sys import exit
-        exit()
-    
-    elif s.endswith("\nclear"):
-        from os import system, name as OS
-        system('cls' if OS == 'nt' else 'clear')
-        print(f"magicc v{get_config("version")} </> {get_config("language")} {get_config("implementation")}")
-        return ""
-    
-    elif s.endswith("\n"):
-        return s
-    
-    return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
-
-
-def regularize(path: str) -> None:
-    if os.path.isdir(path):
-        for file in os.listdir(path):
-            regularize(os.path.join(path, file))
-            
-    elif path.endswith(".txt"):
-        print(f"Regularizing {path}")
-        
-        with open(path) as file:
-            text = file.read()
-            text = text.splitlines()
-        
-        offset = 0
-
-        for i, line in enumerate(s.strip() for s in text):
-            text[i] = [s.strip() for s in line.split("::=")]
-            if len(text[i]) == 2:
-                offset = max(offset, len(text[i][0]))
-
-        for i, line in enumerate(text):
-            if isinstance(line, list):
-                if len(line) == 1:  
-                    text[i] = line[0]
-                else:
-                    rule, production = line
-                    text[i] = f"{rule.upper()}{" " * (offset-len(rule))} ::= {" ".join([s.upper() if (len(s) > 1 and s[::len(s)-1] == "<>") else s for s in production.split()])}"
-
-        text = "\n".join(text).strip() + "\n"
-
-        with open(path, "w") as file:
-            file.write(text)
-
-
-def pathToFunc(path: str) -> str:
-    """Converts a path .lib/path/to/somewhere to a function prefix p_path_to_somewhere_<fname>."""
-    return f"p_{path.lower().removeprefix(".lib/").replace("/", "_")}_".lower()
 
 
 def print_warnings(msg: str, log: dict[str, list]) -> None:
@@ -121,29 +19,14 @@ WARNING: <msg> (<key[n]>)
     :param msg: The warning message.
     :param log: Dictionary of applicable info for the warning."""
     
-    if not get_config("flags", "debug"): return
-
-    from datatypes import OrderedSet
-
     for type, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):
         if warnings:
             print("WARNING: " + msg + f" ({type})")
-            for path in OrderedSet(warnings):
+            for path in warnings:
                 print(f"       | {path}")
-    print()
 
 
-def tostr(l: list) -> list[str]:
-    """Shorthand for `list(map(str, l))`"""
-    return list(map(str, l))
-
-
-def lib(path: str) -> str:
-    """Prepend `.lib/` to `path` and replace all `.` with `/`."""
-    return f".lib/{path.replace(".", "/")}"
-
-
-def table(title: str, headers: dict, rows: list = None, grid: bool = False) -> Table:
+def displayTable(title: str, headers: dict, rows: list = None, grid: bool = False) -> Table:
     """Construct a renderable table from the headers and data."""
 
     rows = rows or []
@@ -161,6 +44,62 @@ def table(title: str, headers: dict, rows: list = None, grid: bool = False) -> T
     display.title = title
 
     return display
+
+
+def lstToStr(lst: list) -> str:
+    return " ".join(map(str, lst))
+
+
+def get_input(prompt: str = "", s: str = "") -> str:
+    if s.endswith("\nquit"):
+        from sys import exit
+        exit()
+    
+    elif s.endswith("\nclear"):
+        from os import system, name as OS
+        system('cls' if OS == 'nt' else 'clear')
+        print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
+        return ""
+    
+    elif s.endswith("\n"):
+        return s
+    
+    return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
+
+
+def regularize(path: str) -> None:
+    import os
+    
+    if os.path.isdir(path):
+        for file in os.listdir(path):
+            regularize(os.path.join(path, file))
+            
+    elif path.endswith("syntax.txt"):
+        print(f"Regularizing {path}")
+        
+        with open(path) as file:
+            text = file.read()
+            text = text.splitlines()
+        
+        offset = 0
+
+        for i, line in enumerate(s.strip() for s in text):
+            text[i] = [s.strip() for s in line.split("->", 1)]
+            if len(text[i]) == 2:
+                offset = max(offset, len(text[i][0]))
+
+        for i, line in enumerate(text):
+            if isinstance(line, list):
+                if len(line) == 1:  
+                    text[i] = line[0]
+                else:
+                    rule, production = line
+                    text[i] = f"{rule.upper()}{" " * (offset-len(rule))} -> {" ".join([s if (len(s) > 1 and s[::len(s)-1] == "\"\"") else s.upper() for s in production.split()])}"
+
+        text = "\n".join(text).strip() + "\n"
+
+        with open(path, "w") as file:
+            file.write(text)
 
 
 

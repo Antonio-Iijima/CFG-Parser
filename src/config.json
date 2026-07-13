@@ -1,26 +1,27 @@
 {
    "version": "0.0.0",
-   "language": "bnf",
+   "language": "calculator",
    "flags": {
-      "debug": true,
       "interactive": false,
+      "debug": false,
+      "time": false,
       "force": false,
-      "clear": false
+      "reset": false,
+      "metacompile": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "/home/ai/github/magicc/languages/bnf",
-      "generated": "parser"
+      "language": "/home/ai/github/magicc/languages/calculator",
+      "root": "/home/ai/github/magicc/src",
+      "config": "/home/ai/github/magicc/src/config.json"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
-      "dedent": " //DEDENTATION-MARKER// ",
-      "indentation": false,
-      "newlines": true
+      "dedent": " //DEDENTATION-MARKER// "
    },
    "input": [
-      "../languages/bnf2/syntax.txt"
+      "../examples/1.calc"
    ],
    "output": "out.cpp",
    "tests": [],
@@ -28,12 +29,9 @@
       "categories": [
          "ignore",
          "flags",
-         "input"
-      ],
-      "generated": [
-         "AST.py",
-         "eval.py",
-         "parsetable.py"
+         "input",
+         "output"
       ]
-   }
+   },
+   "indent": 3
 }
