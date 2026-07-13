@@ -1,3 +1,3 @@
-<PROGRAM> ::= <E>
-<E>       ::= <E> \+ <E> | <E> - <E> | <VALUE>
-<VALUE>   ::= 0 | [1-9]\d*
+PROGRAM -> E
+E       -> E "\+" E | E "-" E | VALUE
+VALUE   -> "0" | "[1-9]\d*"

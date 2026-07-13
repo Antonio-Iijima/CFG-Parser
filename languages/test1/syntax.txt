@@ -1,2 +1,2 @@
-<PROGRAM> ::= \( <X> <X> \)
-<X>       ::= a <X> | b
+PROGRAM -> "\(" X X "\)"
+X       -> "a" X | "b"

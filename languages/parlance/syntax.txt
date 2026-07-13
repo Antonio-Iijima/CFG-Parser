@@ -2,32 +2,32 @@
 #require math.infix.extended
 
 
-<PROGRAM>        ::= <STATEMENT_LIST> | <EXPRESSION>
+PROGRAM        -> STATEMENT_LIST | EXPRESSION
 
-<STATEMENT_LIST> ::= <STATEMENT> | <STATEMENT> \n+ <STATEMENT_LIST>
-<STATEMENT>      ::= <ASSIGNMENT> | <CONDITIONAL> | <RETURN> | <GOTO> | <MARKER> | <PRINT>
+STATEMENT_LIST -> STATEMENT | STATEMENT "\n+" STATEMENT_LIST
+STATEMENT      -> ASSIGNMENT | CONDITIONAL | RETURN | GOTO | MARKER | PRINT
 
-<EXPRESSION>     ::= <MATHEXPR> | <LISTEXPR>
-<VALUE>          ::= <STRING> | <LABEL> | <BOOL> | <LIST>
-<LABEL>          ::= <ID>
-<BOOL>           ::= True | False
-<ATOM>           ::= <VALUE>
+EXPRESSION     -> MATHEXPR | LISTEXPR
+VALUE          -> STRING | LABEL | BOOL | LIST
+LABEL          -> ID
+BOOL           -> "True" | "False"
+ATOM           -> VALUE
 
-<ASSIGNMENT>     ::= let <ID> be <EXPRESSION>
+ASSIGNMENT     -> "let" ID "be" EXPRESSION
 
-<CONDITIONAL>    ::= <IF_THEN> | <IF_THEN_ELSE>
-<IF_THEN>        ::= if <COMPARISON>, then <BLOCK>
-<IF_THEN_ELSE>   ::= if <COMPARISON>, then <BLOCK> \n+ else <BLOCK>
-<BLOCK>          ::= \n+ <INDENT> <STATEMENT_LIST> <DEDENT>
+CONDITIONAL    -> IF_THEN | IF_THEN_ELSE
+IF_THEN        -> "if" "<COMPARISON>," "then" BLOCK
+IF_THEN_ELSE   -> "if" "<COMPARISON>," "then" BLOCK "\n+" "else" BLOCK
+BLOCK          -> "\n+" INDENT STATEMENT_LIST DEDENT
 
-<RETURN>         ::= return <EXPRESSION> | return
+RETURN         -> "return" EXPRESSION | "return"
 
-<GOTO>           ::= goto instruction <MARK>
-<MARKER>         ::= @ <MARK> \n+ <STATEMENT_LIST>
-<MARK>           ::= <EXPRESSION>
+GOTO           -> "goto" "instruction" MARK
+MARKER         -> "@" MARK "\n+" STATEMENT_LIST
+MARK           -> EXPRESSION
 
-<PRINT>          ::= print <EXPRESSION> | print
+PRINT          -> "print" EXPRESSION | "print"
 
-<LISTEXPR>       ::= <EXPRESSION> \[ <SLICE> \]
-<SLICE>          ::= <INDEX> | <INDEX> : <INDEX>
-<INDEX>          ::= <EXPRESSION> | ε
+LISTEXPR       -> EXPRESSION "\[" SLICE "\]"
+SLICE          -> INDEX | INDEX ":" INDEX
+INDEX          -> EXPRESSION | "ε"

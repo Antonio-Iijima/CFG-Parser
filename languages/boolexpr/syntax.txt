@@ -1,10 +1,10 @@
-<PROGRAM>  ::= <BOOLEXPR> | <BOOLEXPR> \n+ <PROGRAM>
-<BOOLEXPR> ::= \( <LIST> , <EXPR> \)
-<LIST>     ::= \[ \] | \[ <ATOMS> \]
-<ATOMS>    ::= <ATOM> | <ATOM> , <ATOMS>
-<ATOM>     ::= <VAR>
-<EXPR>     ::= <AND> \| <EXPR> | <AND>
-<AND>      ::= <NOT> & <AND> | <NOT>
-<NOT>      ::= ~ <NOT> | <LITERAL> | <VAR>
-<LITERAL>  ::= t | f
-<VAR>      ::= [a-eg-su-z]
+PROGRAM  -> BOOLEXPR | BOOLEXPR "\n+" PROGRAM
+BOOLEXPR -> "\(" LIST "," EXPR "\)"
+LIST     -> "\[" "\]" | "\[" ATOMS "\]"
+ATOMS    -> ATOM | ATOM "," ATOMS
+ATOM     -> VAR
+EXPR     -> AND "\|" EXPR | AND
+AND      -> NOT "&" AND | NOT
+NOT      -> "~" NOT | LITERAL | VAR
+LITERAL  -> "t" | "f"
+VAR      -> "[a-eg-su-z]"

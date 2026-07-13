@@ -1,4 +1,4 @@
 #require datatypes.list
 
-<PROGRAM> ::= <LIST>
-<ATOM>    ::= \d+
+PROGRAM -> LIST
+ATOM    -> "\d+"

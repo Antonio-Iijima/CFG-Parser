@@ -3,29 +3,29 @@
 #require math.infix
 
 
-<PROGRAM>      ::= <STATEMENTS> | <EXPRESSION>
+PROGRAM      -> STATEMENTS | EXPRESSION
 
-<STATEMENTS>   ::= <STATEMENT> | <STATEMENT> \n+ <STATEMENTS>
-<STATEMENT>    ::= <ASSIGNMENT> | <CONDITIONAL> | <RETURN> | <GOTO> | <MARKER> | <PRINT>
+STATEMENTS   -> STATEMENT | STATEMENT "\n+" STATEMENTS
+STATEMENT    -> ASSIGNMENT | CONDITIONAL | RETURN | GOTO | MARKER | PRINT
 
-<ASSIGNMENT>   ::= let <ID> be <EXPRESSION>
+ASSIGNMENT   -> "let" ID "be" EXPRESSION
 
-<CONDITIONAL>  ::= <IF_THEN> | <IF_THEN_ELSE>
-<IF_THEN>      ::= if <EXPRESSION>, then <BLOCK>
-<IF_THEN_ELSE> ::= if <EXPRESSION>, then <BLOCK> \n+ else <BLOCK>
-<BLOCK>        ::= \n+ <INDENT> <STATEMENTS> <DEDENT>
+CONDITIONAL  -> IF_THEN | IF_THEN_ELSE
+IF_THEN      -> "if" "<EXPRESSION>," "then" BLOCK
+IF_THEN_ELSE -> "if" "<EXPRESSION>," "then" BLOCK "\n+" "else" BLOCK
+BLOCK        -> "\n+" INDENT STATEMENTS DEDENT
 
-<RETURN>       ::= return <EXPRESSION>
+RETURN       -> "return" EXPRESSION
 
-<GOTO>         ::= goto instruction <MARK>
-<MARKER>       ::= @ <MARK>
-<MARK>         ::= <ID> | <NUMBER>
+GOTO         -> "goto" "instruction" MARK
+MARKER       -> "@" MARK
+MARK         -> ID | NUMBER
 
-<PRINT>        ::= print <EXPRESSION> | print
+PRINT        -> "print" EXPRESSION | "print"
 
-<EXPRESSION>   ::= <MATHEXPR>
-<VALUE>        ::= <STRING> | <LABEL>
-<LABEL>        ::= <ID>
+EXPRESSION   -> MATHEXPR
+VALUE        -> STRING | LABEL
+LABEL        -> ID
 
 
 

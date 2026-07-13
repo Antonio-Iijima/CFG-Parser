@@ -1,4 +1,4 @@
-<PROGRAM> ::= <A>
-<A>       ::= <C> x <A> | ε
-<B>       ::= x <C> y | x <C>
-<C>       ::= x <B> x | z
+PROGRAM -> A
+A       -> C "x" A | "ε"
+B       -> "x" C "y" | "x" C
+C       -> "x" B "x" | "z"

@@ -24,7 +24,6 @@ def main(input: tuple, **flags):
     CONFIG.output = flags.pop("output")
     CONFIG.flags = flags
 
-
     print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
 
 
@@ -62,11 +61,10 @@ def main(input: tuple, **flags):
 
 
 if __name__ == "__main__":
-    debug = CONFIG.flags.debug
     try:
         main()
     except Exception as e:
-        if debug: raise e
+        if CONFIG.flags.debug: raise e
         print(f"{type(e).__name__}: {e}")
     finally:
         CONFIG.save()

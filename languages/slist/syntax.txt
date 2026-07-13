@@ -1,3 +1,3 @@
-<PROGRAM>    ::= <SYMBOLEXPR>
-<SYMBOLEXPR> ::= x | y | z | \( <SLIST> \)
-<SLIST>      ::= <SYMBOLEXPR> | <SYMBOLEXPR> , <SLIST>
+PROGRAM    -> SYMBOLEXPR
+SYMBOLEXPR -> "x" | "y" | "z" | "\(" SLIST "\)"
+SLIST      -> SYMBOLEXPR | SYMBOLEXPR "," SLIST

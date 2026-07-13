@@ -1,2 +1,2 @@
-<PROGRAM> ::= <S>
-<S>       ::= ε | a | b | a<S>a | b<S>b
+PROGRAM -> S
+S       -> "ε" | "a" | "b" | "a<S>a" | "b<S>b"

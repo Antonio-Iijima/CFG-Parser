@@ -192,7 +192,7 @@ def regularize(path: str) -> None:
         for file in os.listdir(path):
             regularize(os.path.join(path, file))
             
-    elif path.endswith(".txt"):
+    elif path.endswith("syntax.txt"):
         print(f"Regularizing {path}")
         
         with open(path) as file:
@@ -212,7 +212,7 @@ def regularize(path: str) -> None:
                     text[i] = line[0]
                 else:
                     rule, production = line
-                    text[i] = f"{rule.upper()}{" " * (offset-len(rule))} ::= {" ".join([s.upper() if (len(s) > 1 and s[::len(s)-1] == "<>") else s for s in production.split()])}"
+                    text[i] = f"{rule[1:-1].upper()}{" " * (offset-len(rule))} -> {" ".join([s[1:-1].upper() if (len(s) > 1 and s[::len(s)-1] == "<>") else "|" if s == "|" else f"\"{s}\"" for s in production.split()])}"
 
         text = "\n".join(text).strip() + "\n"
 

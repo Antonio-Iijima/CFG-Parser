@@ -1,19 +1,19 @@
-<MATHEXPR>   ::= <OR>
-<OR>         ::= <AND> \| <OR> | <AND>
-<AND>        ::= <NOT> & <AND> | <NOT>
-<NOT>        ::= ~ <NOT> | <COMPARISON>
+MATHEXPR   -> OR
+OR         -> AND "\|" OR | AND
+AND        -> NOT "&" AND | NOT
+NOT        -> "~" NOT | COMPARISON
 
-<COMPARISON> ::= <LE> | <LEQ> | <GE> | <GEQ> | <EQ> | <NEQ> | <SUM>
-<LE>         ::= <COMPARISON> < <SUM>
-<LEQ>        ::= <COMPARISON> <= <SUM>
-<GE>         ::= <COMPARISON> > <SUM>
-<GEQ>        ::= <COMPARISON> >= <SUM>
-<EQ>         ::= <COMPARISON> == <SUM>
-<NEQ>        ::= <COMPARISON> != <SUM>
+COMPARISON -> LE | LEQ | GE | GEQ | EQ | NEQ | SUM
+LE         -> COMPARISON "<" SUM
+LEQ        -> COMPARISON "<=" SUM
+GE         -> COMPARISON ">" SUM
+GEQ        -> COMPARISON ">=" SUM
+EQ         -> COMPARISON "==" SUM
+NEQ        -> COMPARISON "!=" SUM
 
-<SUM>        ::= <SUM> \+ <TERM> | <SUM> - <TERM> | <TERM>
-<TERM>       ::= <TERM> \* <FACTOR> | <TERM> / <FACTOR> | <FACTOR>
-<FACTOR>     ::= - <FACTOR> | <POWER>
-<POWER>      ::= <GROUP> \*\* <FACTOR> | <GROUP>
-<GROUP>      ::= \( <MATHEXPR> \) | <VALUE>
-<VALUE>      ::= <NUMBER>
+SUM        -> SUM "\+" TERM | SUM "-" TERM | TERM
+TERM       -> TERM "\*" FACTOR | TERM "/" FACTOR | FACTOR
+FACTOR     -> "-" FACTOR | POWER
+POWER      -> GROUP "\*\*" FACTOR | GROUP
+GROUP      -> "\(" MATHEXPR "\)" | VALUE
+VALUE      -> NUMBER

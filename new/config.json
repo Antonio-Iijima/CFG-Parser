@@ -3,18 +3,17 @@
    "indent": 3,
    "path": "/home/ai/github/magicc/new/config.json",
    "version": "0.0.0",
-   "language": "bnf3",
+   "language": "calculator",
    "flags": {
-      "debug": true,
-      "force": true,
-      "interactive": false,
-      "reset": false,
-      "metacompile": false
+      "interactive": true,
+      "debug": false,
+      "force": false,
+      "reset": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "/home/ai/github/magicc/languages/bnf3",
+      "language": "/home/ai/github/magicc/languages/calculator",
       "generated": "parser"
    },
    "formatting": {
@@ -23,9 +22,7 @@
       "indentation": false,
       "newlines": true
    },
-   "input": [
-      "../languages/lisp/"
-   ],
+   "input": [],
    "output": "out.cpp",
    "tests": [],
    "ignore": {

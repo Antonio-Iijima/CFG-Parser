@@ -1,1 +1,1 @@
-<ATOMS> ::= ε | <ATOM> <ATOMS>
+ATOMS -> "ε" | ATOM ATOMS
