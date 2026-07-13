@@ -1,0 +1,4 @@
+#require math.infix
+
+
+PROGRAM -> MATHEXPR | MATHEXPR "\n+" PROGRAM

@@ -57,4 +57,14 @@ compiler.compile()      main.py
   - wrapper for `parse`
   - converts AST to `Expr` and calls `parser/evaluation`'s evaluation function
     - require `_evaluate`, `Parser`?
-- 
+  
+
+
+`parse` needs:
+- PROGRAM
+- Token
+- Error messages
+- Rule
+- RULES
+- TABLE
+- TERMINALS

@@ -121,6 +121,8 @@ WARNING: <msg> (<key[n]>)
     :param msg: The warning message.
     :param log: Dictionary of applicable info for the warning."""
     
+    if not get_config("flags", "debug"): return
+
     from datatypes import OrderedSet
 
     for type, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):

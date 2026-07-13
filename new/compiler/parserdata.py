@@ -23,7 +23,7 @@ PROGRAM -> GRAMMAR
 class GRAMMAR(Rule):
     r'''```
 GRAMMAR -> LINE
-         | LINE '\n+' GRAMMAR
+         | LINE "\n+" GRAMMAR
     ```'''
 
 class LINE(Rule):
@@ -34,12 +34,12 @@ LINE -> REQUIRE
 
 class REQUIRE(Rule):
     r'''```
-REQUIRE -> '#require\s+\w+(\.\w+)*'
+REQUIRE -> "#require\s+\w+(\.\w+)*"
     ```'''
 
 class PRODUCTION(Rule):
     r'''```
-PRODUCTION -> RULE '[:][:][=]' ALTERNATIVES
+PRODUCTION -> RULE "->" ALTERNATIVES
     ```'''
 
 class RULE(Rule):
@@ -50,7 +50,7 @@ RULE -> NONTERMINAL
 class ALTERNATIVES(Rule):
     r'''```
 ALTERNATIVES -> PATTERN
-              | PATTERN '\|' ALTERNATIVES
+              | PATTERN "\|" ALTERNATIVES
     ```'''
 
 class PATTERN(Rule):
@@ -67,22 +67,22 @@ TERM -> TERMINAL
 
 class NONTERMINAL(Rule):
     r'''```
-NONTERMINAL -> '[<]\S+[>]'
+NONTERMINAL -> "[_a-zA-Z]\w*"
     ```'''
 
 class TERMINAL(Rule):
     r'''```
-TERMINAL -> '(<)?\S*(?(1)(?<![>]))'
+TERMINAL -> "\"\S+\""
     ```'''
 
 
 terminals = {
-    r'\|',
-    r'(<)?\S*(?(1)(?<![>]))',
-    r'[:][:][=]',
-    r'#require\s+\w+(\.\w+)*',
-    r'[<]\S+[>]',
-    r'\n+'
+    r"\n+",
+    r"->",
+    r"#require\s+\w+(\.\w+)*",
+    r"\|",
+    r"[_a-zA-Z]\w*",
+    r"\"\S+\""
 }
 
 
@@ -92,23 +92,23 @@ terminals = {
 
 
 # ---{ GRAMMAR }---
-# Rule 0    START ::= PROGRAM
-# Rule 1    PROGRAM ::= GRAMMAR
-# Rule 2    GRAMMAR ::= LINE
-# Rule 3    GRAMMAR ::= LINE '\n+' GRAMMAR
-# Rule 4    LINE ::= REQUIRE
-# Rule 5    LINE ::= PRODUCTION
-# Rule 6    REQUIRE ::= '#require\s+\w+(\.\w+)*'
-# Rule 7    PRODUCTION ::= RULE '[:][:][=]' ALTERNATIVES
-# Rule 8    RULE ::= NONTERMINAL
-# Rule 9    ALTERNATIVES ::= PATTERN
-# Rule 10   ALTERNATIVES ::= PATTERN '\|' ALTERNATIVES
-# Rule 11   PATTERN ::= TERM
-# Rule 12   PATTERN ::= TERM PATTERN
-# Rule 13   TERM ::= TERMINAL
-# Rule 14   TERM ::= NONTERMINAL
-# Rule 15   NONTERMINAL ::= '[<]\S+[>]'
-# Rule 16   TERMINAL ::= '(<)?\S*(?(1)(?<![>]))'
+# Rule 0    START -> PROGRAM
+# Rule 1    PROGRAM -> GRAMMAR
+# Rule 2    GRAMMAR -> LINE
+# Rule 3    GRAMMAR -> LINE "\n+" GRAMMAR
+# Rule 4    LINE -> REQUIRE
+# Rule 5    LINE -> PRODUCTION
+# Rule 6    REQUIRE -> "#require\s+\w+(\.\w+)*"
+# Rule 7    PRODUCTION -> RULE "->" ALTERNATIVES
+# Rule 8    RULE -> NONTERMINAL
+# Rule 9    ALTERNATIVES -> PATTERN
+# Rule 10   ALTERNATIVES -> PATTERN "\|" ALTERNATIVES
+# Rule 11   PATTERN -> TERM
+# Rule 12   PATTERN -> TERM PATTERN
+# Rule 13   TERM -> TERMINAL
+# Rule 14   TERM -> NONTERMINAL
+# Rule 15   NONTERMINAL -> "[_a-zA-Z]\w*"
+# Rule 16   TERMINAL -> "\"\S+\""
 
 
     
@@ -147,9 +147,9 @@ table = {
         PRODUCTION : [('G', 6)],
         RULE : [('G', 7)],
         NONTERMINAL : [('G', 19)],
-        r'[<]\S+[>]' : [('S', 16)],
+        r"[_a-zA-Z]\w*" : [('S', 16)],
         REQUIRE : [('G', 20)],
-        r'#require\s+\w+(\.\w+)*' : [('S', 21)]
+        r"#require\s+\w+(\.\w+)*" : [('S', 21)]
     },
     1 : {
         EOI : [('A', True)]
@@ -159,7 +159,7 @@ table = {
     },
     3 : {
         EOI : [('R', 2)],
-        r'\n+' : [('S', 4)]
+        r"\n+" : [('S', 4)]
     },
     4 : {
         GRAMMAR : [('G', 5)],
@@ -167,105 +167,105 @@ table = {
         PRODUCTION : [('G', 6)],
         RULE : [('G', 7)],
         NONTERMINAL : [('G', 19)],
-        r'[<]\S+[>]' : [('S', 16)],
+        r"[_a-zA-Z]\w*" : [('S', 16)],
         REQUIRE : [('G', 20)],
-        r'#require\s+\w+(\.\w+)*' : [('S', 21)]
+        r"#require\s+\w+(\.\w+)*" : [('S', 21)]
     },
     5 : {
         EOI : [('R', 3)]
     },
     6 : {
-        EOI : [('R', 5)],
-        r'\n+' : [('R', 5)]
+        r"\n+" : [('R', 5)],
+        EOI : [('R', 5)]
     },
     7 : {
-        r'[:][:][=]' : [('S', 8)]
+        r"->" : [('S', 8)]
     },
     8 : {
         ALTERNATIVES : [('G', 9)],
         PATTERN : [('G', 10)],
         TERM : [('G', 13)],
         NONTERMINAL : [('G', 15)],
-        r'[<]\S+[>]' : [('S', 16)],
+        r"[_a-zA-Z]\w*" : [('S', 16)],
         TERMINAL : [('G', 17)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('S', 18)]
+        r"\"\S+\"" : [('S', 18)]
     },
     9 : {
-        EOI : [('R', 7)],
-        r'\n+' : [('R', 7)]
+        r"\n+" : [('R', 7)],
+        EOI : [('R', 7)]
     },
     10 : {
+        r"\n+" : [('R', 9)],
         EOI : [('R', 9)],
-        r'\n+' : [('R', 9)],
-        r'\|' : [('S', 11)]
+        r"\|" : [('S', 11)]
     },
     11 : {
         ALTERNATIVES : [('G', 12)],
         PATTERN : [('G', 10)],
         TERM : [('G', 13)],
         NONTERMINAL : [('G', 15)],
-        r'[<]\S+[>]' : [('S', 16)],
+        r"[_a-zA-Z]\w*" : [('S', 16)],
         TERMINAL : [('G', 17)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('S', 18)]
+        r"\"\S+\"" : [('S', 18)]
     },
     12 : {
-        EOI : [('R', 10)],
-        r'\n+' : [('R', 10)]
+        r"\n+" : [('R', 10)],
+        EOI : [('R', 10)]
     },
     13 : {
+        r"\n+" : [('R', 11)],
+        r"\|" : [('R', 11)],
         EOI : [('R', 11)],
-        r'\|' : [('R', 11)],
-        r'\n+' : [('R', 11)],
         PATTERN : [('G', 14)],
         TERM : [('G', 13)],
         NONTERMINAL : [('G', 15)],
-        r'[<]\S+[>]' : [('S', 16)],
+        r"[_a-zA-Z]\w*" : [('S', 16)],
         TERMINAL : [('G', 17)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('S', 18)]
+        r"\"\S+\"" : [('S', 18)]
     },
     14 : {
-        EOI : [('R', 12)],
-        r'\|' : [('R', 12)],
-        r'\n+' : [('R', 12)]
+        r"\n+" : [('R', 12)],
+        r"\|" : [('R', 12)],
+        EOI : [('R', 12)]
     },
     15 : {
-        r'\|' : [('R', 14)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('R', 14)],
+        r"\n+" : [('R', 14)],
+        r"\|" : [('R', 14)],
         EOI : [('R', 14)],
-        r'[<]\S+[>]' : [('R', 14)],
-        r'\n+' : [('R', 14)]
+        r"[_a-zA-Z]\w*" : [('R', 14)],
+        r"\"\S+\"" : [('R', 14)]
     },
     16 : {
-        r'\|' : [('R', 15)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('R', 15)],
-        r'[:][:][=]' : [('R', 15)],
+        r"\n+" : [('R', 15)],
+        r"->" : [('R', 15)],
+        r"\|" : [('R', 15)],
         EOI : [('R', 15)],
-        r'[<]\S+[>]' : [('R', 15)],
-        r'\n+' : [('R', 15)]
+        r"[_a-zA-Z]\w*" : [('R', 15)],
+        r"\"\S+\"" : [('R', 15)]
     },
     17 : {
-        r'\|' : [('R', 13)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('R', 13)],
+        r"\n+" : [('R', 13)],
+        r"\|" : [('R', 13)],
         EOI : [('R', 13)],
-        r'[<]\S+[>]' : [('R', 13)],
-        r'\n+' : [('R', 13)]
+        r"[_a-zA-Z]\w*" : [('R', 13)],
+        r"\"\S+\"" : [('R', 13)]
     },
     18 : {
-        r'\|' : [('R', 16)],
-        r'(<)?\S*(?(1)(?<![>]))' : [('R', 16)],
+        r"\n+" : [('R', 16)],
+        r"\|" : [('R', 16)],
         EOI : [('R', 16)],
-        r'[<]\S+[>]' : [('R', 16)],
-        r'\n+' : [('R', 16)]
+        r"[_a-zA-Z]\w*" : [('R', 16)],
+        r"\"\S+\"" : [('R', 16)]
     },
     19 : {
-        r'[:][:][=]' : [('R', 8)]
+        r"->" : [('R', 8)]
     },
     20 : {
-        EOI : [('R', 4)],
-        r'\n+' : [('R', 4)]
+        r"\n+" : [('R', 4)],
+        EOI : [('R', 4)]
     },
     21 : {
-        EOI : [('R', 6)],
-        r'\n+' : [('R', 6)]
+        r"\n+" : [('R', 6)],
+        EOI : [('R', 6)]
     }
 }

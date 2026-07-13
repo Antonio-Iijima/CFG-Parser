@@ -18,11 +18,9 @@ def main(path: str, implementation: bool, onefile: bool):
     """Compiles a language system from the files provided in PATH."""
 
     cfg = get_config()
-
-    path = path.split("/")
-
-    cfg["paths"]["language"] = "/".join(path[-2:])
-    cfg["language"] = path[-1]
+    
+    cfg["paths"]["language"] = path
+    cfg["language"] = path[path.rfind("/")+1:]
     cfg["implementation"] = implementation
 
     set_config(cfg)

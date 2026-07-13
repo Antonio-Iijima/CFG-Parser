@@ -27,7 +27,7 @@ class LALR1:
     
     
     def cache(self) -> 'LALR1':
-        import parser.parsetable as parsetable
+        from parser import parsetable
         reload(parsetable)
         self.rules = parsetable.RULES
         self.table = parsetable.TABLE
@@ -480,7 +480,9 @@ def preprocess_input(string: str) -> list:
 
     for i, line in enumerate(lines):
         if "#" in line:
-            lines[i] = line[:line.index("#")]
+            temp = line[line.index("#"):]
+            if not temp.startswith("#require"):
+                lines[i] = line.removesuffix(temp)
 
     formatting = get_config("formatting")
     indentation, newlines = formatting["indentation"], formatting["newlines"]

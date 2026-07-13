@@ -1,0 +1,9 @@
+<MULTIPLY> ::= <NEGATIVE>
+<NEGATIVE> ::= - <MATHEXPR>
+<DIVIDE>   ::= <MODULO>
+<MODULO>   ::= <TERM> % <FACTOR>
+<FACTOR>   ::= <ABS> | <EXP>
+<ABS>      ::= \| <MATHEXPR> \|
+<EXP>      ::= <BASE> \*\* <EXPONENT>
+<BASE>     ::= <FACTOR>
+<EXPONENT> ::= <MATHEXPR>

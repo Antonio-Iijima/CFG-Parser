@@ -175,7 +175,7 @@ class File:
             )
 
         return re.sub(
-            pattern=r"p_.*\(",
+            pattern=r"p_[\w\d_]*\(",
             repl=replace_fname,
             string=text
         )

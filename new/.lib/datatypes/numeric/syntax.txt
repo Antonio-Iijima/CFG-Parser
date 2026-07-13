@@ -1,0 +1,4 @@
+<NUMBER> ::= <INT> | <FLOAT> | <BOOL>
+<INT>    ::= 0 | [1-9]\d*
+<FLOAT>  ::= \d*\.\d+
+<BOOL>   ::= True | False

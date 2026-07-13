@@ -1,16 +1,20 @@
 {
+   "filename": "config.json",
+   "indent": 3,
+   "path": "/home/ai/github/magicc/new/config.json",
    "version": "0.0.0",
-   "language": "bnf",
+   "language": "bnf3",
    "flags": {
       "debug": true,
+      "force": true,
       "interactive": false,
-      "force": false,
-      "clear": false
+      "reset": false,
+      "metacompile": false
    },
    "implementation": "interpreter",
    "paths": {
       "lib": ".lib",
-      "language": "/home/ai/github/magicc/languages/bnf",
+      "language": "/home/ai/github/magicc/languages/bnf3",
       "generated": "parser"
    },
    "formatting": {
@@ -20,7 +24,7 @@
       "newlines": true
    },
    "input": [
-      "../languages/bnf2/syntax.txt"
+      "../languages/lisp/"
    ],
    "output": "out.cpp",
    "tests": [],
