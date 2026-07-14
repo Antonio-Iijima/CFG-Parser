@@ -29,18 +29,6 @@ import os
 def main(path: str|None, implementation: str, backup: bool, restore: bool, **flags):
     """Compiles a language system from the files provided in `path`."""
 
-    CONFIG.flags.update(flags)
-    CONFIG.implementation = implementation
-
-    if CONFIG.flags.metacompile:
-        if path is not None: print_warnings("ignoring input", {"metacompiling" : [path]})
-        path = os.path.join(CONFIG.paths.root, CONFIG.paths.metacompiler)
-    if path is None: raise Exception("missing argument 'PATH'. Did you mean to metacompile instead?")
-    
-    CONFIG.paths.language = path
-    CONFIG.language = os.path.basename(path)
-
-
     directory = os.path.dirname(__file__)
     base = os.path.join(directory, "compiler")
     save = os.path.join(directory, "compiler/backup")
@@ -54,6 +42,18 @@ def main(path: str|None, implementation: str, backup: bool, restore: bool, **fla
         print("Restoring files...")
         for file in os.listdir(save):
             shutil.copyfile(os.path.join(save, file), os.path.join(base, file))
+
+
+    CONFIG.flags.update(flags)
+    CONFIG.implementation = implementation
+
+    if CONFIG.flags.metacompile:
+        if path is not None: print_warnings("ignoring input", {"metacompiling" : [path]})
+        path = os.path.join(CONFIG.paths.root, CONFIG.paths.metacompiler)
+    if path is None: raise Exception("missing argument 'PATH'. Did you mean to metacompile instead?")
+    
+    CONFIG.paths.language = path
+    CONFIG.language = os.path.basename(path)
 
 
     with open(os.path.join(path, "syntax.txt")) as file:

@@ -1,6 +1,7 @@
 from config import CONFIG
 
 from rich.table import Table
+from rich import print
 
 import sys
 import os

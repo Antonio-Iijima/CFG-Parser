@@ -7,13 +7,11 @@ from utils import *
 
 from collections.abc import Sequence
 
+import os
+
 
 
 ##### main #####
-
-
-
-import os
 
 
 
@@ -38,6 +36,8 @@ from datatypes import *
 from utils import *
 
 from collections.abc import Sequence
+
+import os
 
 
 
@@ -476,15 +476,24 @@ def get_parsetable_str():
     if CONFIG.flags.debug: 
         print(grammar)
         print()
-    
-    
+
+        categories = [*sorted(g_terminals, key=str, reverse=True), EOI(), *g_grammar.keys()]
+        categories.remove(START())
+        parsetable = displayTable(
+            title="LALR Table",
+            columns=dict.fromkeys(("State", *map(str, categories)), {}),
+            rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in table.items()]
+            )
+        
+        print(parsetable)
+
 
     return f"""
 ##### PARSETABLE #####
 
 
 
-# {grammar.replace("\n", "\n# ")}
+# {str(grammar).replace("\n", "\n# ")}
 
 
     
