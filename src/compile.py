@@ -27,7 +27,7 @@ import os
     constraint=cloup.constraints.mutually_exclusive
 )
 def main(path: str|None, implementation: str, backup: bool, restore: bool, **flags):
-    """Compiles a language system from the files provided in `path`."""
+    """Compiles a language system from the files provided in PATH."""
 
     directory = os.path.dirname(__file__)
     base = os.path.join(directory, "compiler")
