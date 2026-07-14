@@ -34,6 +34,7 @@ class Config(DotDict):
 
 
     def save(self):
+        self.flags = dict.fromkeys(self.flags.keys(), False)
         with open(self.paths.config, "w") as file:
             json.dump(self, file, indent=self.indent)
 

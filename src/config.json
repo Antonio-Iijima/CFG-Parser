@@ -1,29 +1,27 @@
 {
    "version": "0.0.0",
-   "language": "calculator",
+   "language": "dyck",
    "flags": {
       "interactive": false,
-      "debug": true,
+      "debug": false,
       "time": false,
       "force": false,
       "reset": false,
       "metacompile": false,
       "onefile": false
    },
-   "implementation": "interpreter",
+   "implementation": "compiler",
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/languages/calculator",
+      "language": "/home/ai/github/magicc/languages/dyck",
       "lib": ".lib"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
       "dedent": " //DEDENTATION-MARKER// "
    },
-   "input": [
-      "../examples/in.lsp"
-   ],
+   "input": [],
    "output": "out.cpp",
    "tests": [],
    "ignore": {

@@ -117,13 +117,16 @@ from datatypes import Rule, EOI
 """
 
     for category, warnings in g_warnings.items(): 
-        if warnings: print_warnings(f"{category} not found", warnings)
+        print_warnings(f"{category} not found", warnings)
 
     for rule, alternatives in g_grammar.items():
         AST += f"""
 class {rule}(Rule):
     r'''```
-{rule} -> {("\n"+" "*(len(rule)+2)+"| ").join(lstToStr(production.pattern) for production in alternatives)}
+{rule} -> {("\n"+" "*(len(rule)+2)+"| ").join(
+    (lstToStr(production.pattern) if production.pattern else "\"\"")
+    for production in alternatives
+    )}
     ```'''
 """
     
@@ -278,8 +281,7 @@ def p_terminal_1(expr):
 
 def get_parsetable_str():
     global g_grammar
-    global g_modules
-    global g_terminals
+
 
     automaton: dict[int, dict[Item, set]] = {}
     table: dict[int, dict[Terminal|Nonterminal, list[tuple[str, int]]]] = {}
@@ -377,20 +379,17 @@ def get_parsetable_str():
 
         for token in sequence:
             if isinstance(token, Terminal):
-                first.add(token)
-                break
+                return first.union({token})
 
             elif not token in exclude:
                 for production in g_grammar[token]: 
                     first.update(FIRST(production.pattern, set(), exclude.union({token})))
                 
                 if isNullable(token): continue
-                else: break
+                else: return first
 
-        else: first.update(lookahead)
+        return first.union(lookahead)
 
-        return first
-    
 
     def construct_table() -> str:
         """Constructs the LALR table."""
@@ -456,8 +455,8 @@ def get_parsetable_str():
 
     
     
-    grammar = f"""---{{ GRAMMAR }}---
-{"\n".join(f"Rule {i:<4} {str(rule)}" for i, rule in enumerate(rules))}"""
+    grammar = f"""-------{{ GRAMMAR }}-------
+{"\n".join(f"Rule {i:<3} {str(rule)}" for i, rule in enumerate(rules))}"""
 
     if CONFIG.flags.debug: 
         print(grammar)

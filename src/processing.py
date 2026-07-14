@@ -38,7 +38,7 @@ def parse(
     if CONFIG.flags.debug: 
         parserOutput = displayTable(
             title="Parser Output",
-            headers={
+            columns={
                 "Step" : {"justify" : "center"},
                 "State" : {},
                 "Symbols" : {},

@@ -22,16 +22,18 @@ WARNING: <msg> (<key[n]>)
     :param msg: The warning message.
     :param log: Dictionary of applicable info for the warning."""
     
-    for type, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):
+    if not log: return
+    
+    for note, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):
         if warnings:
-            print("WARNING: " + msg + f" ({type})")
-            for path in warnings:
-                print(f"       | {path}")
+            print("WARNING: " + msg + f" ({note})")
+            for details in warnings:
+                print(f"       | {details}")
     print()
 
 
-def displayTable(title: str, headers: dict, rows: list = None, grid: bool = False) -> Table:
-    """Construct a renderable table from the headers and data."""
+def displayTable(title: str, columns: dict, rows: list = None, grid: bool = False) -> Table:
+    """Construct a renderable table from the column labels and data."""
 
     rows = rows or []
 
@@ -39,8 +41,8 @@ def displayTable(title: str, headers: dict, rows: list = None, grid: bool = Fals
         display = Table.grid()
     else:
         display = Table()
-        for header, kwargs in headers.items():
-            display.add_column(header, **kwargs)
+        for column, kwargs in columns.items():
+            display.add_column(column, **kwargs)
     
     for row in rows:
         display.add_row(*row)
@@ -54,16 +56,17 @@ def lstToStr(lst: list) -> str:
     return " ".join(map(str, lst))
 
 
-def get_input(prompt: str = "", s: str = "") -> str:
-    if s.endswith("\nquit"): sys.exit()
-    
-    elif s.endswith("\nclear"):
-        os.system('cls' if os.name == 'nt' else 'clear')
-        return print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
-    
-    elif s.endswith("\n"): return s
-    
-    return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
+def get_input(prompt: str = "", s: str = "") -> str|None:
+    match s:
+        case "\nquit": 
+            return "quit"
+        case "\nclear":
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
+            return None
+        case _:
+            if s.endswith("\n"): return s
+            return get_input("... ", s + "\n" + input(prompt))
 
 
 def regularize(path: str) -> None:    

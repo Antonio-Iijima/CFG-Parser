@@ -56,7 +56,7 @@ class Production(Default):
         return hash((self.rule, self.module, self.variant))
     
     def __str__(self):
-        return f"{self.rule} -> {lstToStr(self.pattern)}"
+        return f"{self.rule} -> {lstToStr(self.pattern) if self.pattern else "\"\""}"
     
     def __repr__(self):
         return f"({self.rule}, {self.module.__repr__()}, {self.variant}, {len(self.pattern)})"

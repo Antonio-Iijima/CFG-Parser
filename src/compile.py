@@ -30,7 +30,7 @@ def main(path: str, implementation: bool, backup: bool, restore: bool, **flags):
     """Compiles a language system from the files provided in PATH."""
 
     CONFIG.paths.language = path
-    CONFIG.language = path[path.rfind("/")+1:]
+    CONFIG.language = os.path.basename(path)
     CONFIG.implementation = implementation
     CONFIG.flags.update(flags)
 

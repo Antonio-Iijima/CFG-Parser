@@ -60,14 +60,22 @@ def main(input: tuple, **flags):
             else: print(f"{type(e).__name__}: {e}")
 
 
+    warnings = {}
     for filename in input:
-        with open(filename) as file:
-            REP(file.read())
+        try:
+            with open(filename) as file:
+                REP(file.read())
+        except FileNotFoundError as e:
+            note = e.strerror.lower()
+            if not note in warnings: warnings[note] = []
+            warnings[note].append(e.filename)
+    print_warnings("file not found", warnings)
+
 
     if CONFIG.flags.interactive:
-        for line in iter(lambda: get_input("</> "), "quit"):
-            if line.strip():
-                REP(line)
+        for input in iter(lambda: get_input("</> "), "quit"):
+            if (input is not None) and input.strip():
+                REP(input)
 
 
 
