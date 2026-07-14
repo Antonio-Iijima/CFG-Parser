@@ -63,7 +63,7 @@ def get_input(prompt: str = "", s: str = "") -> str|None:
             return "quit"
         case "\nclear":
             os.system('cls' if os.name == 'nt' else 'clear')
-            print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
+            print(CONFIG.info)
             return None
         case _:
             if s.endswith("\n"): return s

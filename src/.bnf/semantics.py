@@ -309,7 +309,7 @@ def get_parsetable_str():
         state = len(automaton)
         automaton[state] = closure
 
-        for items in get_transitions(automaton[state]).values():
+        for items in get_transitions(closure).values():
 
             nextKernel = {
                 Item(item.dot+1, item.production) : lookahead
@@ -357,10 +357,23 @@ def get_parsetable_str():
         return out
     
     
-    def get_transitions(state: dict[Item, set]) -> dict[Terminal|Nonterminal, dict[Item, set]]:
+    def get_transitions(closure: dict[Item, set]) -> dict[Terminal|Nonterminal, dict[Item, set]]:
+        """Organizes transitions from a given closure by the token used to make the transition, e.g.
+        ```
+        { 
+            token1 : {
+                item1 : lookahead1,
+                item2 : lookahead2,
+                ...
+            },
+            token2 : ...
+        }
+        ```
+        """
+
         transitions = {}
 
-        for item, lookahead in state.items():
+        for item, lookahead in closure.items():
             if item.isReduction: continue
 
             if not item.current in transitions: transitions[item.current] = {}
@@ -368,10 +381,11 @@ def get_parsetable_str():
             transitions[item.current][item] = lookahead
 
         return transitions
-    
+
 
     def FIRST(sequence: list[Terminal|Nonterminal], lookahead: set = None, exclude: set = None) -> set[str]:
-    
+        """Compute the FIRST set of a sequence of terminals/nonterminals. Union with lookahead if the whole sequence is nullable."""
+        
         exclude = exclude or set()
         first = set()
 
@@ -460,7 +474,7 @@ def get_parsetable_str():
         print(grammar)
         print()
 
-        categories = [*sorted(g_terminals, key=str, reverse=True), EOI(), *g_grammar.keys()]
+        categories = [*sorted(g_terminals, key=str), EOI(), *g_grammar.keys()]
         categories.remove(START())
         parsetable = displayTable(
             title="LALR Table",
@@ -468,6 +482,13 @@ def get_parsetable_str():
             rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in table.items()]
             )
         
+        print("------{ AUTOMATON }------")
+        for state, closure in automaton.items():
+            print(f"State {state}")
+            for item, lookahead in closure.items():
+                print(f"    {item}, {"/".join(map(str, lookahead))}")
+        print()
+
         print(parsetable)
 
 
@@ -479,7 +500,7 @@ def get_parsetable_str():
 # {str(grammar).replace("\n", "\n# ")}
 
 
-    
+
 # Parsetable constructed with {len(table)} state{"s"*(len(table)!=1)}.
 # {g_conflicts.replace("\n", "\n# ")}
 

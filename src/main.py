@@ -20,7 +20,7 @@ CONTEXT = dict(help_option_names=['-h', '--help'])
 def main(input: tuple, **flags):
     """Runs a compiled language with OPTIONS."""
 
-    print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
+    print(CONFIG.info)
 
 
     CONFIG.input = list(input)

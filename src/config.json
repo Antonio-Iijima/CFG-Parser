@@ -1,6 +1,9 @@
 {
+   "project": "magicc",
    "version": "0.0.0",
    "language": "dyck",
+   "implementation": "compiler",
+   "info": "magicc 0.0.0 </> dyck compiler",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -10,7 +13,6 @@
       "metacompile": false,
       "onefile": false
    },
-   "implementation": "compiler",
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",

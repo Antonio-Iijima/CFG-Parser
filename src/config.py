@@ -32,6 +32,8 @@ class Config(DotDict):
         self.paths.config = config
         self.indent = indent
 
+        self.info = f"{self.project} {self.version} </> {self.language} {self.implementation}"
+
 
     def save(self):
         self.flags = dict.fromkeys(self.flags.keys(), False)
