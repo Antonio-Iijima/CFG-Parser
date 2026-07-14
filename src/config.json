@@ -15,7 +15,8 @@
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
       "language": "/home/ai/github/magicc/languages/dyck",
-      "lib": ".lib"
+      "lib": ".lib",
+      "metacompiler": ".bnf"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",

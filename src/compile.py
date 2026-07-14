@@ -11,11 +11,11 @@ import os
 
 
 @cloup.command(context_settings=CONTEXT)
-@cloup.argument("path", type=cloup.Path(exists=True, file_okay=False, resolve_path=True))
+@cloup.argument("path", type=cloup.Path(exists=True, file_okay=False, resolve_path=True), required=False)
 @cloup.option_group(
     "Options",
     cloup.option("-i", "--interpreter", "implementation", flag_value="interpreter", help="Compile an interpreter.", default=True),
-    cloup.option("-c", "--compiler", "implementation", flag_value="compiler", help="Compile a compiler."),
+    cloup.option("-c", "--compiler", "implementation", flag_value="compiler", help="Compile a compiler.", default=True),
     cloup.option("-d", "--debug", is_flag=True, help="Run in debug mode."),
     cloup.option("-o", "--onefile", is_flag=True, help="Generate single file executable."),
     cloup.option("-m", "--metacompile", is_flag=True, help="Enable metacompilation (requires BNF-specified language directory input).")
@@ -26,13 +26,19 @@ import os
     cloup.option("-r", "--restore", "restore", is_flag=True, help="Restore saved BNF compilation files."),
     constraint=cloup.constraints.mutually_exclusive
 )
-def main(path: str, implementation: bool, backup: bool, restore: bool, **flags):
+def main(path: str|None, implementation: str, backup: bool, restore: bool, **flags):
     """Compiles a language system from the files provided in PATH."""
 
+    CONFIG.flags.update(flags)
+    CONFIG.implementation = implementation
+
+    if path is None:
+        if CONFIG.flags.metacompile:
+            path = os.path.join(CONFIG.paths.root, CONFIG.paths.metacompiler)
+        else: raise Exception("path variable not provided")
+    
     CONFIG.paths.language = path
     CONFIG.language = os.path.basename(path)
-    CONFIG.implementation = implementation
-    CONFIG.flags.update(flags)
 
 
     directory = os.path.dirname(__file__)
@@ -62,7 +68,8 @@ def main(path: str, implementation: bool, backup: bool, restore: bool, **flags):
             "--add-data", "config.json:."
         ])
 
-        os.system("rm -r build && rm ./*.spec")
+        shutil.rmtree("build")
+        os.remove(f"{CONFIG.language}.spec")
 
 
 

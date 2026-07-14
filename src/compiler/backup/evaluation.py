@@ -86,7 +86,7 @@ def p_main_program(expr, module: str = "main"):
     g_module = module
 
     if module == "main":
-        print("Metacompiling...") if CONFIG.flags.metacompile else print("Compiling...")
+        print("Metacompiling") if CONFIG.flags.metacompile else print(f"Compiling" + (" onefile" if CONFIG.flags.onefile else ""))
         print()
     else: return
 
