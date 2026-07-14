@@ -1,5 +1,5 @@
-from config import CONFIG
 from main import CONTEXT
+from utils import *
 
 import compiler
 
@@ -27,15 +27,15 @@ import os
     constraint=cloup.constraints.mutually_exclusive
 )
 def main(path: str|None, implementation: str, backup: bool, restore: bool, **flags):
-    """Compiles a language system from the files provided in PATH."""
+    """Compiles a language system from the files provided in `path`."""
 
     CONFIG.flags.update(flags)
     CONFIG.implementation = implementation
 
-    if path is None:
-        if CONFIG.flags.metacompile:
-            path = os.path.join(CONFIG.paths.root, CONFIG.paths.metacompiler)
-        else: raise Exception("path variable not provided")
+    if CONFIG.flags.metacompile:
+        if path is not None: print_warnings("ignoring input", {"metacompiling" : [path]})
+        path = os.path.join(CONFIG.paths.root, CONFIG.paths.metacompiler)
+    if path is None: raise Exception("missing argument 'PATH'. Did you mean to metacompile instead?")
     
     CONFIG.paths.language = path
     CONFIG.language = os.path.basename(path)
