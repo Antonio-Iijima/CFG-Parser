@@ -91,7 +91,7 @@ def parse(
                     raise ParseError("could not parse expression")
                 
                 case "E": 
-                    expected = set(tok for tok in table[state[-1]].keys() if (isinstance(tok, str) or tok == EOI))
+                    expected = set({EOI : "EOI"}.get(tok, tok) for tok in table[state[-1]].keys() if (isinstance(tok, str) or tok == EOI))
                     
                     raise ParseError(f'''unexpected {
                         f"{input[0].info} (Token matched r'{input[0].regex}')" if isinstance(input[0], Token) 
@@ -106,7 +106,7 @@ def parse(
             end = time() - start
             print(f"Parse time: {end*1000:.7} ms")
 
-        if CONFIG.flags.debug: print(parserOutput)
+        if CONFIG.flags.debug: print(parserOutput, "")
 
     return symbols.pop()
 
@@ -148,8 +148,8 @@ def lexer(unprocessed: str, terminals: set, indentation: bool, newlines: bool) -
 
         if (tokens or ("\n" not in match)): tokens.append(Token(match, regex, lineno, col))
         
-        # Print warning in case of ambiguity between multiple matched patterns;
-        # but assume exact matches are keywords and skip warning
+        # Print warning in case of ambiguity between multiple matched 
+        # patterns, but assume exact matches are keywords and skip warning
         if len(matches) > 1 and (not re.escape(match) == regex):
             print_warnings(
                 msg=f"multiple token matches at line {lineno}, col {col}",

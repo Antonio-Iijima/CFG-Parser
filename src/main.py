@@ -20,11 +20,12 @@ CONTEXT = dict(help_option_names=['-h', '--help'])
 def main(input: tuple, **flags):
     """Runs a compiled language with OPTIONS."""
 
+    print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
+
+
     CONFIG.input = list(input)
     CONFIG.output = flags.pop("output")
     CONFIG.flags.update(flags)
-
-    print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
 
 
     if CONFIG.flags.reset:
@@ -47,21 +48,26 @@ def main(input: tuple, **flags):
 
     import parser
 
+
+    def REP(text: str) -> None:
+        "Read-Eval-Print"
+        try:
+            result = parser.evaluate(text)
+            if result is not None: print(result)
+
+        except Exception as e:
+            if CONFIG.flags.debug: raise e
+            else: print(f"{type(e).__name__}: {e}")
+
+
     for filename in input:
         with open(filename) as file:
-            parser.evaluate(file.read())
+            REP(file.read())
 
     if CONFIG.flags.interactive:
         for line in iter(lambda: get_input("</> "), "quit"):
             if line.strip():
-                
-                try:
-                    result = parser.evaluate(line)
-                    if result is not None: print(result)
-
-                except Exception as e:
-                    if CONFIG.flags.debug: raise e
-                    else: print(f"{type(e).__name__}: {e}")
+                REP(line)
 
 
 

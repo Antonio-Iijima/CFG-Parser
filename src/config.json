@@ -3,25 +3,26 @@
    "language": "calculator",
    "flags": {
       "interactive": false,
-      "debug": false,
+      "debug": true,
       "time": false,
       "force": false,
       "reset": false,
-      "metacompile": false
+      "metacompile": false,
+      "onefile": false
    },
    "implementation": "interpreter",
    "paths": {
-      "lib": ".lib",
-      "language": "/home/ai/github/magicc/languages/calculator",
       "root": "/home/ai/github/magicc/src",
-      "config": "/home/ai/github/magicc/src/config.json"
+      "config": "/home/ai/github/magicc/src/config.json",
+      "language": "/home/ai/github/magicc/languages/calculator",
+      "lib": ".lib"
    },
    "formatting": {
       "indent": " //INDENTATION-MARKER// ",
       "dedent": " //DEDENTATION-MARKER// "
    },
    "input": [
-      "../examples/1.calc"
+      "../examples/in.lsp"
    ],
    "output": "out.cpp",
    "tests": [],

@@ -2,6 +2,10 @@
 
 
 
+from utils import *
+
+
+
 class Default:
     """Base class which handles `__eq__` if `__hash__` has been defined by the subclass."""
     def __eq__(self, other): return isinstance(other, type(self)) and self.__hash__() == other.__hash__()
@@ -46,13 +50,13 @@ class Production(Default):
         self.rule = rule
         self.module = module
         self.variant = variant
-        self.pattern = pattern
+        self.pattern = list(token for token in pattern if not isinstance(token, EPSILON))
         
     def __hash__(self):
         return hash((self.rule, self.module, self.variant))
     
     def __str__(self):
-        return f"{self.rule} -> {" ".join(map(str, self.pattern))}"
+        return f"{self.rule} -> {lstToStr(self.pattern)}"
     
     def __repr__(self):
         return f"({self.rule}, {self.module.__repr__()}, {self.variant}, {len(self.pattern)})"
@@ -73,31 +77,38 @@ class Item(Default):
     def __repr__(self):
         pattern = self.production.pattern[:]
         pattern.insert(self.dot, "∙")
-        return f"{self.production.rule} -> {" ".join(map(str, pattern))}"
+        return f"{self.production.rule} -> {lstToStr(pattern)}"
 
 
 
-class EPSILON: pass
+class SpecialTerminal(Terminal):
+    def __init__(self): 
+        self.__name__ = type(self).__name__
+        self.regex = type(self)
+    
+    def __hash__(self):
+        return hash(self.regex)
+
+    def __repr__(self):
+        return type(self).__name__
+
+
+
+class EOI(SpecialTerminal):
+    def __str__(self): return "$"
+
+
+
+class EPSILON(SpecialTerminal):
+    def __str__(self): return "\"\""
 
 
 
 class START(Nonterminal):
-    def __init__(self):
-        super().__init__("START")
+    def __init__(self): super().__init__("START")
 
 
 
-class EOI(Terminal):
-    def __init__(self): 
-        super().__init__(str(hash("EOI")))
-        self.regex = EOI
-    
-    def __str__(self): return "$"
-
-    def __repr__(self): return "EOI"
-    
-
-    
 class Token:
     def __init__(self, tok: str, regex: str, lineno: int, col: int):
         self.tok = tok

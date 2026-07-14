@@ -2,6 +2,9 @@ from config import CONFIG
 
 from rich.table import Table
 
+import sys
+import os
+
 
 
 def print_warnings(msg: str, log: dict[str, list]) -> None:
@@ -24,6 +27,7 @@ WARNING: <msg> (<key[n]>)
             print("WARNING: " + msg + f" ({type})")
             for path in warnings:
                 print(f"       | {path}")
+    print()
 
 
 def displayTable(title: str, headers: dict, rows: list = None, grid: bool = False) -> Table:
@@ -51,25 +55,18 @@ def lstToStr(lst: list) -> str:
 
 
 def get_input(prompt: str = "", s: str = "") -> str:
-    if s.endswith("\nquit"):
-        from sys import exit
-        exit()
+    if s.endswith("\nquit"): sys.exit()
     
     elif s.endswith("\nclear"):
-        from os import system, name as OS
-        system('cls' if OS == 'nt' else 'clear')
-        print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
-        return ""
+        os.system('cls' if os.name == 'nt' else 'clear')
+        return print(f"magicc v{CONFIG.version} </> {CONFIG.language} {CONFIG.implementation}")
     
-    elif s.endswith("\n"):
-        return s
+    elif s.endswith("\n"): return s
     
     return get_input("." * (len(prompt)-1) + " ", s + "\n" + input(prompt))
 
 
-def regularize(path: str) -> None:
-    import os
-    
+def regularize(path: str) -> None:    
     if os.path.isdir(path):
         for file in os.listdir(path):
             regularize(os.path.join(path, file))
@@ -104,6 +101,4 @@ def regularize(path: str) -> None:
 
 
 if __name__ == "__main__":
-    from sys import argv
-
-    regularize(argv[-1])
+    regularize(sys.argv[-1])

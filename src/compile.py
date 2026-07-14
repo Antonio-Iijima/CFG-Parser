@@ -16,8 +16,9 @@ import os
     "Options",
     cloup.option("-i", "--interpreter", "implementation", flag_value="interpreter", help="Compile an interpreter.", default=True),
     cloup.option("-c", "--compiler", "implementation", flag_value="compiler", help="Compile a compiler."),
-    cloup.option("-o", "--onefile", "onefile", is_flag=True, help="Generate single file executable."),
-    cloup.option("-m", "--metacompile", "metacompile", is_flag=True, help="Enable metacompilation (requires BNF-specified language directory input).")
+    cloup.option("-d", "--debug", is_flag=True, help="Run in debug mode."),
+    cloup.option("-o", "--onefile", is_flag=True, help="Generate single file executable."),
+    cloup.option("-m", "--metacompile", is_flag=True, help="Enable metacompilation (requires BNF-specified language directory input).")
 )
 @cloup.option_group(
     "Backup Options",
@@ -25,13 +26,13 @@ import os
     cloup.option("-r", "--restore", "restore", is_flag=True, help="Restore saved BNF compilation files."),
     constraint=cloup.constraints.mutually_exclusive
 )
-def main(path: str, implementation: bool, onefile: bool, backup: bool, restore: bool, metacompile: bool):
+def main(path: str, implementation: bool, backup: bool, restore: bool, **flags):
     """Compiles a language system from the files provided in PATH."""
 
     CONFIG.paths.language = path
     CONFIG.language = path[path.rfind("/")+1:]
     CONFIG.implementation = implementation
-    CONFIG.flags.metacompile = metacompile
+    CONFIG.flags.update(flags)
 
 
     directory = os.path.dirname(__file__)
@@ -39,12 +40,12 @@ def main(path: str, implementation: bool, onefile: bool, backup: bool, restore: 
     save = os.path.join(directory, "compiler/backup")
 
     if backup:
-        print("backing up files")
+        print("Backing up files...")
         for file in os.listdir(save):
             shutil.copyfile(os.path.join(base, file), os.path.join(save, file))
             
     if restore:
-        print("restoring files")
+        print("Restoring files...")
         for file in os.listdir(save):
             shutil.copyfile(os.path.join(save, file), os.path.join(base, file))
 
@@ -52,7 +53,7 @@ def main(path: str, implementation: bool, onefile: bool, backup: bool, restore: 
     with open(os.path.join(path, "syntax.txt")) as file:
         compiler.evaluate(file.read())
 
-    if onefile:
+    if CONFIG.flags.onefile:
 
         PyInstaller.__main__.run([
             "main.py",

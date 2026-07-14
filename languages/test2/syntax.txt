@@ -1,4 +1,4 @@
 PROGRAM -> A
-A       -> C "x" A | "ε"
+A       -> C "x" A | ""
 B       -> "x" C "y" | "x" C
 C       -> "x" B "x" | "z"
