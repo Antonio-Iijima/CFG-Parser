@@ -1,4 +1,4 @@
-WARNING: DOCUMENTATION IS OUT OF DATE. 
+# WARNING: DOCUMENTATION IS OUT OF DATE. 
 
 
 # magicc: a general interpreter/compiler compiler
