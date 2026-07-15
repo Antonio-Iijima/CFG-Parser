@@ -1,3 +1,6 @@
+WARNING: DOCUMENTATION IS OUT OF DATE. 
+
+
 # magicc: a general interpreter/compiler compiler
 
 <!-- **NB** The README is only guaranteed to be accurate for the commit it was a part of. If there is any appreciable Δt between the last README update and the last project update, you may safely assume the README is out of date. -->
