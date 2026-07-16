@@ -6,7 +6,7 @@ from compiler.parserdata import (
     newlines,
     PROGRAM
 )
-from compiler.evaluation import Expr
+from compiler.evaluation import __Expr__
 
 import processing
 
@@ -44,5 +44,5 @@ def evaluate(input: str) -> any:
         return processing.evaluate(
             input=input,
             parse=parse,
-            Expr=Expr
+            Expr=__Expr__
         )

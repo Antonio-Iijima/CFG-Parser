@@ -3,7 +3,7 @@
    "version": "0.0.0",
    "language": "dyck",
    "implementation": "compiler",
-   "info": "magicc 0.0.0 </> .bnf interpreter",
+   "info": "magicc 0.0.0 </> dyck compiler",
    "flags": {
       "interactive": false,
       "debug": false,
