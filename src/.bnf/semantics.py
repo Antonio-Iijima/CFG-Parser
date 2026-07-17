@@ -10,7 +10,7 @@ g_indentation = False
 g_module: dict = "main"
 g_paths: list = ["main"]
 g_grammar: dict[Nonterminal, list[Production]] = {
-    START() : [ Production(START(), "main", 0, [Nonterminal("PROGRAM")]) ]
+    START() : [ Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()]) ]
 }
 g_terminals: set = set()
 g_conflicts: str = ""
@@ -77,6 +77,14 @@ def p_program(expr, module: str = "main"):
         print("Metacompiling") if CONFIG.flags.metacompile else print(f"Compiling" + (" onefile" if CONFIG.flags.onefile else ""))
         print()
     else: return
+
+    if g_indentation:
+        for NT, T in (
+                (Nonterminal("INDENT"), Terminal(CONFIG.formatting.indent)),
+                (Nonterminal("DEDENT"), Terminal(CONFIG.formatting.dedent))
+            ): 
+            g_terminals.add(T)
+            g_grammar[NT] = [Production(NT, "main", 0, [T])]
 
     for path in g_paths:
 
@@ -182,10 +190,8 @@ class __Expr__(__Sequence__):
         e = self if (i == None) else self[i]
         return self.evaluate(e, *args, **kwargs)
 
-
     def default(self, x: '__Expr__'):
         return {"x(0)" if (CONFIG.implementation == "interpreter") else "\"\".join(x(i) for i in range(len(x)))"}
-
 
     def get_function(self, node: __Rule__):
         return (
@@ -193,7 +199,6 @@ class __Expr__(__Sequence__):
             or __Expr__.SEMANTICS.get(node.fname)
             or self.default
         )
-
 
     def evaluate(self, expr, *args, **kwargs):
         return (
@@ -284,193 +289,223 @@ def p_terminal_1(expr):
 
 def get_parsetable_str():
     global g_grammar
+    global g_conflicts
 
 
-    automaton: dict[int, dict[Item, set]] = {}
-    table: dict[int, dict[Terminal|Nonterminal, list[tuple[str, int]]]] = {}
     rules = list(e for opts in g_grammar.values() for e in opts)
+
+    COLLECTION: list[set[Item]] = []
+    GOTO: dict[int, dict[Terminal|Nonterminal, int]] = {}
+    X: set[tuple[int, Nonterminal]] = set()
     
 
-    def isNullable(rule: Terminal|Nonterminal) -> bool:
+    def CANONICAL(itemset: set[Item]) -> dict:
+        """Compute the canonical LR(0) collection."""
+
+        state = len(COLLECTION)
+        GOTO[state] = {}
+        COLLECTION.append(itemset)
+        for token, closure in GOTOS(itemset).items():
+            if closure in COLLECTION:
+                GOTO[state][token] = COLLECTION.index(closure)
+            else:
+                GOTO[state][token] = len(COLLECTION)
+                CANONICAL(closure)
+            if isinstance(token, Nonterminal): X.add((state, token))
+
+
+    def CLOSURE(kernel: set[Item]) -> set[Item]:
+        """Compute the closure of an LR(0) kernel."""
+
+        closure = set()
+        expansions = kernel
+        while expansions:
+            item = expansions.pop()
+            if item in closure: continue
+            closure.add(item)
+            if isinstance(item.current, Nonterminal):
+                for production in g_grammar[item.current]:
+                    expansions.add(Item(0, production))
+        return closure
+    
+
+    def GOTOS(itemset: set[Item]) -> dict[Terminal|Nonterminal, set[Item]]:
+        """Compute the goto transitions of a given state."""
+
+        gotos: dict[Terminal|Nonterminal, set[Item]] = {}
+        for item in itemset:
+            if item.isReduction: continue
+            if item.current not in gotos: gotos[item.current] = set()
+            gotos[item.current].add(Item(item.dot+1, item.production))
+        for token, kernel in gotos.items():
+            gotos[token] = CLOSURE(kernel)
+        return gotos
+
+
+    def LOOKAHEADS():
+        """LALR lookahead computation algorithm, adapted from (DeRemer and Penello, 1982).
+        Accessible via the ACM Digital Library: https://dl.acm.org/doi/epdf/10.1145/69622.357187.
+        
+        ### Quantities Involved
+        
+        `DR` : a function DirectRead[(p, A)] = {a, b, c}
+        `reads` : a relation reads[(p, A)] = [(r0, C0), (r1, C1), ...]
+        `Read` : a function Read[(p, A)] = {a, b, c}
+        `includes` : a relation includes[(p, A)] = [(r0, C0), (r1, C1), ...]
+        `lookback` : a relation lookback[(p, A)] = [(r0, P0), (r1, P1), ...]
+        `Follow` : a relation
+        `LA` : a function
+        """
+        
+        def accesses(p: int, sequence: list[Terminal|Nonterminal]) -> int|None:
+            """Applies a sequence of transitions from state p, returning the resultant state or `None`."""
+            for t in sequence:
+                try: p = GOTO[p][t]
+                except: return None
+            return p
+        
+        DR: dict[tuple[int, Nonterminal], set[Terminal]] = { transition : set() for transition in X }
+        reads: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
+        includes: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
+        lookback: dict[Production, list[tuple[int, Nonterminal]]] = {}
+
+        for (p, A) in X:
+            q = GOTO[p][A]
+            for B in GOTO[q]:
+                # direct read
+                if isinstance(B, Terminal):
+                    DR[(p, A)].add(B)
+                # reads relation
+                elif isinstance(B, Nonterminal) and NULLABLE(B):
+                    reads[(p, A)].append((q, B))
+
+            for production in g_grammar[A]:
+                # includes relation
+                for i, B in enumerate(production.pattern):
+                    if isinstance(B, Nonterminal):
+                        q = accesses(p, production.pattern[:i])
+                        if (
+                            (q is not None)
+                            and all(map(NULLABLE, production.pattern[i+1:]))
+                        ):
+                            includes[(q, B)].append((p, A))
+                # lookback relation
+                q = accesses(p, production.pattern)
+                if q is not None:
+                    if not (q, production) in lookback: lookback[(q, production)] = []
+                    lookback[(q, production)].append((p, A))
+        
+        Read = DIGRAPH(reads, DR)
+        Follow = DIGRAPH(includes, Read)
+        
+        LA: dict[int, dict[Production, set[Terminal]]] = { q : {} for (q, _) in lookback.keys() }
+
+        # for ((q, production), pairs) in lookback.items():
+        #     if not production in LA[q]: LA[q][production] = set()
+        #     for (p, A) in pairs:
+        #         LA[q][production].update(Follow[(p, A)])
+
+        LA = { (q, production) : set() for (q, production) in lookback.keys() }
+        for ((q, production), pairs) in lookback.items():
+            for (p, A) in pairs:
+                LA[(q, production)].update(Follow[(p, A)])
+
+        return LA
+
+
+    def DIGRAPH(
+            R: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]], 
+            f: dict[tuple[int, Nonterminal], set[Terminal]]
+        ) -> dict[tuple[int, Nonterminal], set[Terminal]]:
+        """The DeRemer-Penello Algorithm Digraph.
+        
+        :param relation R: A relation on X.
+        :param function f: A set-valued function.
+        :returns: F, a function from X to sets."""
+
+        F: dict[tuple[int, Nonterminal], set[Terminal]] = {} # { transition : set() for transition in X }
+        S: list[tuple[int, Nonterminal]] = []
+        N: dict[tuple[int, Nonterminal], int] = dict.fromkeys(X, 0)
+        
+        def TRAVERSE(x):
+            S.append(x)
+            d = len(S)
+            N[x] = d
+            F[x] = f[x]
+            for y in X:
+                if y in R[x]:
+                    if N[y] == 0: TRAVERSE(y)
+                    N[x] = min(N[x], N[y])
+                    F[x].update(F[y])
+            if N[x] == d:
+                while S.pop() != x:
+                    N[S[-1]] = float('inf')
+                    F[S[-1]] = F[x]
+    
+        for x in X:
+            if N[x] == 0:
+                TRAVERSE(x)
+
+        return F
+
+
+    def NULLABLE(rule: Terminal|Nonterminal) -> bool:
         return (
             isinstance(rule, Nonterminal)
             and any(
                 (production.pattern == [])
-                or all(isNullable(token) for token in production.pattern if not (token == rule))
+                or all(NULLABLE(token) for token in production.pattern if not token == rule)
                 for production in g_grammar[rule]
             )
         )
+    
 
+    CANONICAL(CLOSURE({ Item(0, Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()])) }))
+    
+    LA: dict[int, dict[Nonterminal, set[Terminal]]] = LOOKAHEADS()
+    TABLE = { p : {} for p in range(len(COLLECTION)) }
+    conflicts = {}
 
-    def construct_automaton(closure: dict[Item, set]):
+    for p, itemset in enumerate(COLLECTION):
+        for item in itemset:
+            A = item.production
+            lookaheads = LA.get((p, A))
 
-        def merge(existingState: dict[Item, set], newState: dict[Item, set]) -> bool:
-            if (existingState.keys() == newState.keys()):
-                for item, lookahead in newState.items():
-                    existingState[item].update(lookahead)
-                return True
-            return False
-            
-        state = len(automaton)
-        automaton[state] = closure
-
-        for items in get_transitions(closure).values():
-
-            nextKernel = {
-                Item(item.dot+1, item.production) : lookahead
-                for item, lookahead in items.items()
-            }
-
-            nextClosure = construct_closure(nextKernel)
-            for closure in automaton.values():
-                if merge(closure, nextClosure): break
-            else: 
-                construct_automaton(nextClosure)
-
-
-    def construct_closure(kernel: dict[Item, set]) -> dict[Item, set]:
-        
-        items: list[tuple[Item, set]] = []
-
-        expansions = list(kernel.items())
-
-        while expansions:
-
-            # add the most recent rule to the expansion
-            item, lookahead = expansions.pop()
-
-            if (item, lookahead) in items: continue
-
-            items.append((item, lookahead))
-
-            # if the current token is a nonterminal, we must add further expansions
-            if isinstance(item.current, Nonterminal):
-                
-                newLookahead = FIRST(item.next, lookahead)
-
-                for productionData in g_grammar[item.current]:
-                    expansions.append((Item(0, productionData), newLookahead))
-
-        out: dict[Item, set] = {}
-
-        for (item, lookahead) in items:
-            if item in out:
-                out[item].update(lookahead)
+            if lookaheads is None:
+                t = item.current
+                q = GOTO[p].get(t)
+                action = (
+                    ("A", True) if t == EOI()
+                    else ("S" if isinstance(t, Terminal) else "G", q))
+                TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
             else:
-                out[item] = lookahead
+                for t in lookaheads:
+                    TABLE[p][t] = TABLE[p].get(t, set()).union({("R", rules.index(A))})
 
-        return out
-    
-    
-    def get_transitions(closure: dict[Item, set]) -> dict[Terminal|Nonterminal, dict[Item, set]]:
-        """Organizes transitions from a given closure by the token used to make the transition, e.g.
-        ```
-        { 
-            token1 : {
-                item1 : lookahead1,
-                item2 : lookahead2,
-                ...
-            },
-            token2 : ...
-        }
-        ```
-        """
+        for A, actions in TABLE[p].items():
+            TABLE[p][A] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
+            
+            if len(actions) > 1:
 
-        transitions = {}
+                if not p in conflicts:
+                    conflicts[p] = {}
 
-        for item, lookahead in closure.items():
-            if item.isReduction: continue
+                conflict = "/".join(action[0] for action in TABLE[p][A])
 
-            if not item.current in transitions: transitions[item.current] = {}
-
-            transitions[item.current][item] = lookahead
-
-        return transitions
-
-
-    def FIRST(sequence: list[Terminal|Nonterminal], lookahead: set = None, exclude: set = None) -> set[str]:
-        """Compute the FIRST set of a sequence of terminals/nonterminals. Union with lookahead if the whole sequence is nullable."""
-        
-        exclude = exclude or set()
-        first = set()
-
-        for token in sequence:
-            if isinstance(token, Terminal):
-                return first.union({token})
-
-            elif not token in exclude:
-                for production in g_grammar[token]: 
-                    first.update(FIRST(production.pattern, set(), exclude.union({token})))
+                if not conflict in conflicts:
+                    conflicts[p][conflict] = []
                 
-                if isNullable(token): continue
-                else: return first
-
-        return first.union(lookahead)
-
-
-    def construct_table() -> str:
-        """Constructs the LALR table."""
-
-        global g_conflicts
-
-        conflicts = {}
-
-        for state, closure in automaton.items():
-            table[state] = {}
-
-            transitions = get_transitions(closure)
-            reductions = { item : lookahead for item, lookahead in closure.items() if item.isReduction }
-
-            for item, lookahead in reductions.items():
-                for token in lookahead:
-                    table[state][token] = table[state].get(token, set()).union({
-                        ("A", True) if (item.production.rule, token) == (START(), EOI())
-                        else ("R", rules.index(item.production))
-                    })
-
-            for token, kernel in transitions.items():
-                nextItems = {
-                        Item(item.dot+1, item.production)
-                        for item in kernel
-                    }
-                action = ("S" if isinstance(token, Terminal) else "G")
-                
-                table[state][token] = table[state].get(token, set()).union({ 
-                        (action, toState) for toState, toClosure in automaton.items() if nextItems.issubset(toClosure)
-                    })
-
-            for token, actions in table[state].items():
-                table[state][token] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
-                
-                if len(actions) > 1:
-    
-                    if not state in conflicts:
-                        conflicts[state] = {}
-
-                    conflict = "/".join(action[0] for action in table[state][token])
-
-                    if not conflict in conflicts:
-                        conflicts[state][conflict] = []
-                    
-                    conflicts[state][conflict].append(token)
-
+                conflicts[p][conflict].append(A)
 
         if conflicts: 
             g_conflicts = f"Found {len(conflicts)} conflicts."
-            for state, conflictTypes in conflicts.items():
+            for p, conflictTypes in conflicts.items():
                 for label, tokens in conflictTypes.items():
-                    g_conflicts += f"\n(state {state}) {label} conflict on token{"s"*(len(tokens) != 1)} {", ".join(token.__repr__() for token in tokens)}"
+                    g_conflicts += f"\n(state {p}) {label} conflict on token{"s"*(len(tokens) != 1)} {", ".join(token.__repr__() for token in tokens)}"
         else:
             g_conflicts = "No conflicts found."
     
-
-
-    construct_automaton(construct_closure({
-        Item(0, Production(START(), "MAIN", 0, [Nonterminal("PROGRAM")])) : { EOI() } 
-        }))
-    construct_table()
-
-    
+    print(g_conflicts)
     
     grammar = f"""-------{{ GRAMMAR }}-------
 {"\n".join(f"Rule {i:<3} {str(rule)}" for i, rule in enumerate(rules))}"""
@@ -484,15 +519,15 @@ def get_parsetable_str():
         parsetable = displayTable(
             title="LALR Table",
             columns=dict.fromkeys(("State", *map(str, categories)), {}),
-            rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in table.items()]
+            rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in TABLE.items()]
             )
         
         print("------{ AUTOMATON }------")
-        for state, closure in automaton.items():
-            print(f"State {state}")
-            for item, lookahead in closure.items():
-                print(f"    {item}, {"/".join(map(str, lookahead))}")
-        print()
+        for p, closure in enumerate(COLLECTION):
+            print(f"State {p}")
+            for item in closure:
+                print(f"    {item}")
+            print()
 
         print(parsetable)
 
@@ -506,7 +541,7 @@ def get_parsetable_str():
 
 
 
-# Parsetable constructed with {len(table)} state{"s"*(len(table)!=1)}.
+# Parsetable constructed with {len(TABLE)} state{"s"*(len(TABLE)!=1)}.
 # {g_conflicts.replace("\n", "\n# ")}
 
 
@@ -525,7 +560,7 @@ rules = (
 table = {{
     {",\n    ".join(f"""{state} : {{
         {",\n        ".join(f"{token.__repr__()} : {actions}" for token, actions in transitions.items())}
-    }}""" for state, transitions in table.items())}
+    }}""" for state, transitions in TABLE.items())}
 }}"""
 
 

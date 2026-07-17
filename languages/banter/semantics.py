@@ -51,19 +51,8 @@ def p_program(expr):
     return out
     
 
-def p_statement_list_1(expr):
-    expr(0)
-    expr(2)
-
-
-def p_label(expr):
-    try:
-        return g_env[expr(0)]
-    except KeyError:
-        raise UnboundLocalError(f"variable {expr(0)} not declared.")
-
-def p_bool(expr):
-    return expr(0) == "True"
+def p_statements_1(expr):
+    expr(0); expr(2)
 
 
 def p_assignment(expr):
@@ -81,7 +70,7 @@ def p_if_then_else(expr):
         expr(7)
 
 def p_block(expr):
-    return expr(2)  
+    return expr(2)
 
 
 def p_return(expr):
@@ -90,6 +79,7 @@ def p_return(expr):
 
 def p_goto(expr):
     raise Goto(expr(2))
+
 
 def p_marker(expr):
     expr(3)
@@ -100,3 +90,10 @@ def p_print_0(expr):
 
 def p_print_1(expr):
     print()
+
+
+def p_label(expr):
+    try:
+        return g_env[expr(0)]
+    except KeyError:
+        raise UnboundLocalError(f"variable {expr(0)} not declared.")

@@ -498,7 +498,7 @@ def get_parsetable_str():
         categories.remove(START())
         parsetable = displayTable(
             title="LALR Table",
-            columns=dict.fromkeys(("State", *map(str, categories)), {}),
+            columns={header : {} for header in ("State", *map(str, categories))},
             rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in table.items()]
             )
         

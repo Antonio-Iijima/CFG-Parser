@@ -181,7 +181,7 @@ def autoIndent(lines: list[str]) -> list:
     level = max(set(levels).difference({0}) or {1}, key=lambda val: levels.count(val))
 
     indentation = " " * level
-    indent, dedent = CONFIG.formatting.indent, CONFIG.formatting.dedent
+    indent, dedent = f" {CONFIG.formatting.indent} ", f" {CONFIG.formatting.dedent} "
 
     for i, line in enumerate(lines):
         
@@ -219,7 +219,7 @@ def autoIndent(lines: list[str]) -> list:
     while prev_indent > 0:
         indented[-1] += dedent
         prev_indent -= 1
-
+    
     return indented
 
 

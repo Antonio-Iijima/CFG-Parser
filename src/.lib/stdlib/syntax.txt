@@ -1,0 +1,2 @@
+NEWLINE -> COMMENT "\n+" | "\n+"
+COMMENT -> "#[^\n]*"

@@ -1,9 +1,9 @@
 {
    "project": "magicc",
    "version": "0.0.0",
-   "language": "dyck",
-   "implementation": "compiler",
-   "info": "magicc 0.0.0 </> dyck compiler",
+   "language": ".bnf",
+   "implementation": "interpreter",
+   "info": "magicc 0.0.0 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -16,15 +16,17 @@
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/languages/dyck",
+      "language": "/home/ai/github/magicc/src/.bnf",
       "lib": ".lib",
       "metacompiler": ".bnf"
    },
    "formatting": {
-      "indent": " //INDENTATION-MARKER// ",
-      "dedent": " //DEDENTATION-MARKER// "
+      "indent": "INDENTATION_MARKER",
+      "dedent": "DEDENTATION_MARKER"
    },
-   "input": [],
+   "input": [
+      "../examples/1.banter"
+   ],
    "output": "out.cpp",
    "tests": [],
    "ignore": {
