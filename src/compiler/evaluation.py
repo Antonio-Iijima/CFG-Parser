@@ -24,6 +24,7 @@ g_newlines = False
 g_indentation = False
 g_module: dict = "main"
 g_paths: list = ["main"]
+g_aliases: dict = {}
 g_grammar: dict[Nonterminal, list[Production]] = {
     START() : [ Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()]) ]
 }
@@ -53,17 +54,18 @@ from collections.abc import Sequence as __Sequence__
 
 
 def p_main_program(expr, module: str = "main"):
-    
     from compiler import parse
     
     global g_module
     global g_paths
+    global g_aliases
     global g_grammar
     global g_terminals
     global g_conflicts
     global g_warnings
     global g_eval
 
+    print(g_aliases)
 
     def get_filename(directory: str, file: str):
         """Tries to find a syntax/semantics file in the given directory."""
@@ -85,6 +87,7 @@ def p_main_program(expr, module: str = "main"):
         
 
     g_module = module
+    g_aliases[module] = {}
     expr(0)
     g_module = module
 
@@ -241,8 +244,13 @@ def p_main_grammar_1(expr):
 
 def p_main_require(expr):
     global g_paths
+    global g_aliases
+    global g_module
 
-    path = expr(0).removeprefix("#require").strip().split(".")
+    path = expr(1)
+    # require math.infix as m_i
+    if len(expr) > 2: g_aliases[g_module][expr(3)] = path.replace(".", "_")
+    path = path.split(".")
     paths = list("/".join(path[:i+1]) for i in range(len(path)))
     for path in paths:
         if not path in g_paths:
@@ -276,7 +284,7 @@ def p_main_pattern_1(expr):
 def p_main_nonterminal(expr):
     global g_indentation
 
-    nonterminal = Nonterminal(expr(0))
+    nonterminal = Nonterminal(unalias(expr(0)))
     g_indentation = g_indentation or (nonterminal.rule in ("INDENT", "DEDENT"))
     
     return nonterminal
@@ -297,6 +305,21 @@ def p_main_terminal_1(expr):
     return EPSILON()
 
 
+def unalias(name: str) -> str:
+    global g_aliases
+    global g_module
+
+    if "." in name:
+        name = name.replace(".", "_")
+        ref, name = name.rsplit("_", 1)
+        name = f"{g_aliases[g_module].get(ref, ref)}_{name}"
+    else: 
+        if not g_module == "main":
+            name = f"{g_module}_{name}"
+    
+    return name.upper()
+
+
 
 ##### parsing #####
 
@@ -305,8 +328,7 @@ def p_main_terminal_1(expr):
 def get_parsetable_str():
     global g_grammar
     global g_conflicts
-
-
+    
     rules = list(e for opts in g_grammar.values() for e in opts)
 
     COLLECTION: list[set[Item]] = []
@@ -357,18 +379,50 @@ def get_parsetable_str():
         return gotos
 
 
-    def LOOKAHEADS():
+    def LOOKAHEADS() -> dict[tuple[int, Production], set[Terminal]]:
         """LALR lookahead computation algorithm, adapted from (DeRemer and Penello, 1982).
+        Accessible via the ACM Digital Library: https://dl.acm.org/doi/epdf/10.1145/69622.357187.
         
-        ### Quantities Involved
+        ### Quantities involved:
+
+        `DR` *dict*
+            A function `DR[(p, A)] = {t₀, ..., tₙ}`.
+            Given state p, on `Nonterminal` A, return the set of `Terminal`s which could be (directly) read next.
         
-        `DR` : a function DirectRead[(p, A)] = {a, b, c}
-        `reads` : a relation reads[(p, A)] = [(r0, C0), (r1, C1), ...]
-        `Read` : a function Read[(p, A)] = {a, b, c}
-        `includes` : a relation includes[(p, A)] = [(r0, C0), (r1, C1), ...]
-        `lookback` : a relation lookback[(p, A)] = [(r0, P0), (r1, P1), ...]
-        `Follow` : a relation
-        `LA` : a function
+        `reads` *dict*
+            A relation `reads[(p, A)] = [(q₀, B₁), ..., (qₙ₋₁, Bₙ)]`.
+            Given state p, on `Nonterminal` A, return a list of `(int, Nonterminal)` pairs such that
+            (p, A) *reads* (q, B) iff p -- A --> q -- B --> and B =>* ε; 
+            i.e. all (q, B) such that whatever is read after state q could be read after state p given A.
+            
+        `Read` *dict*
+            A function `Read[(p, A)] = {t₀, ..., tₙ}`.
+            Result of `DIGRAPH(reads, DR)`. Consolidates all Direct Read sets found on SCCs of reads.
+            Given state p, on `Nonterminal` A, returns the set of `Terminal`s t which could be read
+                a) directly, or
+                b) after one or more ε-reductions.
+        
+        `includes` *dict*
+            A relation `includes[(p, A)] = [(q₀, B₁), ..., (qₙ₋₁, Bₙ)]`.
+            Given state p, on `Nonterminal` A, return a list of `(int, Nonterminal)` pairs such that
+            (p, A) *includes* (q, B) iff B -> βAγ, γ =>* ε, and p --* β --> q; 
+            i.e. all (q, B) such that whatever is read after B in q can be read after A in p; note
+            that this is a subset relation, i.e. Follow(q, B) ≤ Follow(p, A) (see Follow).
+
+        `lookback` *dict*
+            A relation `lookback[(p, A -> ω)] = [(q₀, B₀), ..., (qₙ, Bₙ)]`
+            Given state p, on production A -> ω, return a list of `(int, Nonterminal)` pairs such that
+            (p, A -> ω) p --* ω --> q; i.e. all (q, B) such that ω accesses q from p.
+        
+        `Follow` *dict*
+            A function `Follow[(p, A)] = {t₀, ..., tₙ}`.
+            Result of `DIGRAPH(includes, Read)`. Consolidates all Read sets found on SCCs of includes.
+            Given state p, on `Nonterminal` A, return the set of `Terminal`s which could be read after A.
+            
+        :returns LA: 
+            A function `LA[(p, A -> ω)] = {t₀, ..., tₙ}`.
+            Union of all `Follow[(q, A)]` such that (p, A -> ω) *lookback* (q, A);
+            i.e. the set of all `Terminal`s which could be read after reducing ω in state p to A in state q.
         """
         
         def accesses(p: int, sequence: list[Terminal|Nonterminal]) -> int|None:
@@ -378,11 +432,12 @@ def get_parsetable_str():
                 except: return None
             return p
         
+        nonlocal X
         DR: dict[tuple[int, Nonterminal], set[Terminal]] = { transition : set() for transition in X }
         reads: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
         includes: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
-        lookback: dict[Production, list[tuple[int, Nonterminal]]] = {}
-
+        lookback: dict[tuple[int, Production], list[tuple[int, Nonterminal]]] = {}
+        
         for (p, A) in X:
             q = GOTO[p][A]
             for B in GOTO[q]:
@@ -395,33 +450,27 @@ def get_parsetable_str():
 
             for production in g_grammar[A]:
                 # includes relation
-                for i, B in enumerate(production.pattern):
+                nullable = True
+                # enumerating backwards allows us to stop iteration at the first nonnullable token
+                for i, B in enumerate(reversed(production.pattern)):
                     if isinstance(B, Nonterminal):
-                        q = accesses(p, production.pattern[:i])
-                        if (
-                            (q is not None)
-                            and all(map(NULLABLE, production.pattern[i+1:]))
-                        ):
-                            includes[(q, B)].append((p, A))
+                        q = accesses(p, production.pattern[:-(i+1)])
+                        if q is not None: includes[(q, B)].append((p, A))
+                        if nullable: break
+                        nullable = NULLABLE(B)
+                    else: break
                 # lookback relation
                 q = accesses(p, production.pattern)
                 if q is not None:
                     if not (q, production) in lookback: lookback[(q, production)] = []
                     lookback[(q, production)].append((p, A))
-        
+
         Read = DIGRAPH(reads, DR)
         Follow = DIGRAPH(includes, Read)
-        
-        LA: dict[int, dict[Production, set[Terminal]]] = { q : {} for (q, _) in lookback.keys() }
-
-        # for ((q, production), pairs) in lookback.items():
-        #     if not production in LA[q]: LA[q][production] = set()
-        #     for (p, A) in pairs:
-        #         LA[q][production].update(Follow[(p, A)])
 
         LA = { (q, production) : set() for (q, production) in lookback.keys() }
-        for ((q, production), pairs) in lookback.items():
-            for (p, A) in pairs:
+        for (q, production) in lookback:
+            for (p, A) in lookback[(q, production)]:
                 LA[(q, production)].update(Follow[(p, A)])
 
         return LA
@@ -431,13 +480,13 @@ def get_parsetable_str():
             R: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]], 
             f: dict[tuple[int, Nonterminal], set[Terminal]]
         ) -> dict[tuple[int, Nonterminal], set[Terminal]]:
-        """The DeRemer-Penello Algorithm Digraph.
+        """The DeRemer-Penello Digraph algorithm.
         
         :param relation R: A relation on X.
         :param function f: A set-valued function.
-        :returns: F, a function from X to sets."""
+        :returns F (function): A function from X to sets."""
 
-        F: dict[tuple[int, Nonterminal], set[Terminal]] = {} # { transition : set() for transition in X }
+        F: dict[tuple[int, Nonterminal], set[Terminal]] = {}
         S: list[tuple[int, Nonterminal]] = []
         N: dict[tuple[int, Nonterminal], int] = dict.fromkeys(X, 0)
         
@@ -446,15 +495,14 @@ def get_parsetable_str():
             d = len(S)
             N[x] = d
             F[x] = f[x]
-            for y in X:
-                if y in R[x]:
-                    if N[y] == 0: TRAVERSE(y)
-                    N[x] = min(N[x], N[y])
-                    F[x].update(F[y])
+            for y in R[x]:
+                if N[y] == 0: TRAVERSE(y)
+                N[x] = min(N[x], N[y])
+                F[x].update(F[y])
             if N[x] == d:
                 while S.pop() != x:
                     N[S[-1]] = float('inf')
-                    F[S[-1]] = F[x]
+                    if x != S[-1]: F[S[-1]] = F[x]
     
         for x in X:
             if N[x] == 0:
@@ -474,27 +522,37 @@ def get_parsetable_str():
         )
     
 
-    CANONICAL(CLOSURE({ Item(0, Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()])) }))
+    CANONICAL(CLOSURE({ Item(0, g_grammar[START()][0]) }))
+
     
-    LA: dict[int, dict[Nonterminal, set[Terminal]]] = LOOKAHEADS()
+    LA: dict[tuple[int, Production], set[Terminal]] = LOOKAHEADS()
     TABLE = { p : {} for p in range(len(COLLECTION)) }
     conflicts = {}
-
+    
+    for p, itemset in enumerate(COLLECTION):
+        print(f"State {p}")
+        for item in itemset:
+            if (p, item.production) in LA:
+                print(f"    {item}, {LA[(p, item.production)]}")
+            else:
+                print(f"    {item}, S")
+    
+    
     for p, itemset in enumerate(COLLECTION):
         for item in itemset:
             A = item.production
             lookaheads = LA.get((p, A))
-
-            if lookaheads is None:
-                t = item.current
-                q = GOTO[p].get(t)
-                action = (
-                    ("A", True) if t == EOI()
-                    else ("S" if isinstance(t, Terminal) else "G", q))
-                TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
-            else:
+            if item.isReduction and lookaheads is not None:
                 for t in lookaheads:
                     TABLE[p][t] = TABLE[p].get(t, set()).union({("R", rules.index(A))})
+            else:
+                t = item.current
+                q = GOTO[p].get(t)
+                if t is None:
+                    action = ("A", True)
+                else:
+                    action = ("S" if isinstance(t, Terminal) else "G", q)
+                TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
 
         for A, actions in TABLE[p].items():
             TABLE[p][A] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
@@ -510,7 +568,7 @@ def get_parsetable_str():
                     conflicts[p][conflict] = []
                 
                 conflicts[p][conflict].append(A)
-
+        
         if conflicts: 
             g_conflicts = f"Found {len(conflicts)} conflicts."
             for p, conflictTypes in conflicts.items():

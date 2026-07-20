@@ -1,4 +1,6 @@
-MATHEXPR   -> OR
+#require datatypes.numeric as numeric
+
+INFIX      -> OR
 OR         -> AND "\|" OR | AND
 AND        -> NOT "&" AND | NOT
 NOT        -> "~" NOT | COMPARISON
@@ -15,5 +17,5 @@ SUM        -> SUM "\+" TERM | SUM "-" TERM | TERM
 TERM       -> TERM "\*" FACTOR | TERM "/" FACTOR | FACTOR
 FACTOR     -> "-" FACTOR | POWER
 POWER      -> GROUP "\*\*" FACTOR | GROUP
-GROUP      -> "\(" MATHEXPR "\)" | VALUE
-VALUE      -> NUMBER
+GROUP      -> "\(" INFIX "\)" | VALUE
+VALUE      -> numeric.NUMBER

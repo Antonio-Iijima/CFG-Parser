@@ -10,8 +10,7 @@ inspection of the successor state of the latter transition.
 that the grammar is not LR(k) for any k.
 - **E.** Compute **includes** and **lookback**: one list of nonterminal transitions per nonterminal
 transition and reduction, respectively, by inspection of each nonterminal transition and
-associated production right parts, and by considering nullable nonterminals appropri-
-ately.
+associated production right parts, and by considering nullable nonterminals appropriately.
 - **F.** Apply algorithm **Digraph** to **includes** to compute **Follow**: use the same sets as
 initialized in part **B** and completed in part **D**, both as initial values and as workspace.
 If a cycle is detected in which a **Read** set is nonempty, announce that (as we conjecture)

@@ -29,7 +29,7 @@ class Terminal(Default):
 
 class Nonterminal(Default):
     def __init__(self, rule: str):
-        self.rule = rule.upper()
+        self.rule = rule
 
     def __hash__(self):
         return hash(self.rule)
@@ -134,7 +134,11 @@ class Token:
 class Rule(Default):
     def __init__(self, children: list, modulename: str = None, variant: int = 0):
         self.__name__ = type(self).__name__
-        self.fname = f"p_{modulename}_{self.__name__.lower()}"
+        self.fname =  (
+            f"p_{self.__name__.lower()}" if "_" in self.__name__
+            else f"p_main_{self.__name__.lower()}"
+        )
+        # self.fname = f"p_{modulename}_{self.__name__.lower()}"
         self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename

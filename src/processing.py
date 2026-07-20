@@ -86,10 +86,6 @@ def parse(
                     if action == "G": state.append(data)
                     else: raise ParseError(f"expected goto on token {state[-1]}")
 
-                case "A":
-                    if len(symbols) == 1 and isinstance(symbols[0], PROGRAM): break
-                    raise ParseError("could not parse expression")
-                
                 case "E": 
                     expected = set({EOI : "EOI"}.get(tok, tok) for tok in table[state[-1]].keys() if (isinstance(tok, str) or tok == EOI))
                     
@@ -108,7 +104,9 @@ def parse(
 
         if CONFIG.flags.debug: print(parserOutput, "")
 
-    return symbols.pop()
+    if tuple(map(type, symbols)) == (PROGRAM, EOI): return symbols[0]
+    raise ParseError("could not parse expression")
+
 
 
 def evaluate(input: str, parse, Expr: object) -> any:
