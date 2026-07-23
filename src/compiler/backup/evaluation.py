@@ -16,6 +16,9 @@ from collections.abc import Sequence as __Sequence__
 from datatypes import *
 from utils import *
 
+from typing import Callable
+
+import functools
 import os
 
 
@@ -24,10 +27,10 @@ g_newlines = False
 g_indentation = False
 g_module: dict = "main"
 g_paths: list = ["main"]
+g_aliases: dict = {}
 g_grammar: dict[Nonterminal, list[Production]] = {
     START() : [ Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()]) ]
 }
-g_terminals: set = set()
 g_conflicts: str = ""
 g_warnings: dict = {
     "syntax" : {},
@@ -53,13 +56,12 @@ from collections.abc import Sequence as __Sequence__
 
 
 def p_main_program(expr, module: str = "main"):
-    
     from compiler import parse
     
     global g_module
     global g_paths
+    global g_aliases
     global g_grammar
-    global g_terminals
     global g_conflicts
     global g_warnings
     global g_eval
@@ -84,6 +86,7 @@ def p_main_program(expr, module: str = "main"):
         return filename
         
 
+    g_aliases[module] = {}
     g_module = module
     expr(0)
     g_module = module
@@ -92,13 +95,12 @@ def p_main_program(expr, module: str = "main"):
         print("Metacompiling") if CONFIG.flags.metacompile else print(f"Compiling" + (" onefile" if CONFIG.flags.onefile else ""))
         print()
     else: return
-
+    
     if g_indentation:
         for NT, T in (
                 (Nonterminal("INDENT"), Terminal(CONFIG.formatting.indent)),
                 (Nonterminal("DEDENT"), Terminal(CONFIG.formatting.dedent))
             ): 
-            g_terminals.add(T)
             g_grammar[NT] = [Production(NT, "main", 0, [T])]
 
     for path in g_paths:
@@ -156,15 +158,7 @@ class {rule}(Rule):
     ```'''
 """
     
-    AST += f"""
-
-terminals = {{
-    {",\n    ".join((token.__repr__() for token in g_terminals))}
-}}
-
-
-{get_parsetable_str()}
-"""
+    AST += get_parsetable_str()
     
     g_eval += f"""##### evaluation #####
 
@@ -241,8 +235,13 @@ def p_main_grammar_1(expr):
 
 def p_main_require(expr):
     global g_paths
+    global g_aliases
+    global g_module
 
-    path = expr(0).removeprefix("#require").strip().split(".")
+    path = expr(1)
+    # require math.infix as m_i
+    if len(expr) > 2: g_aliases[g_module][expr(3)] = path
+    path = path.split(".")
     paths = list("/".join(path[:i+1]) for i in range(len(path)))
     for path in paths:
         if not path in g_paths:
@@ -276,7 +275,7 @@ def p_main_pattern_1(expr):
 def p_main_nonterminal(expr):
     global g_indentation
 
-    nonterminal = Nonterminal(expr(0))
+    nonterminal = Nonterminal(unalias(expr(0)))
     g_indentation = g_indentation or (nonterminal.rule in ("INDENT", "DEDENT"))
     
     return nonterminal
@@ -288,13 +287,25 @@ def p_main_terminal_0(expr):
     terminal = Terminal(expr(0)[1:-1])
     g_newlines = g_newlines or (r"\n" in terminal.regex)
     
-    g_terminals.add(terminal)
-
     return terminal
 
 
 def p_main_terminal_1(expr):
     return EPSILON()
+
+
+def unalias(name: str) -> str:
+    global g_aliases
+    global g_module
+
+    if "." in name: 
+        ref, name = name.rsplit(".", 1)
+        name = f"{g_aliases[g_module].get(ref, g_module)}.{name}"
+    else: 
+        if not g_module == "main":
+            name = f"{g_module}.{name}"
+    
+    return name.replace(".", "_").upper()
 
 
 
@@ -306,8 +317,8 @@ def get_parsetable_str():
     global g_grammar
     global g_conflicts
 
-
     rules = list(e for opts in g_grammar.values() for e in opts)
+    scansets: dict[Terminal, set[Terminal]] = {}
 
     COLLECTION: list[set[Item]] = []
     GOTO: dict[int, dict[Terminal|Nonterminal, int]] = {}
@@ -403,6 +414,14 @@ def get_parsetable_str():
             i.e. the set of all `Terminal`s which could be read after reducing ω in state p to A in state q.
         """
         
+        nonlocal X
+        nonlocal scansets
+
+
+        FIRST = FoL(False)
+        LAST = FoL(True)
+
+
         def accesses(p: int, sequence: list[Terminal|Nonterminal]) -> int|None:
             """Applies a sequence of transitions from state p, returning the resultant state or `None`."""
             for t in sequence:
@@ -410,12 +429,23 @@ def get_parsetable_str():
                 except: return None
             return p
         
-        nonlocal X
+        
+        def SCANSET(token, sequence):
+            nonlocal FIRST
+            if not token in scansets: scansets[token] = set()
+            for next in sequence:
+                if isinstance(next, Terminal) and not isinstance(next, EOI):
+                    scansets[token].add(next)
+                elif isinstance(next, Nonterminal):
+                    scansets[token].update(FIRST(next))
+                if not NULLABLE(next): break
+
+
         DR: dict[tuple[int, Nonterminal], set[Terminal]] = { transition : set() for transition in X }
         reads: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
         includes: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
         lookback: dict[tuple[int, Production], list[tuple[int, Nonterminal]]] = {}
-        
+                
         for (p, A) in X:
             q = GOTO[p][A]
             for B in GOTO[q]:
@@ -443,6 +473,20 @@ def get_parsetable_str():
                     if not (q, production) in lookback: lookback[(q, production)] = []
                     lookback[(q, production)].append((p, A))
 
+                # compute scansets
+                for production in rules:                    
+                    for i, token in enumerate(production.pattern):
+                        if isinstance(token, EOI) or i == len(production.pattern): continue
+
+                        elif isinstance(token, Terminal):
+                            SCANSET(token, production.pattern[i+1:])
+
+                        elif isinstance(token, Nonterminal):
+                            for t in LAST(token):
+                                SCANSET(t, production.pattern[i+1:])
+
+        scansets[None] = FIRST(START())
+
         Read = DIGRAPH(reads, DR)
         Follow = DIGRAPH(includes, Read)
 
@@ -451,6 +495,28 @@ def get_parsetable_str():
             for (p, A) in lookback[(q, production)]:
                 LA[(q, production)].update(Follow[(p, A)])
 
+
+        if not CONFIG.flags.quiet:
+            from statistics import mean, median, mode
+            data = tuple(map(len, scansets.values()))
+            print(f"""Scanner set optimization data
+
+Original    : {len(scansets)}
+Average     : {mean(data):.3f}
+Reduction   : {(1-mean(data)/len(scansets))*100:.3f}%
+
+Minimum     : {min(data)}
+Median      : {median(data)}
+Maximum     : {max(data)}
+
+Mode : {mode(data)}
+
+LAST cache: {LAST.cache_info()}
+FIRST cache: {FIRST.cache_info()}
+NULLABLE cache: {NULLABLE.cache_info()}
+""")
+
+            
         return LA
 
 
@@ -460,9 +526,9 @@ def get_parsetable_str():
         ) -> dict[tuple[int, Nonterminal], set[Terminal]]:
         """The DeRemer-Penello Digraph algorithm.
         
-        :param relation R: A relation on X.
-        :param function f: A set-valued function.
-        :returns F (function): A function from X to sets."""
+        :param R: A relation on X.
+        :param f: A set-valued function.
+        :returns F: A function from X to sets."""
 
         F: dict[tuple[int, Nonterminal], set[Terminal]] = {}
         S: list[tuple[int, Nonterminal]] = []
@@ -488,13 +554,32 @@ def get_parsetable_str():
 
         return F
 
+    
+    def FoL(reverse: bool) -> Callable:
+        @functools.cache
+        def Generic(rule: Nonterminal, exclude: tuple = None) -> set[Terminal]:
+            exclude = exclude or tuple()
+            out = set()
+            for production in g_grammar[rule]:
+                for token in (reversed(production.pattern) if reverse else production.pattern):
+                    if isinstance(token, Terminal): 
+                        out.add(token)
+                    elif isinstance(token, Nonterminal) and not token in exclude:
+                        out.update(Generic(token, tuple((token, *exclude))))
+                    if NULLABLE(token): continue
+                    else: break
+            return out
+        return Generic
+    
 
-    def NULLABLE(rule: Terminal|Nonterminal) -> bool:
+    @functools.cache
+    def NULLABLE(rule: Terminal|Nonterminal, exclude: tuple = None) -> bool:
+        exclude = exclude or tuple()
         return (
             isinstance(rule, Nonterminal)
             and any(
                 (production.pattern == [])
-                or all(NULLABLE(token) for token in production.pattern if not token == rule)
+                or all(NULLABLE(token, tuple((rule, *exclude))) for token in production.pattern if not token in exclude)
                 for production in g_grammar[rule]
             )
         )
@@ -506,16 +591,18 @@ def get_parsetable_str():
     LA: dict[tuple[int, Production], set[Terminal]] = LOOKAHEADS()
     TABLE = { p : {} for p in range(len(COLLECTION)) }
     conflicts = {}
-    
-    for p, itemset in enumerate(COLLECTION):
-        print(f"State {p}")
-        for item in itemset:
-            if (p, item.production) in LA:
-                print(f"    {item}, {LA[(p, item.production)]}")
-            else:
-                print(f"    {item}, S")
-    
-    
+
+
+    if CONFIG.flags.debug:
+        for p, itemset in enumerate(COLLECTION):
+            print(f"State {p}")
+            for item in itemset:
+                if (p, item.production) in LA:
+                    print(f"    {item}, {LA[(p, item.production)]}")
+                else:
+                    print(f"    {item}, S")
+
+
     for p, itemset in enumerate(COLLECTION):
         for item in itemset:
             A = item.production
@@ -564,7 +651,7 @@ def get_parsetable_str():
         print(grammar)
         print()
 
-        categories = [*sorted(g_terminals, key=str), EOI(), *g_grammar.keys()]
+        categories = [*sorted(scansets, key=str), EOI(), *g_grammar.keys()]
         categories.remove(START())
         parsetable = displayTable(
             title="LALR Table",
@@ -583,6 +670,13 @@ def get_parsetable_str():
 
 
     return f"""
+    
+scansets = {{
+    {",\n    ".join((f"{token.__repr__()} : {scanset}" for token, scanset in scansets.items()))}
+}}
+
+
+
 ##### PARSETABLE #####
 
 
@@ -619,7 +713,7 @@ def embed_eval(filename: str, modulename: str) -> str:
     from re import sub
 
     def replace_fname(match: Match) -> str:
-        return f"p_{modulename}_{match.group().removeprefix("p_")}"
+        return f"p_{modulename}_{match.group().removeprefix("p_")}".lower()
 
     with open(filename) as file:
         return sub(

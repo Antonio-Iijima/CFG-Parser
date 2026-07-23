@@ -1,4 +1,4 @@
-#require math.infix as math
+#require math.infix as MATH
 
 
-PROGRAM -> math.INFIX | math.INFIX "\n+" PROGRAM
+PROGRAM -> MATH.INFIX | MATH.INFIX "\n+" PROGRAM

@@ -1,12 +1,13 @@
 {
    "project": "magicc",
    "version": "0.0.0",
-   "language": "dyck",
+   "language": "palindromes",
    "implementation": "compiler",
-   "info": "magicc 0.0.0 </> dyck compiler",
+   "info": "magicc 0.0.0 </> palindromes compiler",
    "flags": {
       "interactive": false,
       "debug": false,
+      "quiet": false,
       "time": false,
       "force": false,
       "reset": false,
@@ -16,7 +17,7 @@
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/languages/dyck",
+      "language": "/home/ai/github/magicc/languages/palindromes",
       "lib": ".lib",
       "metacompiler": ".bnf"
    },

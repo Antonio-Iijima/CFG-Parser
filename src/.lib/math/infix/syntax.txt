@@ -1,4 +1,4 @@
-#require datatypes.numeric as numeric
+#require datatypes.numeric as NUMERIC
 
 INFIX      -> OR
 OR         -> AND "\|" OR | AND
@@ -18,4 +18,4 @@ TERM       -> TERM "\*" FACTOR | TERM "/" FACTOR | FACTOR
 FACTOR     -> "-" FACTOR | POWER
 POWER      -> GROUP "\*\*" FACTOR | GROUP
 GROUP      -> "\(" INFIX "\)" | VALUE
-VALUE      -> numeric.NUMBER
+VALUE      -> NUMERIC.NUMBER

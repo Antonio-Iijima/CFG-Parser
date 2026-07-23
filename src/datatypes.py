@@ -135,17 +135,12 @@ class Rule(Default):
     def __init__(self, children: list, modulename: str = None, variant: int = 0):
         self.__name__ = type(self).__name__
         self.fname =  (
-            f"p_{self.__name__.lower()}" if "_" in self.__name__
-            else f"p_main_{self.__name__.lower()}"
-        )
-        # self.fname = f"p_{modulename}_{self.__name__.lower()}"
+            f"p_{self.__name__}" if "_" in self.__name__
+            else f"p_main_{self.__name__}"
+        ).lower()
         self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename
-
-
-    def __eq__(self, other: 'Rule'):
-        return isinstance(other, Rule) and self.__hash__() == other.__hash__()
 
 
     def __hash__(self):

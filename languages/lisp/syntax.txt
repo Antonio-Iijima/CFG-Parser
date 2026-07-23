@@ -3,13 +3,12 @@
 
 
 PROGRAM   -> LISP_EXPR | LISP_EXPR PROGRAM
-LISP_EXPR -> "\'" S_EXPR | S_EXPR
+LISP_EXPR -> "'" S_EXPR | S_EXPR
 S_EXPR    -> ATOM | LIST
 
-ATOM      -> NUMBER | STRING | OPERATOR | "[_a-zA-Z][^\s\'()]*"
+ATOM      -> DATATYPES.NUMERIC.NUMBER | DATATYPES.STRING.STRING | OPERATOR | "[_a-zA-Z][^\s\'()]*"
 
 LIST      -> "\(" "\)" | "\(" ELEMS "\)"
-ELEMS     -> ELEM | ELEM ELEMS
-ELEM      -> LISP_EXPR
+ELEMS     -> LISP_EXPR | LISP_EXPR ELEMS
 
 OPERATOR  -> "[+*/<>%?]" | "\-" | "//" | "\*\*" | "<=" | ">=" | "=="

@@ -52,7 +52,8 @@ def p_program(expr):
     
 
 def p_statements_1(expr):
-    expr(0); expr(2)
+    expr(0)
+    expr(2)
 
 
 def p_assignment(expr):
@@ -69,7 +70,7 @@ def p_if_then_else(expr):
     else:
         expr(7)
 
-def p_block(expr):
+def p_block_0(expr):
     return expr(2)
 
 

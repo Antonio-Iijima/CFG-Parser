@@ -1,5 +1,5 @@
 from compiler.parserdata import (
-    terminals,
+    scansets,
     rules,
     table,
     indentation,
@@ -22,8 +22,8 @@ def parse(input: str, symbols: list = None, state: list = None) -> object:
     :returns: AST (recursive hierarchy of `Rule` types)."""
 
     return processing.parse(
-        input=input,
-        terminals=terminals,
+        remaining=input,
+        scansets=scansets,
         rules=rules,
         table=table,
         indentation=indentation,

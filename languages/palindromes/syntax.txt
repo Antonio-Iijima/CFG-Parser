@@ -1,2 +1,2 @@
 PROGRAM -> S
-S       -> "ε" | "a" | "b" | "a<S>a" | "b<S>b"
+S       -> "" | "a" | "b" | "a" S "a" | "b" S "b"
