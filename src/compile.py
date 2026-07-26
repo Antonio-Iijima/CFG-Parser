@@ -66,6 +66,8 @@ def main(path: str|None, implementation: str, backup: bool, restore: bool, **fla
 
     if CONFIG.flags.onefile:
 
+        CONFIG.save()
+
         PyInstaller.__main__.run([
             "main.py",
             "--onefile",
