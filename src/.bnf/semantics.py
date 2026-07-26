@@ -16,6 +16,7 @@ g_aliases: dict = {}
 g_grammar: dict[Nonterminal, list[Production]] = {
     START() : [ Production(START(), "main", 0, [Nonterminal("PROGRAM"), EOI()]) ]
 }
+g_terminals: set[Terminal] = set()
 g_conflicts: str = ""
 g_warnings: dict = {
     "syntax" : {},
@@ -47,6 +48,7 @@ def p_program(expr, module: str = "main"):
     global g_paths
     global g_aliases
     global g_grammar
+    global g_terminals
     global g_conflicts
     global g_warnings
     global g_eval
@@ -87,6 +89,7 @@ def p_program(expr, module: str = "main"):
                 (Nonterminal("DEDENT"), Terminal(CONFIG.formatting.dedent))
             ): 
             g_grammar[NT] = [Production(NT, "main", 0, [T])]
+            g_terminals.add(T)
 
     for path in g_paths:
 
@@ -267,10 +270,12 @@ def p_nonterminal(expr):
 
 
 def p_terminal_0(expr):
+    global g_terminals
     global g_newlines
     
     terminal = Terminal(expr(0)[1:-1])
     g_newlines = g_newlines or (r"\n" in terminal.regex)
+    g_terminals.add(terminal)
     
     return terminal
 
@@ -300,10 +305,10 @@ def unalias(name: str) -> str:
 
 def get_parsetable_str():
     global g_grammar
+    global g_terminals
     global g_conflicts
 
     rules = list(e for opts in g_grammar.values() for e in opts)
-    scansets: dict[Terminal, set[Terminal]] = {}
 
     COLLECTION: list[set[Item]] = []
     GOTO: dict[int, dict[Terminal|Nonterminal, int]] = {}
@@ -332,11 +337,11 @@ def get_parsetable_str():
         expansions = kernel
         while expansions:
             item = expansions.pop()
-            if item in closure: continue
-            closure.add(item)
-            if isinstance(item.current, Nonterminal):
-                for production in g_grammar[item.current]:
-                    expansions.add(Item(0, production))
+            if item not in closure:
+                closure.add(item)
+                if isinstance(item.current, Nonterminal):
+                    for production in g_grammar[item.current]:
+                        expansions.add(Item(0, production))
         return closure
     
 
@@ -348,9 +353,7 @@ def get_parsetable_str():
             if item.isReduction: continue
             if item.current not in gotos: gotos[item.current] = set()
             gotos[item.current].add(Item(item.dot+1, item.production))
-        for token, kernel in gotos.items():
-            gotos[token] = CLOSURE(kernel)
-        return gotos
+        return { token : CLOSURE(kernel) for token, kernel in gotos.items() }
 
 
     def LOOKAHEADS() -> dict[tuple[int, Production], set[Terminal]]:
@@ -400,11 +403,6 @@ def get_parsetable_str():
         """
         
         nonlocal X
-        nonlocal scansets
-
-
-        FIRST = FoL(False)
-        LAST = FoL(True)
 
 
         def accesses(p: int, sequence: list[Terminal|Nonterminal]) -> int|None:
@@ -414,17 +412,6 @@ def get_parsetable_str():
                 except: return None
             return p
         
-        
-        def SCANSET(token, sequence):
-            nonlocal FIRST
-            if not token in scansets: scansets[token] = set()
-            for next in sequence:
-                if isinstance(next, Terminal) and not isinstance(next, EOI):
-                    scansets[token].add(next)
-                elif isinstance(next, Nonterminal):
-                    scansets[token].update(FIRST(next))
-                if not NULLABLE(next): break
-
 
         DR: dict[tuple[int, Nonterminal], set[Terminal]] = { transition : set() for transition in X }
         reads: dict[tuple[int, Nonterminal], list[tuple[int, Nonterminal]]] = { transition : [] for transition in X }
@@ -449,7 +436,7 @@ def get_parsetable_str():
                     if isinstance(B, Nonterminal):
                         q = accesses(p, production.pattern[:-(i+1)])
                         if q is not None: includes[(q, B)].append((p, A))
-                        if nullable: break
+                        if not nullable: break
                         nullable = NULLABLE(B)
                     else: break
                 # lookback relation
@@ -458,48 +445,15 @@ def get_parsetable_str():
                     if not (q, production) in lookback: lookback[(q, production)] = []
                     lookback[(q, production)].append((p, A))
 
-                # compute scansets
-                for production in rules:                    
-                    for i, token in enumerate(production.pattern):
-                        if isinstance(token, EOI) or i == len(production.pattern): continue
-
-                        elif isinstance(token, Terminal):
-                            SCANSET(token, production.pattern[i+1:])
-
-                        elif isinstance(token, Nonterminal):
-                            for t in LAST(token):
-                                SCANSET(t, production.pattern[i+1:])
-
-        scansets[None] = FIRST(START())
 
         Read = DIGRAPH(reads, DR)
         Follow = DIGRAPH(includes, Read)
 
-        LA = { (q, production) : set() for (q, production) in lookback.keys() }
-        for (q, production) in lookback:
-            for (p, A) in lookback[(q, production)]:
-                LA[(q, production)].update(Follow[(p, A)])
-
-
-        if not CONFIG.flags.quiet:
-            from statistics import mean, median, mode
-            data = tuple(map(len, scansets.values()))
-            print(f"""Scanner set optimization data
-
-Original    : {len(scansets)}
-Average     : {mean(data):.3f}
-Reduction   : {(1-mean(data)/len(scansets))*100:.3f}%
-
-Minimum     : {min(data)}
-Median      : {median(data)}
-Maximum     : {max(data)}
-
-Mode : {mode(data)}
-
-LAST cache: {LAST.cache_info()}
-FIRST cache: {FIRST.cache_info()}
-NULLABLE cache: {NULLABLE.cache_info()}
-""")
+        LA: dict[tuple, set] = {}
+        for look, lookbacks in lookback.items():
+            LA[look] = set()
+            for back in lookbacks:
+                LA[look].update(Follow[back])
 
             
         return LA
@@ -529,32 +483,16 @@ NULLABLE cache: {NULLABLE.cache_info()}
                 N[x] = min(N[x], N[y])
                 F[x].update(F[y])
             if N[x] == d:
-                while S.pop() != x:
+                while True:
                     N[S[-1]] = float('inf')
-                    if x != S[-1]: F[S[-1]] = F[x]
+                    F[S[-1]] = F[x]
+                    if S.pop() == x: break
     
         for x in X:
             if N[x] == 0:
                 TRAVERSE(x)
 
         return F
-
-    
-    def FoL(reverse: bool) -> Callable:
-        @functools.cache
-        def Generic(rule: Nonterminal, exclude: tuple = None) -> set[Terminal]:
-            exclude = exclude or tuple()
-            out = set()
-            for production in g_grammar[rule]:
-                for token in (reversed(production.pattern) if reverse else production.pattern):
-                    if isinstance(token, Terminal): 
-                        out.add(token)
-                    elif isinstance(token, Nonterminal) and not token in exclude:
-                        out.update(Generic(token, tuple((token, *exclude))))
-                    if NULLABLE(token): continue
-                    else: break
-            return out
-        return Generic
     
 
     @functools.cache
@@ -572,7 +510,7 @@ NULLABLE cache: {NULLABLE.cache_info()}
 
     CANONICAL(CLOSURE({ Item(0, g_grammar[START()][0]) }))
 
-    
+
     LA: dict[tuple[int, Production], set[Terminal]] = LOOKAHEADS()
     TABLE = { p : {} for p in range(len(COLLECTION)) }
     conflicts = {}
@@ -627,16 +565,43 @@ NULLABLE cache: {NULLABLE.cache_info()}
         else:
             g_conflicts = "No conflicts found."
     
-    print(g_conflicts)
+
+    if CONFIG.flags.verbose:
+            print(g_conflicts)
+            print()
+
+            from statistics import mean, median, mode
+            sets = tuple(
+                tuple(
+                    regex for regex in state.keys() 
+                    if isinstance(regex, Terminal) and not isinstance(regex, EOI)) for state in TABLE.values()
+                )
+            data = tuple(map(len, sets))
+
+            print(f"""Scanner set optimization data
+
+Original    : {len(g_terminals)}
+Average     : {mean(data):.3f}
+Reduction   : {(1-mean(data)/len(g_terminals))*100:.3f}%
+
+Minimum     : {min(data)}
+Median      : {median(data)}
+Maximum     : {max(data)}
+
+Mode : {mode(data)}
+
+NULLABLE cache: {NULLABLE.cache_info()}
+""")
+
     
-    grammar = f"""-------{{ GRAMMAR }}-------
+    grammar = f"""--------{{ GRAMMAR }}--------
 {"\n".join(f"Rule {i:<3} {str(rule)}" for i, rule in enumerate(rules))}"""
 
     if CONFIG.flags.debug: 
         print(grammar)
         print()
 
-        categories = [*sorted(scansets, key=str), EOI(), *g_grammar.keys()]
+        categories = [*sorted(g_terminals, key=str), EOI(), *g_grammar.keys()]
         categories.remove(START())
         parsetable = displayTable(
             title="LALR Table",
@@ -655,11 +620,6 @@ NULLABLE cache: {NULLABLE.cache_info()}
 
 
     return f"""
-    
-scansets = {{
-    {",\n    ".join((f"{token.__repr__()} : {scanset}" for token, scanset in scansets.items()))}
-}}
-
 
 
 ##### PARSETABLE #####

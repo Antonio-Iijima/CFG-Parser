@@ -19,7 +19,7 @@ import os
     cloup.option("-i", "--interpreter", "implementation", flag_value="interpreter", help="Compile an interpreter.", default=True),
     cloup.option("-c", "--compiler", "implementation", flag_value="compiler", help="Compile a compiler.", default=True),
     cloup.option("-d", "--debug", is_flag=True, help="Run in debug mode."),
-    cloup.option("-q", "--quiet", is_flag=True, help="Silence warning messages."),
+    cloup.option("-v", "--verbose", is_flag=True, help="Allow warning/miscellaneous messages."),
     cloup.option("-t", "--time", is_flag=True, help="Print compilation time."),
     cloup.option("-o", "--onefile", is_flag=True, help="Generate single file executable."),
     cloup.option("-m", "--metacompile", is_flag=True, help="Enable metacompilation (requires BNF-specified language directory input).")

@@ -1,13 +1,13 @@
 {
    "project": "magicc",
    "version": "0.0.0",
-   "language": "palindromes",
-   "implementation": "compiler",
-   "info": "magicc 0.0.0 </> palindromes compiler",
+   "language": ".bnf",
+   "implementation": "interpreter",
+   "info": "magicc 0.0.0 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
-      "quiet": false,
+      "verbose": false,
       "time": false,
       "force": false,
       "reset": false,
@@ -17,7 +17,7 @@
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/languages/palindromes",
+      "language": "/home/ai/github/magicc/src/.bnf",
       "lib": ".lib",
       "metacompiler": ".bnf"
    },
@@ -25,7 +25,9 @@
       "indent": "INDENTATION_MARKER",
       "dedent": "DEDENTATION_MARKER"
    },
-   "input": [],
+   "input": [
+      "../examples/in.lsp"
+   ],
    "output": "out.cpp",
    "tests": [],
    "ignore": {

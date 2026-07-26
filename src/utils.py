@@ -23,7 +23,7 @@ WARNING: <msg> (<key[n]>)
     :param msg: The warning message.
     :param log: Dictionary of applicable info for the warning."""
     
-    if CONFIG.flags.quiet or not log: return
+    if not (CONFIG.flags.verbose and log): return
     
     for note, warnings in sorted(log.items(), key=lambda tup: len(tup[0]), reverse=True):
         if warnings:

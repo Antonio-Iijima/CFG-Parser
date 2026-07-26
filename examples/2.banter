@@ -2,16 +2,8 @@ let a be 1
 
 if a + 6 > 7, then 
    let limit be "not too far"
-else
-   print "Nope"
 
 if a - 6 <= 7, then
-   print "hi"
    let limit be 2.17
-else
-   print "Also nope"
-
-print a
-print a - 6 <= 7
 
 return limit # 2.17

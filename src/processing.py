@@ -10,7 +10,6 @@ import re
 
 def parse(
         remaining: str,
-        scansets: set,
         rules: tuple[tuple],
         table: dict[int, dict],
         indentation: bool,
@@ -44,7 +43,7 @@ def parse(
         :param state: Current state of the parser.
         :param input: Remaining input.
         :returns: The next valid token and the remaining input."""
-        nonlocal token, lineno, col, remaining, scansets
+        nonlocal token, lineno, col, remaining
         
         if not remaining: 
             if token == EOI(): token = None
@@ -53,10 +52,8 @@ def parse(
 
         matches = []        
         
-        # for regex in terminals:
-        for regex in scansets[token if token is None else token.regex]:
+        for regex in filter(lambda tok: isinstance(tok, str), table[state[-1]].keys()):
             if regex == EOI: continue
-        # for regex in filter(lambda tok: isinstance(tok, str), table[state[-1]].keys()):
             match = re.match(regex, remaining)
             if match: matches.append((match.group(), regex))
         

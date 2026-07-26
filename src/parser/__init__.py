@@ -1,5 +1,4 @@
 from parser.parserdata import (
-    scansets,
     rules,
     table,
     indentation,
@@ -21,7 +20,6 @@ def parse(input: str, symbols: list = None, state: list = None) -> object:
 
     return processing.parse(
         remaining=input,
-        scansets=scansets,
         rules=rules,
         table=table,
         indentation=indentation,
