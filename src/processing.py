@@ -38,12 +38,10 @@ def parse(
 
 
     def scan() -> None:
-        """Scans the input for the next token that is valid in the current state.
-        
-        :param state: Current state of the parser.
-        :param input: Remaining input.
-        :returns: The next valid token and the remaining input."""
+        """Scans the input for the next token that is valid in the current state."""
+
         nonlocal token, lineno, col, remaining
+        
         
         if not remaining: 
             if token == EOI(): token = None
@@ -147,7 +145,7 @@ def parse(
                     
                     raise ParseError(f'''unexpected {
                         f"{token.info} (Token matched r'{token.regex}')" if isinstance(token, Token) 
-                        else f" {token}"
+                        else f"'{token}'"
                     }
     expected {", ".join(expected)}''')
                 

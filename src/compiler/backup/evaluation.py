@@ -470,6 +470,12 @@ def get_parsetable_str():
             for back in lookbacks:
                 LA[look].update(Follow[back])
 
+        # for (p, A), lookbacks in lookback.items():
+        #     if not p in LA: LA[p] = {}
+        #     if not A in LA[p]: LA[p][A] = set()
+        #     for back in lookbacks:
+        #         LA[p][A].update(Follow[back])
+
             
         return LA
 
@@ -521,6 +527,10 @@ def get_parsetable_str():
                 for production in g_grammar[rule]
             )
         )
+
+
+    def REDUCE(p: int, t: Terminal) -> set:
+        return set(production for production in rules if t in LA.get((p, production), set()))
     
 
     CANONICAL(CLOSURE({ Item(0, g_grammar[START()][0]) }))
@@ -542,6 +552,7 @@ def get_parsetable_str():
 
 
     for p, itemset in enumerate(COLLECTION):
+        TABLE[p] = {}
         for item in itemset:
             A = item.production
             lookaheads = LA.get((p, A))
@@ -556,6 +567,7 @@ def get_parsetable_str():
                 else:
                     action = ("S" if isinstance(t, Terminal) else "G", q)
                 TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
+
 
         for A, actions in TABLE[p].items():
             TABLE[p][A] = list(sorted(actions, key=lambda tup: tup[0] == "R"))

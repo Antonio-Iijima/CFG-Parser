@@ -553,7 +553,6 @@ def get_parsetable_str():
 
     for p, itemset in enumerate(COLLECTION):
         TABLE[p] = {}
-
         for item in itemset:
             A = item.production
             lookaheads = LA.get((p, A))
@@ -569,13 +568,6 @@ def get_parsetable_str():
                     action = ("S" if isinstance(t, Terminal) else "G", q)
                 TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
 
-        # for X, q in GOTO[p].items():
-        #     if not X in TABLE[p]: TABLE[p][X] = []
-        #     TABLE[p][X].append(("S" if isinstance(X, Terminal) else "G", q))
-        # for t in g_terminals:
-        #     for A in REDUCE(p, t):
-        #         if not t in TABLE[p]: TABLE[p][t] = []
-        #         TABLE[p][t].append(("R", rules.index(A)))
 
         for A, actions in TABLE[p].items():
             TABLE[p][A] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
