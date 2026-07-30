@@ -16,8 +16,6 @@ from collections.abc import Sequence as __Sequence__
 from datatypes import *
 from utils import *
 
-from typing import Callable
-
 import functools
 import os
 
@@ -374,47 +372,6 @@ def get_parsetable_str():
     def LOOKAHEADS() -> dict[tuple[int, Production], set[Terminal]]:
         """LALR lookahead computation algorithm, adapted from (DeRemer and Penello, 1982).
         Accessible via the ACM Digital Library: https://dl.acm.org/doi/epdf/10.1145/69622.357187.
-        
-        ### Quantities involved:
-
-        `DR` *dict*
-            A function `DR[(p, A)] = {t₀, ..., tₙ}`.
-            Given state p, on `Nonterminal` A, return the set of `Terminal`s which could be (directly) read next.
-        
-        `reads` *dict*
-            A relation `reads[(p, A)] = [(q₀, B₁), ..., (qₙ₋₁, Bₙ)]`.
-            Given state p, on `Nonterminal` A, return a list of `(int, Nonterminal)` pairs such that
-            (p, A) *reads* (q, B) iff p -- A --> q -- B --> and B =>* ε; 
-            i.e. all (q, B) such that whatever is read after state q could be read after state p given A.
-            
-        `Read` *dict*
-            A function `Read[(p, A)] = {t₀, ..., tₙ}`.
-            Result of `DIGRAPH(reads, DR)`. Consolidates all Direct Read sets found on SCCs of reads.
-            Given state p, on `Nonterminal` A, returns the set of `Terminal`s t which could be read
-                a) directly, or
-                b) after one or more ε-reductions.
-        
-        `includes` *dict*
-            A relation `includes[(p, A)] = [(q₀, B₁), ..., (qₙ₋₁, Bₙ)]`.
-            Given state p, on `Nonterminal` A, return a list of `(int, Nonterminal)` pairs such that
-            (p, A) *includes* (q, B) iff B -> βAγ, γ =>* ε, and p --* β --> q; 
-            i.e. all (q, B) such that whatever is read after B in q can be read after A in p; note
-            that this is a subset relation, i.e. Follow(q, B) ≤ Follow(p, A) (see Follow).
-
-        `lookback` *dict*
-            A relation `lookback[(p, A -> ω)] = [(q₀, B₀), ..., (qₙ, Bₙ)]`
-            Given state p, on production A -> ω, return a list of `(int, Nonterminal)` pairs such that
-            (p, A -> ω) p --* ω --> q; i.e. all (q, B) such that ω accesses q from p.
-        
-        `Follow` *dict*
-            A function `Follow[(p, A)] = {t₀, ..., tₙ}`.
-            Result of `DIGRAPH(includes, Read)`. Consolidates all Read sets found on SCCs of includes.
-            Given state p, on `Nonterminal` A, return the set of `Terminal`s which could be read after A.
-            
-        :returns LA: 
-            A function `LA[(p, A -> ω)] = {t₀, ..., tₙ}`.
-            Union of all `Follow[(q, A)]` such that (p, A -> ω) *lookback* (q, A);
-            i.e. the set of all `Terminal`s which could be read after reducing ω in state p to A in state q.
         """
         
         nonlocal X
@@ -470,13 +427,6 @@ def get_parsetable_str():
             for back in lookbacks:
                 LA[look].update(Follow[back])
 
-        # for (p, A), lookbacks in lookback.items():
-        #     if not p in LA: LA[p] = {}
-        #     if not A in LA[p]: LA[p][A] = set()
-        #     for back in lookbacks:
-        #         LA[p][A].update(Follow[back])
-
-            
         return LA
 
 
@@ -529,61 +479,51 @@ def get_parsetable_str():
         )
 
 
-    def REDUCE(p: int, t: Terminal) -> set:
-        return set(production for production in rules if t in LA.get((p, production), set()))
+    def REDUCTIONS(p: int) -> dict:
+        out = {}
+        for item in COLLECTION[p]:
+            if item.isReduction:
+                lookaheads = LA.get((p, item.production))
+                if not item.production in out: out[item.production] = set()
+                if lookaheads is None:
+                    out[item.production].add(None)
+                else:
+                    out[item.production].update(lookaheads)
+        return out
     
 
     CANONICAL(CLOSURE({ Item(0, g_grammar[START()][0]) }))
 
 
     LA: dict[tuple[int, Production], set[Terminal]] = LOOKAHEADS()
-    TABLE = { p : {} for p in range(len(COLLECTION)) }
+    TABLE = {}
     conflicts = {}
 
 
-    if CONFIG.flags.debug:
-        for p, itemset in enumerate(COLLECTION):
-            print(f"State {p}")
-            for item in itemset:
-                if (p, item.production) in LA:
-                    print(f"    {item}, {LA[(p, item.production)]}")
-                else:
-                    print(f"    {item}, S")
-
-
-    for p, itemset in enumerate(COLLECTION):
+    for p in range(len(COLLECTION)):
         TABLE[p] = {}
-        for item in itemset:
-            A = item.production
-            lookaheads = LA.get((p, A))
-            if item.isReduction and lookaheads is not None:
-                for t in lookaheads:
-                    TABLE[p][t] = TABLE[p].get(t, set()).union({("R", rules.index(A))})
-            else:
-                t = item.current
-                q = GOTO[p].get(t)
-                if t is None:
-                    action = ("A", True)
-                else:
-                    action = ("S" if isinstance(t, Terminal) else "G", q)
-                TABLE[p][t] = TABLE[p].get(t, set()).union({ action })
+        for t, q in GOTO[p].items():
+            if not t in TABLE[p]: TABLE[p][t] = []
+            TABLE[p][t].append(-q)
+        for A, lookaheads in REDUCTIONS(p).items():
+            for t in lookaheads:
+                if not t in TABLE[p]: TABLE[p][t] = []
+                if t is None: TABLE[p][t] = [0]
+                else: TABLE[p][t].append(rules.index(A))
 
 
-        for A, actions in TABLE[p].items():
-            TABLE[p][A] = list(sorted(actions, key=lambda tup: tup[0] == "R"))
-            
+        for X, actions in TABLE[p].items():            
             if len(actions) > 1:
-
                 if not p in conflicts:
                     conflicts[p] = {}
 
-                conflict = "/".join(action[0] for action in TABLE[p][A])
+                conflict = "/".join(("S" if action > 0 else "R" if action < 0 else "A") for action in TABLE[p][X])
 
                 if not conflict in conflicts:
                     conflicts[p][conflict] = []
                 
-                conflicts[p][conflict].append(A)
-        
+                conflicts[p][conflict].append(X)
+
         if conflicts: 
             g_conflicts = f"Found {len(conflicts)} conflicts."
             for p, conflictTypes in conflicts.items():
@@ -631,10 +571,23 @@ NULLABLE cache: {NULLABLE.cache_info()}
         categories = [*sorted(g_terminals, key=str), EOI(), *g_grammar.keys()]
         categories.remove(START())
         parsetable = displayTable(
-            title="LALR Table",
-            columns=dict.fromkeys(("State", *map(str, categories)), {}),
-            rows=[(str(state), *(lstToStr(edges.get(token, [("",)])[0]) for token in categories)) for state, edges in TABLE.items()]
+            title="LALR Table", 
+            columns=dict.fromkeys(("State", *map(str, categories)), {})
             )
+        for state, options in TABLE.items():
+            row = [str(state)]
+            for token in categories:
+                data = options.get(token, [None])[0]
+                action = (
+                "ERR" if data is None
+                else "S" if data > 0
+                else "R" if data < 0
+                else "ACC"
+                )
+                if data: data = str(abs(data))
+                row.append("" if data is None else f"{action} {data}")
+            parsetable.add_row(*row)
+            
         
         print("------{ AUTOMATON }------")
         for p, closure in enumerate(COLLECTION):

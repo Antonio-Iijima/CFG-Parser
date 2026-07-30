@@ -48,7 +48,7 @@ def parse(
             else: token = EOI()
             return
 
-        matches = []        
+        matches = []
         
         for regex in filter(lambda tok: isinstance(tok, str), table[state[-1]].keys()):
             if regex == EOI: continue
@@ -99,11 +99,17 @@ def parse(
     scan()
     try:
         step = -1
-        parsing = True
-        while parsing:
+        while True:
             step += 1
-            
-            action, data = table[state[-1]].get(token if token is None else token.regex, [("E", False)])[0]
+
+            data = table[state[-1]].get(token if token is None else token.regex, [None])[0]
+            action = (
+                "ERR" if data is None
+                else "S" if data < 0
+                else "R" if data > 0
+                else "ACC"
+            )
+            if data is not None: data = abs(data)
             
             if CONFIG.flags.debug:
                 parserOutput.add_row(
@@ -111,7 +117,8 @@ def parse(
                     lstToStr(state),
                     lstToStr(symbols),
                     remaining,
-                    { "A" : "ACC", "E" : "ERR" }.get(action, f"{action} {data}")
+                    action if action in ("ACC", "ERR")
+                    else f"{action} {data}"
                 )
 
             match action:
@@ -132,15 +139,13 @@ def parse(
                     symbols.append(rule(reversed(reduction), module, variant))
                     
                     # Handle goto as part of reduce action
-                    action, data = table[state[-1]][rule][0]
-                    if action == "G": state.append(data)
-                    else: raise ParseError(f"expected goto on token {state[-1]}")
+                    state.append(abs(table[state[-1]][rule][0]))
 
-                case "A":
+                case "ACC":
                     if tuple(map(type, symbols)) == (PROGRAM, EOI): return symbols[0]
                     raise ParseError("could not parse expression")
 
-                case "E": 
+                case "ERR": 
                     expected = set({EOI : "EOI"}.get(tok, tok) for tok in table[state[-1]].keys() if (isinstance(tok, str) or tok == EOI))
                     
                     raise ParseError(f'''unexpected {

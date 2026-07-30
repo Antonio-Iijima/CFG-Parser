@@ -1,9 +1,9 @@
 {
    "project": "magicc",
    "version": "0.0.0",
-   "language": ".bnf",
+   "language": "lisp",
    "implementation": "interpreter",
-   "info": "magicc 0.0.0 </> .bnf interpreter",
+   "info": "magicc 0.0.0 </> lisp interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -17,7 +17,7 @@
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/src/.bnf",
+      "language": "/home/ai/github/magicc/languages/lisp",
       "lib": ".lib",
       "metacompiler": ".bnf"
    },
@@ -26,7 +26,7 @@
       "dedent": "DEDENTATION_MARKER"
    },
    "input": [
-      "../examples/3.banter"
+      "../examples/in.lsp"
    ],
    "output": "out.cpp",
    "tests": [],
