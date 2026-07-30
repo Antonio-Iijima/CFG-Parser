@@ -70,6 +70,11 @@ def get_input(prompt: str = "", s: str = "") -> str|None:
             return get_input("... ", s + "\n" + input(prompt))
 
 
+def ation():
+    i = 0
+    while True: yield i; i += 1
+
+
 def regularize(path: str) -> None:    
     if os.path.isdir(path):
         for file in os.listdir(path):

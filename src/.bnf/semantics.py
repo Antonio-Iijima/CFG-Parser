@@ -493,9 +493,7 @@ def get_parsetable_str():
         for A, lookaheads in REDUCTIONS(p).items():
             for t in lookaheads:
                 if not t in TABLE[p]: TABLE[p][t] = []
-                if t is None: TABLE[p][t] = [0]
-                else: TABLE[p][t].append(rules.index(A))
-
+                TABLE[p][t].append(rules.index(A))
 
         for X, actions in TABLE[p].items():            
             if len(actions) > 1:

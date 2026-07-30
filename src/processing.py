@@ -43,23 +43,21 @@ def parse(
         nonlocal token, lineno, col, remaining
         
         
-        if not remaining: 
-            if token == EOI(): token = None
-            else: token = EOI()
+        if not remaining:
+            token = (None if token == EOI() else EOI())
             return
 
         matches = []
         
-        for regex in filter(lambda tok: isinstance(tok, str), table[state[-1]].keys()):
-            if regex == EOI: continue
-            match = re.match(regex, remaining)
-            if match: matches.append((match.group(), regex))
+        for regex in table[state[-1]].keys():
+            if isinstance(regex, str):
+                match = re.match(regex, remaining)
+                if match: matches.append((match.group(), regex))
         
         if not matches: 
             raise SyntaxError(f"invalid token '{remaining[0]}' at line {lineno}, col {col}")
 
-        # Prioritize the longest match; if multiple regular expressions match
-        # the same characters, prioritize exact matches to handle reserved words.
+        # Triage: exact match (reserved word), then longest match
         match, regex = max(matches, key=lambda tup: len(tup[0]) + int(tup[0] == tup[1]))
         if match.startswith("\n"): col = 1
 
@@ -70,7 +68,7 @@ def parse(
         # patterns, but assume exact matches are keywords and skip warning
         if len(matches) > 1 and (not re.escape(match) == regex):
             print_warnings(
-                msg=f"multiple token matches at line {lineno}, col {col}",
+                msg=f"multiple token matches from line {lineno}, col {col}",
                 log={
                     "found " \
                     + ", ".join(set(tup[0] for tup in matches)) \
@@ -98,9 +96,7 @@ def parse(
 
     scan()
     try:
-        step = -1
-        while True:
-            step += 1
+        for step in iter(ation()):
 
             data = table[state[-1]].get(token if token is None else token.regex, [None])[0]
             action = (
@@ -110,7 +106,7 @@ def parse(
                 else "ACC"
             )
             if data is not None: data = abs(data)
-            
+
             if CONFIG.flags.debug:
                 parserOutput.add_row(
                     str(step), 
@@ -127,7 +123,7 @@ def parse(
                     symbols.append(token)
                     state.append(data)
                     scan()
-
+                
                 case "R":
                     rule, module, variant, n = rules[data]
                     reduction = []
@@ -158,7 +154,6 @@ def parse(
 
     finally:
         if CONFIG.flags.time: print(f"Parse time: {(time() - start)*1000:.7} ms")
-
         if CONFIG.flags.debug: print(parserOutput, "")
 
 

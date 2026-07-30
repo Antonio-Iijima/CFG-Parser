@@ -1,9 +1,9 @@
 {
    "project": "magicc",
    "version": "0.0.0",
-   "language": "lisp",
+   "language": ".bnf",
    "implementation": "interpreter",
-   "info": "magicc 0.0.0 </> lisp interpreter",
+   "info": "magicc 0.0.0 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -17,7 +17,7 @@
    "paths": {
       "root": "/home/ai/github/magicc/src",
       "config": "/home/ai/github/magicc/src/config.json",
-      "language": "/home/ai/github/magicc/languages/lisp",
+      "language": "/home/ai/github/magicc/src/.bnf",
       "lib": ".lib",
       "metacompiler": ".bnf"
    },
