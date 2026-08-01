@@ -1,9 +1,9 @@
 {
    "project": "magicc",
-   "version": "1.0.0",
+   "version": "1.0.1",
    "language": ".bnf",
    "implementation": "interpreter",
-   "info": "magicc 1.0.0 </> calculator interpreter",
+   "info": "magicc 1.0.1 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,

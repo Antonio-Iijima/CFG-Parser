@@ -6,81 +6,23 @@ from datatypes import Rule, EOI
 
 
 
-##### ABSTRACT SYNTAX TREE #####
+##### AST #####
 
 
 
-class START(Rule):
-    r'''```
-START -> PROGRAM $
-    ```'''
-
-class PROGRAM(Rule):
-    r'''```
-PROGRAM -> GRAMMAR
-    ```'''
-
-class GRAMMAR(Rule):
-    r'''```
-GRAMMAR -> LINE
-         | LINE "\n+" GRAMMAR
-    ```'''
-
-class LINE(Rule):
-    r'''```
-LINE -> REQUIRE
-      | PRODUCTION
-    ```'''
-
-class REQUIRE(Rule):
-    r'''```
-REQUIRE -> "#require" NAME
-         | "#require" NAME "as" NAME
-    ```'''
-
-class NAME(Rule):
-    r'''```
-NAME -> "\w+(\.\w+)*"
-    ```'''
-
-class PRODUCTION(Rule):
-    r'''```
-PRODUCTION -> RULE "->" ALTERNATIVES
-    ```'''
-
-class RULE(Rule):
-    r'''```
-RULE -> NONTERMINAL
-    ```'''
-
-class ALTERNATIVES(Rule):
-    r'''```
-ALTERNATIVES -> PATTERN
-              | PATTERN "\|" ALTERNATIVES
-    ```'''
-
-class PATTERN(Rule):
-    r'''```
-PATTERN -> TERM
-         | TERM PATTERN
-    ```'''
-
-class TERM(Rule):
-    r'''```
-TERM -> TERMINAL
-      | NONTERMINAL
-    ```'''
-
-class NONTERMINAL(Rule):
-    r'''```
-NONTERMINAL -> "\w+(\.\w+)*"
-    ```'''
-
-class TERMINAL(Rule):
-    r'''```
-TERMINAL -> "\"\S+\""
-          | "\"\""
-    ```'''
+class START(Rule):None
+class PROGRAM(Rule):None
+class GRAMMAR(Rule):None
+class LINE(Rule):None
+class REQUIRE(Rule):None
+class NAME(Rule):None
+class PRODUCTION(Rule):None
+class RULE(Rule):None
+class ALTERNATIVES(Rule):None
+class PATTERN(Rule):None
+class TERM(Rule):None
+class NONTERMINAL(Rule):None
+class TERMINAL(Rule):None
 
 
 
@@ -149,167 +91,167 @@ rules = (
 
 table = {
     0 : {
-        PROGRAM : [-1],
-        GRAMMAR : [-3],
-        LINE : [-4],
-        NONTERMINAL : [-6],
+        NONTERMINAL : [-1],
+        REQUIRE : [-2],
+        PROGRAM : [-3],
+        GRAMMAR : [-5],
+        PRODUCTION : [-6],
         r"\w+(\.\w+)*" : [-7],
-        PRODUCTION : [-8],
-        r"#require" : [-10],
-        RULE : [-15],
-        REQUIRE : [-27]
+        RULE : [-8],
+        r"#require" : [-20],
+        LINE : [-25]
     },
     1 : {
-        EOI : [-2]
-    },
-    2 : {
-        None : [0]
-    },
-    3 : {
-        EOI : [1]
-    },
-    4 : {
-        r"\n+" : [-5],
-        EOI : [2]
-    },
-    5 : {
-        LINE : [-4],
-        NONTERMINAL : [-6],
-        r"\w+(\.\w+)*" : [-7],
-        PRODUCTION : [-8],
-        GRAMMAR : [-9],
-        r"#require" : [-10],
-        RULE : [-15],
-        REQUIRE : [-27]
-    },
-    6 : {
         r"->" : [10]
     },
+    2 : {
+        r"\n+" : [4],
+        EOI : [4]
+    },
+    3 : {
+        EOI : [-4]
+    },
+    4 : {
+        None : [0]
+    },
+    5 : {
+        EOI : [1]
+    },
+    6 : {
+        r"\n+" : [5],
+        EOI : [5]
+    },
     7 : {
-        r"\|" : [17],
-        r"\"\"" : [17],
         EOI : [17],
-        r"\n+" : [17],
-        r"->" : [17],
         r"\w+(\.\w+)*" : [17],
-        r"\"\S+\"" : [17]
+        r"\"\S+\"" : [17],
+        r"->" : [17],
+        r"\n+" : [17],
+        r"\"\"" : [17],
+        r"\|" : [17]
     },
     8 : {
-        EOI : [5],
-        r"\n+" : [5]
+        r"->" : [-9]
     },
     9 : {
-        EOI : [3]
+        r"\w+(\.\w+)*" : [-7],
+        PATTERN : [-10],
+        TERM : [-13],
+        r"\"\S+\"" : [-14],
+        r"\"\"" : [-15],
+        ALTERNATIVES : [-19],
+        TERMINAL : [-16],
+        NONTERMINAL : [-18]
     },
     10 : {
-        r"\w+(\.\w+)*" : [-11],
-        NAME : [-12]
+        r"\|" : [-11],
+        r"\n+" : [11],
+        EOI : [11]
     },
     11 : {
-        r"as" : [8],
-        EOI : [8],
-        r"\n+" : [8]
+        r"\w+(\.\w+)*" : [-7],
+        PATTERN : [-10],
+        ALTERNATIVES : [-12],
+        TERM : [-13],
+        r"\"\S+\"" : [-14],
+        r"\"\"" : [-15],
+        TERMINAL : [-16],
+        NONTERMINAL : [-18]
     },
     12 : {
-        r"as" : [-13],
-        EOI : [6],
-        r"\n+" : [6]
+        r"\n+" : [12],
+        EOI : [12]
     },
     13 : {
-        r"\w+(\.\w+)*" : [-11],
-        NAME : [-14]
+        r"\w+(\.\w+)*" : [-7],
+        TERM : [-13],
+        r"\"\S+\"" : [-14],
+        r"\"\"" : [-15],
+        TERMINAL : [-16],
+        PATTERN : [-17],
+        NONTERMINAL : [-18],
+        r"\n+" : [13],
+        EOI : [13],
+        r"\|" : [13]
     },
     14 : {
-        EOI : [7],
-        r"\n+" : [7]
+        EOI : [18],
+        r"\w+(\.\w+)*" : [18],
+        r"\"\S+\"" : [18],
+        r"\n+" : [18],
+        r"\"\"" : [18],
+        r"\|" : [18]
     },
     15 : {
-        r"->" : [-16]
+        EOI : [19],
+        r"\w+(\.\w+)*" : [19],
+        r"\"\S+\"" : [19],
+        r"\n+" : [19],
+        r"\"\"" : [19],
+        r"\|" : [19]
     },
     16 : {
-        ALTERNATIVES : [-17],
-        NONTERMINAL : [-18],
-        r"\"\S+\"" : [-19],
-        r"\w+(\.\w+)*" : [-7],
-        TERM : [-20],
-        PATTERN : [-24],
-        TERMINAL : [-22],
-        r"\"\"" : [-23]
+        EOI : [15],
+        r"\w+(\.\w+)*" : [15],
+        r"\"\S+\"" : [15],
+        r"\n+" : [15],
+        r"\"\"" : [15],
+        r"\|" : [15]
     },
     17 : {
-        EOI : [9],
-        r"\n+" : [9]
+        r"\n+" : [14],
+        EOI : [14],
+        r"\|" : [14]
     },
     18 : {
-        r"\|" : [16],
-        r"\"\"" : [16],
         EOI : [16],
-        r"\n+" : [16],
         r"\w+(\.\w+)*" : [16],
-        r"\"\S+\"" : [16]
+        r"\"\S+\"" : [16],
+        r"\n+" : [16],
+        r"\"\"" : [16],
+        r"\|" : [16]
     },
     19 : {
-        r"\|" : [18],
-        r"\"\"" : [18],
-        EOI : [18],
-        r"\n+" : [18],
-        r"\w+(\.\w+)*" : [18],
-        r"\"\S+\"" : [18]
+        r"\n+" : [9],
+        EOI : [9]
     },
     20 : {
-        NONTERMINAL : [-18],
-        r"\"\S+\"" : [-19],
-        r"\w+(\.\w+)*" : [-7],
-        TERM : [-20],
-        PATTERN : [-21],
-        TERMINAL : [-22],
-        r"\"\"" : [-23],
-        r"\|" : [13],
-        r"\n+" : [13],
-        EOI : [13]
+        r"\w+(\.\w+)*" : [-21],
+        NAME : [-22]
     },
     21 : {
-        r"\|" : [14],
-        r"\n+" : [14],
-        EOI : [14]
+        r"\n+" : [8],
+        EOI : [8],
+        r"as" : [8]
     },
     22 : {
-        r"\|" : [15],
-        r"\"\"" : [15],
-        EOI : [15],
-        r"\n+" : [15],
-        r"\w+(\.\w+)*" : [15],
-        r"\"\S+\"" : [15]
+        r"as" : [-23],
+        r"\n+" : [6],
+        EOI : [6]
     },
     23 : {
-        r"\|" : [19],
-        r"\"\"" : [19],
-        EOI : [19],
-        r"\n+" : [19],
-        r"\w+(\.\w+)*" : [19],
-        r"\"\S+\"" : [19]
+        r"\w+(\.\w+)*" : [-21],
+        NAME : [-24]
     },
     24 : {
-        r"\|" : [-25],
-        EOI : [11],
-        r"\n+" : [11]
+        r"\n+" : [7],
+        EOI : [7]
     },
     25 : {
-        NONTERMINAL : [-18],
-        r"\"\S+\"" : [-19],
-        r"\w+(\.\w+)*" : [-7],
-        TERM : [-20],
-        ALTERNATIVES : [-26],
-        PATTERN : [-24],
-        TERMINAL : [-22],
-        r"\"\"" : [-23]
+        r"\n+" : [-26],
+        EOI : [2]
     },
     26 : {
-        EOI : [12],
-        r"\n+" : [12]
+        NONTERMINAL : [-1],
+        REQUIRE : [-2],
+        PRODUCTION : [-6],
+        GRAMMAR : [-27],
+        r"\w+(\.\w+)*" : [-7],
+        RULE : [-8],
+        r"#require" : [-20],
+        LINE : [-25]
     },
     27 : {
-        EOI : [4],
-        r"\n+" : [4]
+        EOI : [3]
     }
 }

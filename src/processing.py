@@ -57,8 +57,8 @@ def parse(
         if not matches: 
             raise SyntaxError(f"invalid token '{remaining[0]}' at line {lineno}, col {col}")
 
-        # Triage: exact match (reserved word), then longest match
-        match, regex = max(matches, key=lambda tup: len(tup[0]) + int(tup[0] == tup[1]))
+        # Accept longest match, prioritizing exact match (reserved word)
+        match, regex = max(matches, key=lambda tup: len(tup[0]) + int(tup[0] == tup[1])/10)
         if match.startswith("\n"): col = 1
 
         token = Token(match, regex, lineno, col)

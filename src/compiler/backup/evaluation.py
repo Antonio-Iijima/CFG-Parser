@@ -150,7 +150,8 @@ from datatypes import Rule, EOI
 
 
 
-##### ABSTRACT SYNTAX TREE #####
+##### AST #####
+
 
 
 """
@@ -158,16 +159,8 @@ from datatypes import Rule, EOI
     for category, warnings in WARNINGS.items(): 
         print_warnings(f"{category} not found", warnings)
 
-    for rule, alternatives in GRAMMAR.items():
-        AST += f"""
-class {rule}(Rule):
-    r'''```
-{rule} -> {("\n"+" "*(len(rule)+2)+"| ").join(
-    (lstToStr(production.pattern) if production.pattern else "\"\"")
-    for production in alternatives
-    )}
-    ```'''
-"""
+    for rule in GRAMMAR:
+        AST += f"class {rule}(Rule):None\n"
     
     AST += get_parsetable_str()
     
