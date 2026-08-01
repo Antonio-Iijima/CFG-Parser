@@ -30,6 +30,7 @@ class Terminal(Default):
 class Nonterminal(Default):
     def __init__(self, rule: str):
         self.rule = rule
+        if "_" in rule: self.module, self.name = rule.rsplit("_", 1)
 
     def __hash__(self):
         return hash(self.rule)
@@ -105,7 +106,7 @@ class EPSILON(SpecialTerminal):
 
 
 class START(Nonterminal):
-    def __init__(self): super().__init__("START")
+    def __init__(self): super().__init__("MAIN_START")
 
 
 
@@ -133,18 +134,17 @@ class Token:
 
 class Rule(Default):
     def __init__(self, children: list, modulename: str = None, variant: int = 0):
-        self.__name__ = type(self).__name__
-        self.fname =  (
-            f"p_{self.__name__}" if self.__name__.lower().startswith(modulename)
-            else f"p_main_{self.__name__}"
-        ).lower()
-        self.variant = variant
         self.children = tuple(children)
         self.modulename = modulename
+        self.variant = variant
+
+        self.__name__ = type(self).__name__
+        self.fname = f"p_{self.__name__}".lower()
+        self.fname_var = f"{self.fname}_{self.variant}"
 
 
     def __hash__(self):
-        return hash((self.__name__, tuple(self.children)))
+        return hash((self.__name__, self.children))
 
 
     def __repr__(self, i=0):

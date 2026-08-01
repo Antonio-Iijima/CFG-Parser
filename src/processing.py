@@ -105,7 +105,7 @@ def parse(
                 else "R" if data > 0
                 else "ACC"
             )
-            if data is not None: data = abs(data)
+            if action == "S": data *= -1
 
             if CONFIG.flags.debug:
                 parserOutput.add_row(
