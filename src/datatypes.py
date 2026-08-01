@@ -36,13 +36,13 @@ class Nonterminal(Default):
         return hash(self.rule)
     
     def __len__(self):
-        return len(self.rule)
+        return len(self.name)
 
     def __str__(self):
-        return self.rule
+        return self.name
 
     def __repr__(self):
-        return self.rule
+        return self.name
 
 
 
@@ -139,7 +139,7 @@ class Rule(Default):
         self.variant = variant
 
         self.__name__ = type(self).__name__
-        self.fname = f"p_{self.__name__}".lower()
+        self.fname = f"p_{modulename}_{self.__name__}".lower()
         self.fname_var = f"{self.fname}_{self.variant}"
 
 

@@ -44,6 +44,7 @@ from collections.abc import Sequence as __Sequence__
 
 def p_program(expr, module: str = MAIN):
     from compiler import parse
+
     
     global MODULE
     global PATHS
@@ -183,7 +184,7 @@ class __Expr__(__Sequence__):
   
     def __len__(self):
         return len(self._children)
-   
+
     def __str__(self):
         return self._node.__str__()
 
@@ -623,7 +624,6 @@ NULLABLE cache: {NULLABLE.cache_info()}
 
 
 
-PROGRAM = MAIN_PROGRAM
 indentation = {INDENTATION}
 newlines = {NEWLINES}
 

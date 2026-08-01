@@ -10,76 +10,76 @@ from datatypes import Rule, EOI
 
 
 
-class MAIN_START(Rule):
+class START(Rule):
     r'''```
-MAIN_START -> MAIN_PROGRAM $
+START -> PROGRAM $
     ```'''
 
-class MAIN_PROGRAM(Rule):
+class PROGRAM(Rule):
     r'''```
-MAIN_PROGRAM -> MAIN_GRAMMAR
+PROGRAM -> GRAMMAR
     ```'''
 
-class MAIN_GRAMMAR(Rule):
+class GRAMMAR(Rule):
     r'''```
-MAIN_GRAMMAR -> MAIN_LINE
-              | MAIN_LINE "\n+" MAIN_GRAMMAR
+GRAMMAR -> LINE
+         | LINE "\n+" GRAMMAR
     ```'''
 
-class MAIN_LINE(Rule):
+class LINE(Rule):
     r'''```
-MAIN_LINE -> MAIN_REQUIRE
-           | MAIN_PRODUCTION
+LINE -> REQUIRE
+      | PRODUCTION
     ```'''
 
-class MAIN_REQUIRE(Rule):
+class REQUIRE(Rule):
     r'''```
-MAIN_REQUIRE -> "#require" MAIN_NAME
-              | "#require" MAIN_NAME "as" MAIN_NAME
+REQUIRE -> "#require" NAME
+         | "#require" NAME "as" NAME
     ```'''
 
-class MAIN_NAME(Rule):
+class NAME(Rule):
     r'''```
-MAIN_NAME -> "\w+(\.\w+)*"
+NAME -> "\w+(\.\w+)*"
     ```'''
 
-class MAIN_PRODUCTION(Rule):
+class PRODUCTION(Rule):
     r'''```
-MAIN_PRODUCTION -> MAIN_RULE "->" MAIN_ALTERNATIVES
+PRODUCTION -> RULE "->" ALTERNATIVES
     ```'''
 
-class MAIN_RULE(Rule):
+class RULE(Rule):
     r'''```
-MAIN_RULE -> MAIN_NONTERMINAL
+RULE -> NONTERMINAL
     ```'''
 
-class MAIN_ALTERNATIVES(Rule):
+class ALTERNATIVES(Rule):
     r'''```
-MAIN_ALTERNATIVES -> MAIN_PATTERN
-                   | MAIN_PATTERN "\|" MAIN_ALTERNATIVES
+ALTERNATIVES -> PATTERN
+              | PATTERN "\|" ALTERNATIVES
     ```'''
 
-class MAIN_PATTERN(Rule):
+class PATTERN(Rule):
     r'''```
-MAIN_PATTERN -> MAIN_TERM
-              | MAIN_TERM MAIN_PATTERN
+PATTERN -> TERM
+         | TERM PATTERN
     ```'''
 
-class MAIN_TERM(Rule):
+class TERM(Rule):
     r'''```
-MAIN_TERM -> MAIN_TERMINAL
-           | MAIN_NONTERMINAL
+TERM -> TERMINAL
+      | NONTERMINAL
     ```'''
 
-class MAIN_NONTERMINAL(Rule):
+class NONTERMINAL(Rule):
     r'''```
-MAIN_NONTERMINAL -> "\w+(\.\w+)*"
+NONTERMINAL -> "\w+(\.\w+)*"
     ```'''
 
-class MAIN_TERMINAL(Rule):
+class TERMINAL(Rule):
     r'''```
-MAIN_TERMINAL -> "\"\S+\""
-               | "\"\""
+TERMINAL -> "\"\S+\""
+          | "\"\""
     ```'''
 
 
@@ -89,26 +89,26 @@ MAIN_TERMINAL -> "\"\S+\""
 
 
 # --------{ GRAMMAR }--------
-# Rule 0   MAIN_START -> MAIN_PROGRAM $
-# Rule 1   MAIN_PROGRAM -> MAIN_GRAMMAR
-# Rule 2   MAIN_GRAMMAR -> MAIN_LINE
-# Rule 3   MAIN_GRAMMAR -> MAIN_LINE "\n+" MAIN_GRAMMAR
-# Rule 4   MAIN_LINE -> MAIN_REQUIRE
-# Rule 5   MAIN_LINE -> MAIN_PRODUCTION
-# Rule 6   MAIN_REQUIRE -> "#require" MAIN_NAME
-# Rule 7   MAIN_REQUIRE -> "#require" MAIN_NAME "as" MAIN_NAME
-# Rule 8   MAIN_NAME -> "\w+(\.\w+)*"
-# Rule 9   MAIN_PRODUCTION -> MAIN_RULE "->" MAIN_ALTERNATIVES
-# Rule 10  MAIN_RULE -> MAIN_NONTERMINAL
-# Rule 11  MAIN_ALTERNATIVES -> MAIN_PATTERN
-# Rule 12  MAIN_ALTERNATIVES -> MAIN_PATTERN "\|" MAIN_ALTERNATIVES
-# Rule 13  MAIN_PATTERN -> MAIN_TERM
-# Rule 14  MAIN_PATTERN -> MAIN_TERM MAIN_PATTERN
-# Rule 15  MAIN_TERM -> MAIN_TERMINAL
-# Rule 16  MAIN_TERM -> MAIN_NONTERMINAL
-# Rule 17  MAIN_NONTERMINAL -> "\w+(\.\w+)*"
-# Rule 18  MAIN_TERMINAL -> "\"\S+\""
-# Rule 19  MAIN_TERMINAL -> "\"\""
+# Rule 0   START -> PROGRAM $
+# Rule 1   PROGRAM -> GRAMMAR
+# Rule 2   GRAMMAR -> LINE
+# Rule 3   GRAMMAR -> LINE "\n+" GRAMMAR
+# Rule 4   LINE -> REQUIRE
+# Rule 5   LINE -> PRODUCTION
+# Rule 6   REQUIRE -> "#require" NAME
+# Rule 7   REQUIRE -> "#require" NAME "as" NAME
+# Rule 8   NAME -> "\w+(\.\w+)*"
+# Rule 9   PRODUCTION -> RULE "->" ALTERNATIVES
+# Rule 10  RULE -> NONTERMINAL
+# Rule 11  ALTERNATIVES -> PATTERN
+# Rule 12  ALTERNATIVES -> PATTERN "\|" ALTERNATIVES
+# Rule 13  PATTERN -> TERM
+# Rule 14  PATTERN -> TERM PATTERN
+# Rule 15  TERM -> TERMINAL
+# Rule 16  TERM -> NONTERMINAL
+# Rule 17  NONTERMINAL -> "\w+(\.\w+)*"
+# Rule 18  TERMINAL -> "\"\S+\""
+# Rule 19  TERMINAL -> "\"\""
 
 
 
@@ -117,200 +117,199 @@ MAIN_TERMINAL -> "\"\S+\""
 
 
 
-PROGRAM = MAIN_PROGRAM
 indentation = False
 newlines = True
 
 
 
 rules = (
-    (MAIN_START, 'MAIN', 0, 2),
-    (MAIN_PROGRAM, 'MAIN', 0, 1),
-    (MAIN_GRAMMAR, 'MAIN', 0, 1),
-    (MAIN_GRAMMAR, 'MAIN', 1, 3),
-    (MAIN_LINE, 'MAIN', 0, 1),
-    (MAIN_LINE, 'MAIN', 1, 1),
-    (MAIN_REQUIRE, 'MAIN', 0, 2),
-    (MAIN_REQUIRE, 'MAIN', 1, 4),
-    (MAIN_NAME, 'MAIN', 0, 1),
-    (MAIN_PRODUCTION, 'MAIN', 0, 3),
-    (MAIN_RULE, 'MAIN', 0, 1),
-    (MAIN_ALTERNATIVES, 'MAIN', 0, 1),
-    (MAIN_ALTERNATIVES, 'MAIN', 1, 3),
-    (MAIN_PATTERN, 'MAIN', 0, 1),
-    (MAIN_PATTERN, 'MAIN', 1, 2),
-    (MAIN_TERM, 'MAIN', 0, 1),
-    (MAIN_TERM, 'MAIN', 1, 1),
-    (MAIN_NONTERMINAL, 'MAIN', 0, 1),
-    (MAIN_TERMINAL, 'MAIN', 0, 1),
-    (MAIN_TERMINAL, 'MAIN', 1, 1)
+    (START, 'MAIN', 0, 2),
+    (PROGRAM, 'MAIN', 0, 1),
+    (GRAMMAR, 'MAIN', 0, 1),
+    (GRAMMAR, 'MAIN', 1, 3),
+    (LINE, 'MAIN', 0, 1),
+    (LINE, 'MAIN', 1, 1),
+    (REQUIRE, 'MAIN', 0, 2),
+    (REQUIRE, 'MAIN', 1, 4),
+    (NAME, 'MAIN', 0, 1),
+    (PRODUCTION, 'MAIN', 0, 3),
+    (RULE, 'MAIN', 0, 1),
+    (ALTERNATIVES, 'MAIN', 0, 1),
+    (ALTERNATIVES, 'MAIN', 1, 3),
+    (PATTERN, 'MAIN', 0, 1),
+    (PATTERN, 'MAIN', 1, 2),
+    (TERM, 'MAIN', 0, 1),
+    (TERM, 'MAIN', 1, 1),
+    (NONTERMINAL, 'MAIN', 0, 1),
+    (TERMINAL, 'MAIN', 0, 1),
+    (TERMINAL, 'MAIN', 1, 1)
 )
 
 
 
 table = {
     0 : {
-        r"#require" : [-1],
-        MAIN_LINE : [-6],
-        MAIN_NONTERMINAL : [-8],
-        MAIN_PROGRAM : [-25],
-        MAIN_RULE : [-9],
-        MAIN_GRAMMAR : [-27],
-        MAIN_PRODUCTION : [-22],
-        MAIN_REQUIRE : [-24],
-        r"\w+(\.\w+)*" : [-16]
+        PROGRAM : [-1],
+        GRAMMAR : [-3],
+        LINE : [-4],
+        NONTERMINAL : [-6],
+        r"\w+(\.\w+)*" : [-7],
+        PRODUCTION : [-8],
+        r"#require" : [-10],
+        RULE : [-15],
+        REQUIRE : [-27]
     },
     1 : {
-        r"\w+(\.\w+)*" : [-2],
-        MAIN_NAME : [-3]
+        EOI : [-2]
     },
     2 : {
-        r"as" : [8],
-        r"\n+" : [8],
-        EOI : [8]
-    },
-    3 : {
-        r"as" : [-4],
-        r"\n+" : [6],
-        EOI : [6]
-    },
-    4 : {
-        r"\w+(\.\w+)*" : [-2],
-        MAIN_NAME : [-5]
-    },
-    5 : {
-        r"\n+" : [7],
-        EOI : [7]
-    },
-    6 : {
-        r"\n+" : [-7],
-        EOI : [2]
-    },
-    7 : {
-        r"#require" : [-1],
-        MAIN_LINE : [-6],
-        MAIN_NONTERMINAL : [-8],
-        MAIN_RULE : [-9],
-        MAIN_PRODUCTION : [-22],
-        MAIN_GRAMMAR : [-23],
-        MAIN_REQUIRE : [-24],
-        r"\w+(\.\w+)*" : [-16]
-    },
-    8 : {
-        r"->" : [10]
-    },
-    9 : {
-        r"->" : [-10]
-    },
-    10 : {
-        MAIN_TERM : [-11],
-        MAIN_NONTERMINAL : [-12],
-        r"\"\"" : [-13],
-        MAIN_PATTERN : [-18],
-        MAIN_ALTERNATIVES : [-21],
-        r"\"\S+\"" : [-14],
-        MAIN_TERMINAL : [-15],
-        r"\w+(\.\w+)*" : [-16]
-    },
-    11 : {
-        MAIN_TERM : [-11],
-        MAIN_NONTERMINAL : [-12],
-        r"\"\"" : [-13],
-        r"\"\S+\"" : [-14],
-        MAIN_TERMINAL : [-15],
-        r"\w+(\.\w+)*" : [-16],
-        MAIN_PATTERN : [-17],
-        r"\n+" : [13],
-        EOI : [13],
-        r"\|" : [13]
-    },
-    12 : {
-        r"\"\S+\"" : [16],
-        r"\"\"" : [16],
-        r"\|" : [16],
-        r"\n+" : [16],
-        r"\w+(\.\w+)*" : [16],
-        EOI : [16]
-    },
-    13 : {
-        r"\"\S+\"" : [19],
-        r"\"\"" : [19],
-        r"\|" : [19],
-        r"\n+" : [19],
-        r"\w+(\.\w+)*" : [19],
-        EOI : [19]
-    },
-    14 : {
-        r"\"\S+\"" : [18],
-        r"\"\"" : [18],
-        r"\|" : [18],
-        r"\n+" : [18],
-        r"\w+(\.\w+)*" : [18],
-        EOI : [18]
-    },
-    15 : {
-        r"\"\S+\"" : [15],
-        r"\"\"" : [15],
-        r"\|" : [15],
-        r"\n+" : [15],
-        r"\w+(\.\w+)*" : [15],
-        EOI : [15]
-    },
-    16 : {
-        r"\"\S+\"" : [17],
-        r"->" : [17],
-        r"\"\"" : [17],
-        r"\|" : [17],
-        r"\n+" : [17],
-        r"\w+(\.\w+)*" : [17],
-        EOI : [17]
-    },
-    17 : {
-        r"\n+" : [14],
-        EOI : [14],
-        r"\|" : [14]
-    },
-    18 : {
-        r"\|" : [-19],
-        r"\n+" : [11],
-        EOI : [11]
-    },
-    19 : {
-        MAIN_TERM : [-11],
-        MAIN_NONTERMINAL : [-12],
-        r"\"\"" : [-13],
-        MAIN_PATTERN : [-18],
-        r"\"\S+\"" : [-14],
-        MAIN_TERMINAL : [-15],
-        r"\w+(\.\w+)*" : [-16],
-        MAIN_ALTERNATIVES : [-20]
-    },
-    20 : {
-        r"\n+" : [12],
-        EOI : [12]
-    },
-    21 : {
-        r"\n+" : [9],
-        EOI : [9]
-    },
-    22 : {
-        r"\n+" : [5],
-        EOI : [5]
-    },
-    23 : {
-        EOI : [3]
-    },
-    24 : {
-        r"\n+" : [4],
-        EOI : [4]
-    },
-    25 : {
-        EOI : [-26]
-    },
-    26 : {
         None : [0]
     },
-    27 : {
+    3 : {
         EOI : [1]
+    },
+    4 : {
+        r"\n+" : [-5],
+        EOI : [2]
+    },
+    5 : {
+        LINE : [-4],
+        NONTERMINAL : [-6],
+        r"\w+(\.\w+)*" : [-7],
+        PRODUCTION : [-8],
+        GRAMMAR : [-9],
+        r"#require" : [-10],
+        RULE : [-15],
+        REQUIRE : [-27]
+    },
+    6 : {
+        r"->" : [10]
+    },
+    7 : {
+        r"\|" : [17],
+        r"\"\"" : [17],
+        EOI : [17],
+        r"\n+" : [17],
+        r"->" : [17],
+        r"\w+(\.\w+)*" : [17],
+        r"\"\S+\"" : [17]
+    },
+    8 : {
+        EOI : [5],
+        r"\n+" : [5]
+    },
+    9 : {
+        EOI : [3]
+    },
+    10 : {
+        r"\w+(\.\w+)*" : [-11],
+        NAME : [-12]
+    },
+    11 : {
+        r"as" : [8],
+        EOI : [8],
+        r"\n+" : [8]
+    },
+    12 : {
+        r"as" : [-13],
+        EOI : [6],
+        r"\n+" : [6]
+    },
+    13 : {
+        r"\w+(\.\w+)*" : [-11],
+        NAME : [-14]
+    },
+    14 : {
+        EOI : [7],
+        r"\n+" : [7]
+    },
+    15 : {
+        r"->" : [-16]
+    },
+    16 : {
+        ALTERNATIVES : [-17],
+        NONTERMINAL : [-18],
+        r"\"\S+\"" : [-19],
+        r"\w+(\.\w+)*" : [-7],
+        TERM : [-20],
+        PATTERN : [-24],
+        TERMINAL : [-22],
+        r"\"\"" : [-23]
+    },
+    17 : {
+        EOI : [9],
+        r"\n+" : [9]
+    },
+    18 : {
+        r"\|" : [16],
+        r"\"\"" : [16],
+        EOI : [16],
+        r"\n+" : [16],
+        r"\w+(\.\w+)*" : [16],
+        r"\"\S+\"" : [16]
+    },
+    19 : {
+        r"\|" : [18],
+        r"\"\"" : [18],
+        EOI : [18],
+        r"\n+" : [18],
+        r"\w+(\.\w+)*" : [18],
+        r"\"\S+\"" : [18]
+    },
+    20 : {
+        NONTERMINAL : [-18],
+        r"\"\S+\"" : [-19],
+        r"\w+(\.\w+)*" : [-7],
+        TERM : [-20],
+        PATTERN : [-21],
+        TERMINAL : [-22],
+        r"\"\"" : [-23],
+        r"\|" : [13],
+        r"\n+" : [13],
+        EOI : [13]
+    },
+    21 : {
+        r"\|" : [14],
+        r"\n+" : [14],
+        EOI : [14]
+    },
+    22 : {
+        r"\|" : [15],
+        r"\"\"" : [15],
+        EOI : [15],
+        r"\n+" : [15],
+        r"\w+(\.\w+)*" : [15],
+        r"\"\S+\"" : [15]
+    },
+    23 : {
+        r"\|" : [19],
+        r"\"\"" : [19],
+        EOI : [19],
+        r"\n+" : [19],
+        r"\w+(\.\w+)*" : [19],
+        r"\"\S+\"" : [19]
+    },
+    24 : {
+        r"\|" : [-25],
+        EOI : [11],
+        r"\n+" : [11]
+    },
+    25 : {
+        NONTERMINAL : [-18],
+        r"\"\S+\"" : [-19],
+        r"\w+(\.\w+)*" : [-7],
+        TERM : [-20],
+        ALTERNATIVES : [-26],
+        PATTERN : [-24],
+        TERMINAL : [-22],
+        r"\"\"" : [-23]
+    },
+    26 : {
+        EOI : [12],
+        r"\n+" : [12]
+    },
+    27 : {
+        EOI : [4],
+        r"\n+" : [4]
     }
 }
