@@ -135,7 +135,7 @@ def parse(
                     symbols.append(rule(reversed(reduction), module, variant))
                     
                     # Handle goto as part of reduce action
-                    state.append(abs(table[state[-1]][rule][0]))
+                    state.append(-table[state[-1]][rule][0])
 
                 case "ACC":
                     if tuple(map(type, symbols)) == (PROGRAM, EOI): return symbols[0]

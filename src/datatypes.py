@@ -28,12 +28,13 @@ class Terminal(Default):
 
 
 class Nonterminal(Default):
-    def __init__(self, rule: str):
-        self.rule = rule
-        if "_" in rule: self.module, self.name = rule.rsplit("_", 1)
+    MAIN: str
+    
+    def __init__(self, data: tuple|str):
+        self.module, self.name = data if isinstance(data, tuple) else (Nonterminal.MAIN, data)
 
     def __hash__(self):
-        return hash(self.rule)
+        return hash((self.module, self.name))
     
     def __len__(self):
         return len(self.name)
@@ -106,7 +107,7 @@ class EPSILON(SpecialTerminal):
 
 
 class START(Nonterminal):
-    def __init__(self): super().__init__("MAIN_START")
+    def __init__(self): super().__init__("START")
 
 
 

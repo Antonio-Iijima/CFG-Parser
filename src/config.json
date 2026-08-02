@@ -1,9 +1,9 @@
 {
    "project": "magicc",
-   "version": "1.0.1",
+   "version": "1.0.2",
    "language": ".bnf",
    "implementation": "interpreter",
-   "info": "magicc 1.0.1 </> .bnf interpreter",
+   "info": "magicc 1.0.2 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -26,7 +26,7 @@
       "dedent": "DEDENTATION_MARKER"
    },
    "input": [
-      "../examples/1.calc"
+      "../examples/2.banter"
    ],
    "output": "out.cpp",
    "tests": [],

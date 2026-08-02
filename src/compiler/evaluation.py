@@ -22,6 +22,7 @@ import os
 
 
 MAIN = "MAIN"
+Nonterminal.MAIN = MAIN
 NEWLINES = False
 INDENTATION = False
 MODULE: dict = MAIN
@@ -30,7 +31,7 @@ ALIASES: dict = {}
 REFERENCES: dict = {}
 DECLARATIONS: dict = {}
 GRAMMAR: dict[Nonterminal, list[Production]] = {
-    START() : [ Production(START(), MAIN, 0, [Nonterminal("MAIN_PROGRAM"), EOI()]) ]
+    START() : [ Production(START(), MAIN, 0, [Nonterminal("PROGRAM"), EOI()]) ]
 }
 TERMINALS: set[Terminal] = set()
 CONFLICTS: str = ""
@@ -279,7 +280,7 @@ def p_main_nonterminal(expr):
 
     nonterminal = Nonterminal(dereference(expr(0)))
     reference(nonterminal)
-    INDENTATION = INDENTATION or (nonterminal.rule in ("INDENT", "DEDENT"))
+    INDENTATION = INDENTATION or (nonterminal.name in ("INDENT", "DEDENT"))
     
     return nonterminal
 
@@ -299,12 +300,13 @@ def p_main_terminal_1(expr):
 
 
 
-def dereference(name: str) -> str:
-    module, name = None, toModule(name)
-    if "_" in name: module, name = name.rsplit("_", 1)
+def dereference(name: str) -> tuple:
+    module, name = "", name
+    if "." in name: module, name = name.rsplit(".", 1)
+    module, name = toModule(module), toModule(name)
     module = ALIASES[MODULE].get(module, module) or MODULE
     
-    return "_".join((module, name))
+    return (module, name)
 
 
 def reference(rule: Nonterminal):
