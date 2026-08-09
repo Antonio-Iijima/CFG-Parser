@@ -165,6 +165,4 @@ class Rule(Default):
 
 
 
-class TableGenerationError(Exception): pass
-class ValidationError(Exception): pass
 class ParseError(Exception): pass

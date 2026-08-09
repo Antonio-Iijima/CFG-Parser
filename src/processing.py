@@ -1,6 +1,7 @@
 from datatypes import *
 from utils import *
 
+from functools import cache
 from rich import print
 from time import time
 
@@ -37,22 +38,25 @@ def parse(
     )
 
 
+    @cache
+    def scanset(state) -> set:
+        return set(regex for regex in table[state].keys() if isinstance(regex, str))
+
+
     def scan() -> None:
         """Scans the input for the next token that is valid in the current state."""
 
         nonlocal token, lineno, col, remaining
-        
-        
+
         if not remaining:
             token = (None if token == EOI() else EOI())
             return
 
         matches = []
         
-        for regex in table[state[-1]].keys():
-            if isinstance(regex, str):
-                match = re.match(regex, remaining)
-                if match: matches.append((match.group(), regex))
+        for regex in scanset(state[-1]):
+            match = re.match(regex, remaining)
+            if match: matches.append((match.group(), regex))
         
         if not matches: 
             raise SyntaxError(f"invalid token '{remaining[0]}' at line {lineno}, col {col}")
@@ -154,6 +158,7 @@ def parse(
 
     finally:
         if CONFIG.flags.time: print(f"Parse time: {(time() - start)*1000:.7} ms")
+        if CONFIG.flags.verbose: print(f"scanset cache: {scanset.cache_info()}")
         if CONFIG.flags.debug: print(parserOutput, "")
 
 
@@ -173,7 +178,7 @@ def autoIndent(lines: list[str]) -> list:
     emptyLines = []
     curr_indent = prev_indent = 0
 
-    levels = list((len(line)-len(line.lstrip(" "))) for line in lines)
+    levels = list((len(line)-len(line.lstrip())) for line in lines)
     level = max(set(levels).difference({0}) or {1}, key=lambda val: levels.count(val))
 
     indentation = " " * level

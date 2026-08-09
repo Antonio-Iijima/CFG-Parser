@@ -21,7 +21,7 @@ class DotDict(dict):
 
 
 class Config(DotDict):
-    def __init__(self, filename: str = "config.json", indent: int = 3):        
+    def __init__(self, filename: str = "config.json", indent: int = 3):
         root = os.path.dirname(__file__)
         config = os.path.join(root, filename)
         
@@ -32,13 +32,16 @@ class Config(DotDict):
         self.paths.config = config
         self.indent = indent
 
-        self.info = f"{self.project} {self.version} </> {self.language} {self.implementation}"
-
 
     def save(self):
         self.flags = dict.fromkeys(self.flags.keys(), False)
         with open(self.paths.config, "w") as file:
             json.dump(self, file, indent=self.indent)
+
+
+    @property
+    def info(self):
+        return f"{self.project} {self.version} </> {self.language} {self.implementation}"
 
 
     @property

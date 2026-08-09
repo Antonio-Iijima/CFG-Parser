@@ -3,6 +3,7 @@ from config import CONFIG
 from rich.table import Table
 from rich import print
 
+import subprocess
 import sys
 import os
 
@@ -62,9 +63,8 @@ def get_input(prompt: str = "", s: str = "") -> str|None:
         case "\nquit": 
             return "quit"
         case "\nclear":
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(CONFIG.info)
-            return None
+            subprocess.run("cls" if os.name == "nt" else "clear")
+            return print(CONFIG.info)
         case _:
             if s.endswith("\n"): return s
             return get_input("... ", s + "\n" + input(prompt))
@@ -75,7 +75,7 @@ def ation():
     while True: yield i; i += 1
 
 
-def regularize(path: str) -> None:    
+def regularize(path: str) -> None:
     if os.path.isdir(path):
         for file in os.listdir(path):
             regularize(os.path.join(path, file))

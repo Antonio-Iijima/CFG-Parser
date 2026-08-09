@@ -3,7 +3,6 @@
    "version": "1.0.2",
    "language": ".bnf",
    "implementation": "interpreter",
-   "info": "magicc 1.0.2 </> .bnf interpreter",
    "flags": {
       "interactive": false,
       "debug": false,
@@ -25,9 +24,6 @@
       "indent": "INDENTATION_MARKER",
       "dedent": "DEDENTATION_MARKER"
    },
-   "input": [
-      "../examples/2.banter"
-   ],
    "output": "out.cpp",
    "tests": [],
    "ignore": {

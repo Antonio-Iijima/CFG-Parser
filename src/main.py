@@ -24,7 +24,6 @@ def main(input: tuple, **flags):
     print(CONFIG.info)
 
 
-    CONFIG.input = list(input)
     CONFIG.output = flags.pop("output")
     CONFIG.flags.update(flags)
 
@@ -50,12 +49,10 @@ def main(input: tuple, **flags):
     import parser
 
 
-    def REP(text: str) -> None:
-        "Read-Eval-Print"
+    def eval_print(text: str) -> None:
         try:
             result = parser.evaluate(text)
             if result is not None: print(result)
-
         except Exception as e:
             if CONFIG.flags.debug: raise e
             else: print(f"{type(e).__name__}: {e}")
@@ -65,7 +62,7 @@ def main(input: tuple, **flags):
     for filename in input:
         try:
             with open(filename) as file:
-                REP(file.read())
+                eval_print(file.read())
         except FileNotFoundError as e:
             note = e.strerror.lower()
             if not note in warnings: warnings[note] = []
@@ -76,7 +73,7 @@ def main(input: tuple, **flags):
     if CONFIG.flags.interactive:
         for input in iter(lambda: get_input("</> "), "quit"):
             if (input is not None) and input.strip():
-                REP(input)
+                eval_print(input)
 
 
 
